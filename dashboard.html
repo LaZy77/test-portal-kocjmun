@@ -234,7 +234,7 @@
       try {
         // 1. Get delegate profile
         const { data: delegate, error: delegateErr } = await sb
-          .from('delegates')
+          .from('profiles')
           .select('*')
           .eq('id', userId)
           .single();
@@ -271,6 +271,7 @@
             .from('resolutions')
             .select('*')
             .eq('committee', delegate.committee)
+            .eq('status', 'published')
             .order('created_at', { ascending: true }),
 
           sb
@@ -388,14 +389,40 @@
               <p class="text-xs text-gray-400">${escHtml(r.title)}</p>
             </div>
             <div class="flex gap-2 flex-shrink-0">
-              <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 transition border border-purple-500/30">View</button>
-              ${r.file_url
-                ? `<a href="${escHtml(r.file_url)}" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10">Download</a>`
-                : `<button disabled class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/3 text-gray-600 border border-white/5 cursor-not-allowed">Download</button>`}
-              <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10">Amend</button>
+              ${r.pdf_url
+                ? `<button onclick="openPdf('${escHtml(r.pdf_url)}','${escHtml(r.title)}')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 transition border border-purple-500/30">View PDF</button>
+                   <a href="${escHtml(r.pdf_url)}" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10">Open</a>`
+                : `<button disabled class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/3 text-gray-600 border border-white/5 cursor-not-allowed">No PDF</button>`}
             </div>
           </div>
         </div>`).join('');
+    }
+
+    // ─── PDF viewer ──────────────────────────────────────────────────
+    function openPdf(url, title) {
+      let modal = document.getElementById('pdf-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'pdf-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem';
+        modal.innerHTML = `
+          <div class="glass-strong rounded-2xl w-full max-w-4xl glow-border overflow-hidden" style="height:85vh">
+            <div class="flex items-center justify-between p-4 border-b border-white/5">
+              <h3 class="text-sm font-semibold" id="pdf-modal-title">—</h3>
+              <button onclick="closePdf()" class="text-gray-500 hover:text-white transition"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+            </div>
+            <iframe id="pdf-modal-frame" src="" class="w-full" style="height:calc(85vh - 57px);border:none;background:#fff"></iframe>
+          </div>`;
+        document.body.appendChild(modal);
+      }
+      document.getElementById('pdf-modal-title').textContent = title;
+      document.getElementById('pdf-modal-frame').src = url;
+      modal.style.display = 'flex';
+      lucide.createIcons();
+    }
+    function closePdf() {
+      const modal = document.getElementById('pdf-modal');
+      if (modal) { modal.style.display = 'none'; document.getElementById('pdf-modal-frame').src = ''; }
     }
 
     // ─── Committee Feed ──────────────────────────────────────────────
