@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head><script src="/_sdk/telemetry_sdk.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal - Koç JMUN</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            outfit: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body { font-family: 'Outfit', sans-serif; }
+    .glass {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .glass-strong {
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .glow-border {
+      box-shadow: 0 0 20px rgba(93,23,95,0.25), inset 0 0 20px rgba(93,23,95,0.1);
+      border: 1px solid rgba(93,23,95,0.4);
+    }
+    .glow-btn {
+      box-shadow: 0 0 24px rgba(93,23,95,0.4), 0 0 48px rgba(93,23,95,0.15);
+    }
+    .gold-accent { color: #d4a853; }
+    .bg-grid {
+      background-image: 
+        linear-gradient(rgba(93,23,95,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(93,23,95,0.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @keyframes pulse-glow { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+    .animate-float { animation: float 6s ease-in-out infinite; }
+    .animate-float-delay { animation: float 6s ease-in-out 2s infinite; }
+    .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+    .card-hover { transition: transform 0.3s, box-shadow 0.3s; }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 0 30px rgba(147,197,253,0.2); }
+    .tab-btn {
+      color: #9ca3af;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s;
+    }
+    .tab-btn:hover {
+      color: #e2e8f0;
+    }
+    .tab-btn.active-tab {
+      color: #9333ea;
+      border-bottom-color: #5D175F;
+    }
+    .tab-content {
+      animation: fadeIn 0.3s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full overflow-auto bg-[#0a0e1a] text-white bg-grid">
+  <!-- Ambient orbs -->
+  <div class="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden" style="z-index:0">
+   <div class="absolute top-[10%] left-[15%] w-96 h-96 rounded-full bg-purple-900/10 blur-3xl animate-pulse-glow"></div>
+   <div class="absolute bottom-[20%] right-[10%] w-80 h-80 rounded-full bg-purple-800/8 blur-3xl animate-pulse-glow" style="animation-delay:1.5s"></div>
+   <div class="absolute top-[50%] left-[60%] w-64 h-64 rounded-full bg-purple-700/6 blur-3xl animate-pulse-glow" style="animation-delay:3s"></div>
+  </div>
+  <div class="relative z-10 w-full">
+   <!-- Navigation -->
+   <nav class="w-full px-4 sm:px-8 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+     <div class="flex items-center gap-2">
+        <img id="nav-logo" src="https://i.ibb.co/pBH9L8Sk/jmun26logoblack-e.png" alt="Koç JMUN Logo" style="height: 50px; width: auto; transition: filter 0.3s; filter: none; cursor: pointer;">
+       <!-- Placeholder logo - replace this SVG with your logo --> <rect width="32" height="32" rx="4" fill="url(#grad)" /> <path d="M8 16h16M16 8v16" stroke="white" stroke-width="2" stroke-linecap="round" /> <defs>
+        <lineargradient id="grad" x1="0" y1="0" x2="32" y2="32">
+         <stop offset="0%" style="stop-color:#9333ea;stop-opacity:1" />
+         <stop offset="100%" style="stop-color:#5D175F;stop-opacity:1" />
+        </lineargradient>
+       </defs>
+      </svg><span class="font-semibold text-sm sm:text-base" id="nav-logo"></span>
+     </div>
+     <div class="hidden md:flex items-center gap-6 text-sm text-gray-300">
+      <a href="#preview" class="hover:text-white transition">My Dashboard</a> <a href="#preview" class="hover:text-white transition">Schedule</a> <a href="#preview" class="hover:text-white transition">Documents</a> <button class="px-4 py-2 rounded-lg glow-border text-purple-200 font-medium hover:bg-purple-500/10 transition">Sign Out</button>
+     </div><button class="md:hidden text-gray-300" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"> <i data-lucide="menu" style="width:24px;height:24px"></i> </button>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden mt-4 glass rounded-xl p-4 flex flex-col gap-3 text-sm text-gray-300">
+     <a href="#preview" class="hover:text-white">My Dashboard</a> <a href="#preview" class="hover:text-white">Schedule</a> <a href="#preview" class="hover:text-white">Documents</a> <button class="px-4 py-2 rounded-lg glow-border text-purple-200 font-medium w-full">Sign Out</button>
+    </div>
+   </nav><!-- Dashboard Section -->
+   <section id="preview" class="max-w-7xl mx-auto px-4 sm:px-8 pt-8 pb-16">
+    <div class="glass-strong rounded-2xl p-5 sm:p-8 glow-border">
+     <!-- Mock dashboard header -->
+     <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
+      <div>
+       <p class="text-xs text-gray-500">Delegate Portal</p>
+       <h3 class="text-lg font-semibold">Welcome, <span class="text-purple-300" id="delegate-name">Delegate</span> 👋</h3>
+      </div>
+      <div class="flex items-center gap-2">
+       <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div><span class="text-xs text-green-400">Live</span>
+      </div>
+     </div><!-- Info cards -->
+     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+      <div class="bg-white/5 rounded-xl p-3">
+       <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Committee</p>
+       <p class="font-semibold text-sm text-purple-200" id="committee-text">UNHRC</p>
+      </div>
+      <div class="bg-white/5 rounded-xl p-3">
+       <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Country</p>
+       <p class="font-semibold text-sm text-purple-200" id="country-text">France 🇫🇷</p>
+      </div>
+      <div class="bg-white/5 rounded-xl p-3">
+       <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Room</p>
+       <p class="font-semibold text-sm text-purple-200" id="room-text">B204</p>
+      </div>
+      <div class="bg-white/5 rounded-xl p-3">
+       <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Next Session</p>
+       <p class="font-semibold text-sm text-purple-200" id="session-time-text">13:30</p>
+      </div>
+     </div><!-- Announcement -->
+     <div class="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 flex items-start gap-3">
+      <i data-lucide="alert-circle" style="width:18px;height:18px" class="text-purple-400 flex-shrink-0 mt-0.5"></i>
+      <div>
+       <p class="text-xs font-medium text-purple-300 mb-0.5">Urgent Announcement</p>
+       <p class="text-xs text-gray-300" id="announcement-text">Opening Ceremony begins at 09:30 in the Auditorium. All delegates must be seated by 09:15.</p>
+      </div>
+     </div><!-- Next session -->
+     <div class="mt-4 bg-white/3 rounded-xl p-4">
+      <p class="text-xs text-gray-500 mb-2">Upcoming</p>
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-sm font-medium" id="session-title-text">Committee Session II</p>
+        <p class="text-xs text-gray-400"><span id="session-time-range">13:30 – 15:00</span> • <span id="session-room">Room B204</span></p>
+       </div><span class="text-[10px] px-2 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">In 45 min</span>
+      </div>
+     </div>
+    </div><!-- Resolutions Section -->
+    <div class="mt-8 mb-8">
+     <h4 class="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">Active Resolutions</h4>
+     <div class="glass-strong rounded-2xl p-5 sm:p-8 glow-border">
+      <div class="space-y-3">
+       <!-- Resolution 1 -->
+       <div class="glass rounded-xl p-4 border border-purple-500/20 hover:border-purple-500/40 transition">
+        <div class="flex items-start justify-between gap-4">
+         <div>
+          <p class="text-sm font-semibold text-purple-300 mb-1">UNHRC 1.1</p>
+          <p class="text-xs text-gray-400">Addressing Humanitarian Crisis in Region X</p>
+         </div>
+         <div class="flex gap-2 flex-shrink-0">
+          <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 transition border border-purple-500/30">View</button> <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10">Download</button> <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10">Amend</button>
+         </div>
+        </div>
+       </div><!-- Resolution 2 -->
+       <div class="glass rounded-xl p-4 border border-purple-500/20 hover:border-purple-500/40 transition">
+        <div class="flex items-start justify-between gap-4">
+         <div>
+          <p class="text-sm font-semibold text-purple-300 mb-1">UNHRC 1.2</p>
+          <p class="text-xs text-gray-400">International Cooperation on Climate Action</p>
+         </div>
+         <div class="flex gap-2 flex-shrink-0">
+          <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 transition border border-purple-500/30">View</button> <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10">Download</button> <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10">Amend</button>
+         </div>
+        </div>
+       </div><!-- Resolution 3 -->
+       <div class="glass rounded-xl p-4 border border-purple-500/20 hover:border-purple-500/40 transition">
+        <div class="flex items-start justify-between gap-4">
+         <div>
+          <p class="text-sm font-semibold text-purple-300 mb-1">UNHRC 1.3</p>
+          <p class="text-xs text-gray-400">Strengthening Global Health Infrastructure</p>
+         </div>
+         <div class="flex gap-2 flex-shrink-0">
+          <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 transition border border-purple-500/30">View</button> <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10">Download</button> <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10">Amend</button>
+         </div>
+        </div>
+       </div><!-- Resolution 4 -->
+       <div class="glass rounded-xl p-4 border border-purple-500/20 hover:border-purple-500/40 transition">
+        <div class="flex items-start justify-between gap-4">
+         <div>
+          <p class="text-sm font-semibold text-purple-300 mb-1">UNHRC 1.4</p>
+          <p class="text-xs text-gray-400">Human Rights and Digital Privacy Protection</p>
+         </div>
+         <div class="flex gap-2 flex-shrink-0">
+          <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 transition border border-purple-500/30">View</button> <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10">Download</button> <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10">Amend</button>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div><!-- Announcements and Committee Feed Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8"><!-- Announcements Section -->
+     <div>
+      <h4 class="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">Announcements</h4>
+      <div class="glass-strong rounded-2xl p-5 sm:p-8 glow-border">
+       <div class="space-y-3">
+        <!-- Announcement 1 -->
+        <div class="glass rounded-xl p-4 border-l-4 border-l-purple-500 border border-purple-500/20">
+         <div class="flex items-start gap-3">
+          <i data-lucide="info" style="width:16px;height:16px" class="text-purple-400 flex-shrink-0 mt-1"></i>
+          <div>
+           <p class="text-xs font-medium text-purple-300 mb-1">Important Update</p>
+           <p class="text-xs text-gray-300 mb-2">Venue Change: Opening Ceremony moved to Grand Auditorium</p>
+           <p class="text-[10px] text-gray-500">2 hours ago</p>
+          </div>
+         </div>
+        </div><!-- Announcement 2 -->
+        <div class="glass rounded-xl p-4 border-l-4 border-l-blue-500 border border-blue-500/20">
+         <div class="flex items-start gap-3">
+          <i data-lucide="calendar" style="width:16px;height:16px" class="text-blue-400 flex-shrink-0 mt-1"></i>
+          <div>
+           <p class="text-xs font-medium text-blue-300 mb-1">Schedule Update</p>
+           <p class="text-xs text-gray-300 mb-2">Lunch break extended to 13:00 - 14:00 due to catering adjustments</p>
+           <p class="text-[10px] text-gray-500">4 hours ago</p>
+          </div>
+         </div>
+        </div><!-- Announcement 3 -->
+        <div class="glass rounded-xl p-4 border-l-4 border-l-green-500 border border-green-500/20">
+         <div class="flex items-start gap-3">
+          <i data-lucide="check-circle" style="width:16px;height:16px" class="text-green-400 flex-shrink-0 mt-1"></i>
+          <div>
+           <p class="text-xs font-medium text-green-300 mb-1">Registration Complete</p>
+           <p class="text-xs text-gray-300 mb-2">Your delegate credentials are ready for pickup at the main reception desk</p>
+           <p class="text-[10px] text-gray-500">1 day ago</p>
+          </div>
+         </div>
+        </div><!-- Announcement 4 -->
+        <div class="glass rounded-xl p-4 border-l-4 border-l-orange-500 border border-orange-500/20">
+         <div class="flex items-start gap-3">
+          <i data-lucide="alert-triangle" style="width:16px;height:16px" class="text-orange-400 flex-shrink-0 mt-1"></i>
+          <div>
+           <p class="text-xs font-medium text-orange-300 mb-1">Document Deadline</p>
+           <p class="text-xs text-gray-300 mb-2">Working papers must be submitted by 16:30 today for tomorrow's session</p>
+           <p class="text-[10px] text-gray-500">6 hours ago</p>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div><!-- Committee Feed Section -->
+     <div>
+      <h4 class="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">Committee Feed</h4>
+      <div class="glass-strong rounded-2xl p-5 sm:p-8 glow-border">
+       <div class="space-y-3">
+        <!-- Feed item 1 -->
+        <div class="glass rounded-xl p-4 border border-white/10">
+         <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
+           🇩🇪
+          </div>
+          <div class="flex-1">
+           <p class="text-sm font-semibold text-white mb-1">Germany <span class="text-xs text-gray-500">submitted</span></p>
+           <p class="text-xs text-gray-400 mb-2">Amendment to UNHRC 1.1 with focus on human rights enforcement</p>
+           <div class="flex gap-2">
+            <span class="text-[10px] px-2 py-1 rounded bg-purple-500/15 text-purple-300 border border-purple-500/20">Amendment</span> <span class="text-[10px] text-gray-500">5 min ago</span>
+           </div>
+          </div>
+         </div>
+        </div><!-- Feed item 2 -->
+        <div class="glass rounded-xl p-4 border border-white/10">
+         <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center text-xs font-bold flex-shrink-0">
+           🇮🇳
+          </div>
+          <div class="flex-1">
+           <p class="text-sm font-semibold text-white mb-1">India <span class="text-xs text-gray-500">raised</span></p>
+           <p class="text-xs text-gray-400 mb-2">Point of Order regarding committee procedures and voting timeline</p>
+           <div class="flex gap-2">
+            <span class="text-[10px] px-2 py-1 rounded bg-blue-500/15 text-blue-300 border border-blue-500/20">Point of Order</span> <span class="text-[10px] text-gray-500">12 min ago</span>
+           </div>
+          </div>
+         </div>
+        </div><!-- Feed item 3 -->
+        <div class="glass rounded-xl p-4 border border-white/10">
+         <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center text-xs font-bold flex-shrink-0">
+           🇫🇷
+          </div>
+          <div class="flex-1">
+           <p class="text-sm font-semibold text-white mb-1">France <span class="text-xs text-gray-500">submitted</span></p>
+           <p class="text-xs text-gray-400 mb-2">Working Paper: A Comprehensive Approach to Climate Action and Development</p>
+           <div class="flex gap-2">
+            <span class="text-[10px] px-2 py-1 rounded bg-green-500/15 text-green-300 border border-green-500/20">Working Paper</span> <span class="text-[10px] text-gray-500">28 min ago</span>
+           </div>
+          </div>
+         </div>
+        </div><!-- Feed item 4 -->
+        <div class="glass rounded-xl p-4 border border-white/10">
+         <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center text-xs font-bold flex-shrink-0">
+           🇧🇷
+          </div>
+          <div class="flex-1">
+           <p class="text-sm font-semibold text-white mb-1">Brazil <span class="text-xs text-gray-500">proposed</span></p>
+           <p class="text-xs text-gray-400 mb-2">Coalition building session for UNHRC 1.2 sponsors</p>
+           <div class="flex gap-2">
+            <span class="text-[10px] px-2 py-1 rounded bg-purple-500/15 text-purple-300 border border-purple-500/20">Coalition</span> <span class="text-[10px] text-gray-500">45 min ago</span>
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div><!-- Footer -->
+    <footer class="w-full px-4 sm:px-8 py-8 border-t border-white/5">
+     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+      <div class="text-center sm:text-left">
+       <p class="font-medium text-gray-400">Portal - Koç JMUN</p>
+       <p>For registered participants only.</p>
+      </div>
+      <div class="flex gap-4">
+       <a href="#" class="hover:text-gray-300 transition">Main Website</a> <a href="#" class="hover:text-gray-300 transition">Contact</a>
+      </div>
+     </div>
+    </footer>
+   </section>
+  </div>
+  <script>
+    lucide.createIcons();
+
+    const defaultConfig = {
+      delegate_name: "Delegate",
+      committee: "UNHRC",
+      country: "France",
+      room: "B204",
+      session_title: "Committee Session II",
+      session_time: "13:30 – 15:00",
+      announcement: "Opening Ceremony begins at 09:30 in the Auditorium. All delegates must be seated by 09:15.",
+      background_color: "#0a0e1a",
+      surface_color: "#ffffff0a",
+      text_color: "#e2e8f0",
+      primary_action: "#5D175F",
+      secondary_action: "#c084fc",
+      font_family: "Outfit",
+      font_size: 16
+    };
+
+    function applyConfig(config) {
+      document.getElementById('delegate-name').textContent = config.delegate_name || defaultConfig.delegate_name;
+      document.getElementById('committee-text').textContent = config.committee || defaultConfig.committee;
+      document.getElementById('country-text').textContent = config.country || defaultConfig.country;
+      document.getElementById('room-text').textContent = config.room || defaultConfig.room;
+      document.getElementById('session-title-text').textContent = config.session_title || defaultConfig.session_title;
+      document.getElementById('session-time-range').textContent = config.session_time || defaultConfig.session_time;
+      document.getElementById('announcement-text').textContent = config.announcement || defaultConfig.announcement;
+      document.getElementById('session-room').textContent = 'Room ' + (config.room || defaultConfig.room);
+
+      const font = config.font_family || defaultConfig.font_family;
+      document.body.style.fontFamily = `${font}, Outfit, sans-serif`;
+
+      document.body.style.backgroundColor = config.background_color || defaultConfig.background_color;
+    }
+
+
+
+    window.elementSdk.init({
+      defaultConfig,
+      onConfigChange: async (config) => applyConfig(config),
+      mapToCapabilities: (config) => ({
+        recolorables: [
+          { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+          { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+          { get: () => config.primary_action || defaultConfig.primary_action, set: (v) => { config.primary_action = v; window.elementSdk.setConfig({ primary_action: v }); } },
+          { get: () => config.secondary_action || defaultConfig.secondary_action, set: (v) => { config.secondary_action = v; window.elementSdk.setConfig({ secondary_action: v }); } }
+        ],
+        borderables: [],
+        fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+        fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } }
+      }),
+      mapToEditPanelValues: (config) => new Map([
+        ["delegate_name", config.delegate_name || defaultConfig.delegate_name],
+        ["committee", config.committee || defaultConfig.committee],
+        ["country", config.country || defaultConfig.country],
+        ["room", config.room || defaultConfig.room],
+        ["session_title", config.session_title || defaultConfig.session_title],
+        ["session_time", config.session_time || defaultConfig.session_time],
+        ["announcement", config.announcement || defaultConfig.announcement]
+      ])
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0bfeb63d080559d',t:'MTc4MTUwOTE1MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
