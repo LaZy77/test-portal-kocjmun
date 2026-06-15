@@ -51,12 +51,16 @@
     [data-theme="light"] .tab-btn.active{color:#7c3aed}
     .status-pending{background:rgba(234,179,8,0.15);color:#a16207;border:1px solid rgba(234,179,8,0.3)}
     .status-received{background:rgba(59,130,246,0.15);color:#1d4ed8;border:1px solid rgba(59,130,246,0.3)}
+    .status-under_review{background:rgba(99,102,241,0.15);color:#4338ca;border:1px solid rgba(99,102,241,0.3)}
+    .status-sent_to_panel{background:rgba(124,58,237,0.15);color:#6d28d9;border:1px solid rgba(124,58,237,0.3)}
     .status-published{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
     .status-withdrawn{background:rgba(107,114,128,0.15);color:#6b7280;border:1px solid rgba(107,114,128,0.3)}
     .status-approved{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
     .status-rejected{background:rgba(239,68,68,0.15);color:#b91c1c;border:1px solid rgba(239,68,68,0.3)}
     [data-theme="dark"] .status-pending{color:#fde047}
     [data-theme="dark"] .status-received{color:#93c5fd}
+    [data-theme="dark"] .status-under_review{color:#a5b4fc}
+    [data-theme="dark"] .status-sent_to_panel{color:#c4b5fd}
     [data-theme="dark"] .status-published{color:#86efac}
     [data-theme="dark"] .status-withdrawn{color:#9ca3af}
     [data-theme="dark"] .status-approved{color:#86efac}
@@ -154,7 +158,8 @@
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Title</label>
           <input id="res-title" type="text" placeholder="e.g. Addressing Climate Action" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Code</label>
-          <input id="res-code" type="text" placeholder="e.g. UNHRC 1.2  (agenda 1, resolution 2)" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
+          <input id="res-code" type="text" placeholder="e.g. UNHRC 1.2" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono">
+          <p class="text-[10px] muted mt-1.5">Format: COMMITTEE AGENDA.NUMBER — e.g. UNHRC 1.2 means agenda item 1, resolution 2.</p></div>
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Agenda Item</label>
           <select id="res-agenda" class="input-field w-full px-4 py-3 rounded-xl text-sm">
             <option value="Agenda Item 1">Agenda Item 1</option>
@@ -163,7 +168,7 @@
           </select></div>
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Google Docs Link</label>
           <input id="res-doc-url" type="url" placeholder="https://docs.google.com/document/d/..." class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono">
-          <p class="text-[10px] muted mt-1.5">Set sharing to "Anyone with the link can view"</p></div>
+          <p class="text-[10px] muted mt-1.5">Set sharing to "Anyone with the link can view".</p></div>
         <div id="submit-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
         <div class="flex gap-3 pt-2">
           <button onclick="closeSubmitModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
@@ -175,21 +180,13 @@
     </div>
   </div>
 
-  <!-- PDF Modal -->
-  <div id="pdf-modal" class="modal-overlay hidden">
-    <div class="surface-strong rounded-2xl w-full max-w-4xl glow-border overflow-hidden" style="height:85vh">
-      <div class="flex items-center justify-between p-4 border-b" style="border-color:rgba(128,128,128,0.1)">
-        <h3 class="text-sm font-semibold" id="pdf-modal-title">—</h3>
-        <button onclick="closePdf()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
-      </div>
-      <iframe id="pdf-modal-frame" src="" class="w-full" style="height:calc(85vh - 57px);border:none;background:#fff"></iframe>
-    </div>
-  </div>
-
   <script>
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const BUILD = '2026-06-16';
+    console.log('%cKoç JMUN · dashboard.html · build '+BUILD,'color:#7c3aed;font-weight:700;font-size:13px');
+    document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#7c3aed;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
     let currentProfile = null;
     let currentTab = 'resolutions';
@@ -268,25 +265,23 @@
       // Show published committee resolutions + my own submissions (any status)
       const items = cachedResolutions.filter(r => r.status==='published' || r.submitted_by===currentProfile.id);
       if (!items.length) { c.innerHTML = emptyState('file-text','No resolutions yet','Published resolutions for '+currentProfile.committee+' appear here.'); return; }
-      const statusLabel = {pending:'Pending',received:'With Exec',published:'Published',withdrawn:'Withdrawn'};
+      const statusLabel = {pending:'Pending review',received:'With exec',published:'Published',withdrawn:'Withdrawn'};
       c.innerHTML = items.map(r => {
         const isMine = r.submitted_by===currentProfile.id;
+        const heading = r.title || r.summary || 'Resolution';
         return '<div class="item-card rounded-xl p-4 hover:opacity-95 transition">'+
           '<div class="flex items-start justify-between gap-4">'+
             '<div class="min-w-0">'+
               '<div class="flex items-center gap-2 mb-1 flex-wrap">'+
-                '<p class="text-sm font-semibold text-purple-400">'+escHtml(r.code)+'</p>'+
+                (r.code ? '<p class="text-sm font-semibold text-purple-400">'+escHtml(r.code)+'</p>' : '')+
                 (r.agenda_item ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.1)">'+escHtml(r.agenda_item)+'</span>' : '')+
-                (r.status!=='published' ? '<span class="text-[10px] px-2 py-0.5 rounded-full status-'+r.status+'">'+statusLabel[r.status]+'</span>' : '')+
-                (isMine ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">Yours</span>' : '')+
+                '<span class="text-[10px] px-2 py-0.5 rounded-full status-'+r.status+'">'+statusLabel[r.status]+'</span>'+
+                (isMine ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(93,23,95,0.15);color:#a855f7">Yours</span>' : '')+
               '</div>'+
-              '<p class="text-xs muted">'+escHtml(r.title)+'</p>'+
+              '<p class="text-xs muted">'+escHtml(heading)+'</p>'+
             '</div>'+
             '<div class="flex gap-2 flex-shrink-0 flex-wrap justify-end">'+
-              (r.status==='published'&&r.pdf_url ?
-                '<button onclick="openPdf(\''+escHtml(r.pdf_url)+'\',\''+escAttr(r.title)+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/15 text-purple-400 hover:bg-purple-500/25 transition border border-purple-500/30">View PDF</button>'+
-                '<a href="'+escHtml(r.pdf_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg surface hover:opacity-80 transition">Open</a>'
-                : '')+
+              (r.chair_doc_url ? '<a href="'+escHtml(r.chair_doc_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Google Docs</a>' : '')+
               (r.status==='published' ? '<a href="amend.html?resolution='+r.id+'" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-500/15 text-amber-500 hover:bg-amber-500/25 transition border border-amber-500/30">Amend</a>' : '')+
               (isMine ? '<button onclick="deleteResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Delete</button>' : '')+
             '</div>'+
@@ -300,7 +295,7 @@
       c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-24 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
       // need resolution titles for context
       if (!cachedResolutions.length) {
-        const { data: rs } = await sb.from('resolutions').select('id,code,title').eq('committee', currentProfile.committee);
+        const { data: rs } = await sb.from('resolutions').select('id,code,title,summary').eq('committee', currentProfile.committee);
         cachedResolutions = rs || [];
       }
       const resMap = {}; cachedResolutions.forEach(r => resMap[r.id] = r);
@@ -311,7 +306,7 @@
       const typeColors = {insert:'#a855f7',add:'#22c55e',strike:'#ef4444',change:'#3b82f6'};
       c.innerHTML = mine.map(a => {
         const res = resMap[a.resolution_id];
-        const resLabel = res ? ((res.code? res.code+' — ':'')+res.title) : 'Resolution';
+        const resLabel = res ? ((res.code? res.code+' — ':'')+(res.title||res.summary||'Resolution')) : 'Resolution';
         const statusLabel = {pending:'Pending review',approved:'Approved',rejected:'Rejected'}[a.status];
         const row = (label,val) => '<div><p class="text-[10px] label-text uppercase tracking-wider mb-0.5">'+label+'</p><p class="text-sm">'+val+'</p></div>';
         return '<div class="item-card rounded-xl p-5 space-y-3">'+
@@ -407,7 +402,7 @@
       const docUrl=document.getElementById('res-doc-url').value.trim();
       const errEl=document.getElementById('submit-error');
       errEl.classList.add('hidden');
-      if(!title||!code||!docUrl){ errEl.textContent='Please fill in all fields.'; errEl.classList.remove('hidden'); return; }
+      if(!title||!code||!docUrl){ errEl.textContent='Please fill in the title, code and Google Docs link.'; errEl.classList.remove('hidden'); return; }
       if(!docUrl.includes('docs.google.com')){ errEl.textContent='Please enter a valid Google Docs link.'; errEl.classList.remove('hidden'); return; }
       document.getElementById('submit-btn').disabled=true;
       document.getElementById('submit-btn-text').textContent='Submitting…';
@@ -424,7 +419,7 @@
       closeSubmitModal();
       document.getElementById('res-title').value=''; document.getElementById('res-code').value=''; document.getElementById('res-doc-url').value='';
       if(currentTab==='resolutions') renderResolutions();
-      alert('Resolution submitted to your chair for review.');
+      alert('Resolution submitted to your chair. You can follow its progress here.');
     }
 
     async function deleteResolution(id) {
@@ -433,14 +428,6 @@
       if(error){ console.error(error); alert('Could not delete (you can only delete resolutions you submitted).'); return; }
       renderResolutions();
     }
-
-    function openPdf(url, title) {
-      document.getElementById('pdf-modal-title').textContent = title;
-      document.getElementById('pdf-modal-frame').src = url;
-      document.getElementById('pdf-modal').classList.remove('hidden');
-      lucide.createIcons();
-    }
-    function closePdf() { document.getElementById('pdf-modal').classList.add('hidden'); document.getElementById('pdf-modal-frame').src=''; }
 
     function emptyState(icon,title,sub){ return '<div class="text-center py-12 muted"><i data-lucide="'+icon+'" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">'+title+'</p><p class="text-xs mt-1">'+sub+'</p></div>'; }
     function escHtml(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
