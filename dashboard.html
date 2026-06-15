@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal — Koç JMUN</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html, body { height: 100%; margin: 0; font-family: 'Outfit', sans-serif; }
+    .glass {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .glass-strong {
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .glow-border {
+      box-shadow: 0 0 20px rgba(93,23,95,0.25), inset 0 0 20px rgba(93,23,95,0.1);
+      border: 1px solid rgba(93,23,95,0.4);
+    }
+    .bg-grid {
+      background-image:
+        linear-gradient(rgba(93,23,95,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(93,23,95,0.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    @keyframes pulse-glow { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+    .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+    .animate-fadein { animation: fadeIn 0.4s ease-out forwards; }
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+    }
+    .tag-amendment  { background: rgba(147,51,234,0.15); color: #c084fc; border: 1px solid rgba(147,51,234,0.2); }
+    .tag-order      { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.2); }
+    .tag-paper      { background: rgba(34,197,94,0.15);  color: #86efac; border: 1px solid rgba(34,197,94,0.2); }
+    .tag-coalition  { background: rgba(147,51,234,0.15); color: #c084fc; border: 1px solid rgba(147,51,234,0.2); }
+    .tag-default    { background: rgba(255,255,255,0.05); color: #9ca3af; border: 1px solid rgba(255,255,255,0.1); }
+    .ann-info     { border-left-color: #9333ea; }
+    .ann-warning  { border-left-color: #f97316; }
+    .ann-success  { border-left-color: #22c55e; }
+    .ann-urgent   { border-left-color: #ef4444; }
+  </style>
+</head>
+<body class="h-full overflow-auto bg-[#0a0e1a] text-white bg-grid">
+
+  <!-- Ambient orbs -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0">
+    <div class="absolute top-[10%] left-[15%] w-96 h-96 rounded-full bg-purple-900/10 blur-3xl animate-pulse-glow"></div>
+    <div class="absolute bottom-[20%] right-[10%] w-80 h-80 rounded-full bg-purple-800/8 blur-3xl animate-pulse-glow" style="animation-delay:1.5s"></div>
+    <div class="absolute top-[50%] left-[60%] w-64 h-64 rounded-full bg-purple-700/6 blur-3xl animate-pulse-glow" style="animation-delay:3s"></div>
+  </div>
+
+  <div class="relative z-10 w-full">
+
+    <!-- Navigation -->
+    <nav class="w-full px-4 sm:px-8 py-4">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <img src="https://i.ibb.co/pBH9L8Sk/jmun26logoblack-e.png" alt="Koç JMUN Logo" style="height:50px;width:auto;filter:none;cursor:pointer">
+        </div>
+        <div class="hidden md:flex items-center gap-6 text-sm text-gray-300">
+          <a href="#" class="hover:text-white transition">My Dashboard</a>
+          <a href="#" class="hover:text-white transition">Schedule</a>
+          <a href="#" class="hover:text-white transition">Documents</a>
+          <button onclick="handleSignOut()" class="px-4 py-2 rounded-lg text-purple-200 font-medium hover:bg-purple-500/10 transition" style="border:1px solid rgba(93,23,95,0.4)">Sign Out</button>
+        </div>
+        <button class="md:hidden text-gray-300" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+          <i data-lucide="menu" style="width:24px;height:24px"></i>
+        </button>
+      </div>
+      <div id="mobile-menu" class="hidden md:hidden mt-4 glass rounded-xl p-4 flex flex-col gap-3 text-sm text-gray-300">
+        <a href="#" class="hover:text-white">My Dashboard</a>
+        <a href="#" class="hover:text-white">Schedule</a>
+        <a href="#" class="hover:text-white">Documents</a>
+        <button onclick="handleSignOut()" class="px-4 py-2 rounded-lg text-purple-200 font-medium w-full" style="border:1px solid rgba(93,23,95,0.4)">Sign Out</button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-8 pt-8 pb-16 animate-fadein">
+
+      <!-- Dashboard header card -->
+      <div class="glass-strong rounded-2xl p-5 sm:p-8 glow-border">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
+          <div>
+            <p class="text-xs text-gray-500">Delegate Portal</p>
+            <h3 class="text-lg font-semibold">Welcome, <span class="text-purple-300" id="delegate-name"><span class="skeleton inline-block w-28 h-5 align-middle"></span></span> 👋</h3>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+            <span class="text-xs text-green-400">Live</span>
+          </div>
+        </div>
+
+        <!-- Info cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+          <div class="bg-white/5 rounded-xl p-3">
+            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Committee</p>
+            <p class="font-semibold text-sm text-purple-200" id="committee-text"><span class="skeleton block h-4 w-16"></span></p>
+          </div>
+          <div class="bg-white/5 rounded-xl p-3">
+            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Country</p>
+            <p class="font-semibold text-sm text-purple-200" id="country-text"><span class="skeleton block h-4 w-20"></span></p>
+          </div>
+          <div class="bg-white/5 rounded-xl p-3">
+            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Room</p>
+            <p class="font-semibold text-sm text-purple-200" id="room-text"><span class="skeleton block h-4 w-12"></span></p>
+          </div>
+          <div class="bg-white/5 rounded-xl p-3">
+            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Next Session</p>
+            <p class="font-semibold text-sm text-purple-200" id="session-time-text"><span class="skeleton block h-4 w-14"></span></p>
+          </div>
+        </div>
+
+        <!-- Urgent announcement banner -->
+        <div id="urgent-banner" class="hidden bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 flex items-start gap-3">
+          <i data-lucide="alert-circle" style="width:18px;height:18px" class="text-purple-400 flex-shrink-0 mt-0.5"></i>
+          <div>
+            <p class="text-xs font-medium text-purple-300 mb-0.5" id="urgent-title">Urgent Announcement</p>
+            <p class="text-xs text-gray-300" id="urgent-text"></p>
+          </div>
+        </div>
+
+        <!-- Next session -->
+        <div class="mt-4 bg-white/3 rounded-xl p-4" id="next-session-block" style="display:none">
+          <p class="text-xs text-gray-500 mb-2">Upcoming</p>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium" id="session-title-text">—</p>
+              <p class="text-xs text-gray-400"><span id="session-time-range">—</span> • <span id="session-room">—</span></p>
+            </div>
+            <span id="session-countdown" class="text-[10px] px-2 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resolutions -->
+      <div class="mt-8 mb-8">
+        <h4 class="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">Active Resolutions</h4>
+        <div class="glass-strong rounded-2xl p-5 sm:p-8 glow-border">
+          <div id="resolutions-list" class="space-y-3">
+            <!-- Skeleton -->
+            <div class="glass rounded-xl p-4 border border-purple-500/20">
+              <div class="skeleton h-4 w-24 mb-2"></div>
+              <div class="skeleton h-3 w-64"></div>
+            </div>
+            <div class="glass rounded-xl p-4 border border-purple-500/20">
+              <div class="skeleton h-4 w-24 mb-2"></div>
+              <div class="skeleton h-3 w-56"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Announcements + Feed grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+
+        <!-- Announcements -->
+        <div>
+          <h4 class="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">Announcements</h4>
+          <div class="glass-strong rounded-2xl p-5 sm:p-8 glow-border">
+            <div id="announcements-list" class="space-y-3">
+              <div class="glass rounded-xl p-4"><div class="skeleton h-3 w-full mb-2"></div><div class="skeleton h-3 w-4/5"></div></div>
+              <div class="glass rounded-xl p-4"><div class="skeleton h-3 w-full mb-2"></div><div class="skeleton h-3 w-3/5"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Committee Feed -->
+        <div>
+          <h4 class="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">Committee Feed</h4>
+          <div class="glass-strong rounded-2xl p-5 sm:p-8 glow-border">
+            <div id="feed-list" class="space-y-3">
+              <div class="glass rounded-xl p-4"><div class="skeleton h-3 w-full mb-2"></div><div class="skeleton h-3 w-4/5"></div></div>
+              <div class="glass rounded-xl p-4"><div class="skeleton h-3 w-full mb-2"></div><div class="skeleton h-3 w-3/5"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="border-t border-white/5 pt-8">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+          <div class="text-center sm:text-left">
+            <p class="font-medium text-gray-400">Portal — Koç JMUN</p>
+            <p>For registered participants only.</p>
+          </div>
+          <div class="flex gap-4">
+            <a href="#" class="hover:text-gray-300 transition">Main Website</a>
+            <a href="#" class="hover:text-gray-300 transition">Contact</a>
+          </div>
+        </div>
+      </footer>
+    </section>
+  </div>
+
+  <script>
+    // ─── Supabase init ───────────────────────────────────────────────
+    const SUPABASE_URL     = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    lucide.createIcons();
+
+    // ─── Auth guard ──────────────────────────────────────────────────
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) {
+        window.location.href = 'login.html';
+        return;
+      }
+      await loadDashboard(session.user.id);
+    }
+
+    // ─── Sign out ────────────────────────────────────────────────────
+    async function handleSignOut() {
+      await sb.auth.signOut();
+      window.location.href = 'login.html';
+    }
+
+    // ─── Main data loader ────────────────────────────────────────────
+    async function loadDashboard(userId) {
+      try {
+        // 1. Get delegate profile
+        const { data: delegate, error: delegateErr } = await sb
+          .from('delegates')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (delegateErr || !delegate) {
+          console.error('Could not load delegate profile:', delegateErr);
+          return;
+        }
+
+        // Populate header
+        document.getElementById('delegate-name').textContent = delegate.name;
+        document.getElementById('committee-text').textContent = delegate.committee;
+        document.getElementById('country-text').textContent  = `${delegate.country} ${delegate.country_flag || ''}`.trim();
+        document.getElementById('room-text').textContent     = delegate.room;
+
+        // 2. Parallel fetch everything else
+        const [sessionsRes, announcementsRes, resolutionsRes, feedRes] = await Promise.all([
+          sb
+            .from('sessions')
+            .select('*')
+            .eq('committee', delegate.committee)
+            .gt('starts_at', new Date().toISOString())
+            .order('starts_at', { ascending: true })
+            .limit(1),
+
+          sb
+            .from('announcements')
+            .select('*')
+            .or(`committee.is.null,committee.eq.${delegate.committee}`)
+            .order('created_at', { ascending: false })
+            .limit(6),
+
+          sb
+            .from('resolutions')
+            .select('*')
+            .eq('committee', delegate.committee)
+            .order('created_at', { ascending: true }),
+
+          sb
+            .from('committee_feed')
+            .select('*')
+            .eq('committee', delegate.committee)
+            .order('created_at', { ascending: false })
+            .limit(8)
+        ]);
+
+        // 3. Render each section
+        renderNextSession(sessionsRes.data?.[0] || null, delegate.room);
+        renderAnnouncements(announcementsRes.data || []);
+        renderResolutions(resolutionsRes.data || [], delegate.committee);
+        renderFeed(feedRes.data || []);
+
+        // Re-init icons after dynamic rendering
+        lucide.createIcons();
+
+      } catch (err) {
+        console.error('Dashboard load error:', err);
+      }
+    }
+
+    // ─── Next session ────────────────────────────────────────────────
+    function renderNextSession(session, delegateRoom) {
+      const timeText = document.getElementById('session-time-text');
+
+      if (!session) {
+        timeText.textContent = 'No upcoming';
+        return;
+      }
+
+      const startsAt   = new Date(session.starts_at);
+      const now        = new Date();
+      const diffMs     = startsAt - now;
+      const diffMins   = Math.round(diffMs / 60000);
+
+      // Header card time
+      timeText.textContent = startsAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+      // Next session block
+      document.getElementById('next-session-block').style.display = 'block';
+      document.getElementById('session-title-text').textContent   = session.title;
+      document.getElementById('session-time-range').textContent   = session.time_range;
+      document.getElementById('session-room').textContent         = `Room ${session.room || delegateRoom}`;
+
+      // Countdown label
+      const countdown = document.getElementById('session-countdown');
+      if (diffMins < 0) {
+        countdown.textContent = 'In progress';
+      } else if (diffMins < 60) {
+        countdown.textContent = `In ${diffMins} min`;
+      } else {
+        const hrs = Math.floor(diffMins / 60);
+        countdown.textContent = `In ${hrs}h`;
+      }
+    }
+
+    // ─── Announcements ───────────────────────────────────────────────
+    function renderAnnouncements(items) {
+      const container = document.getElementById('announcements-list');
+
+      // Show urgent one in top banner
+      const urgent = items.find(a => a.type === 'urgent');
+      if (urgent) {
+        document.getElementById('urgent-banner').classList.remove('hidden');
+        document.getElementById('urgent-title').textContent = urgent.title;
+        document.getElementById('urgent-text').textContent  = urgent.body;
+      }
+
+      if (!items.length) {
+        container.innerHTML = '<p class="text-xs text-gray-500 text-center py-4">No announcements yet.</p>';
+        return;
+      }
+
+      const typeMap = {
+        info:    { border: 'border-l-purple-500', icon: 'info',           iconColor: 'text-purple-400', textColor: 'text-purple-300', label: 'Information' },
+        warning: { border: 'border-l-orange-500', icon: 'alert-triangle', iconColor: 'text-orange-400', textColor: 'text-orange-300', label: 'Notice' },
+        success: { border: 'border-l-green-500',  icon: 'check-circle',   iconColor: 'text-green-400',  textColor: 'text-green-300',  label: 'Confirmed' },
+        urgent:  { border: 'border-l-red-500',    icon: 'alert-circle',   iconColor: 'text-red-400',    textColor: 'text-red-300',    label: 'Urgent' },
+      };
+
+      container.innerHTML = items.map(a => {
+        const t = typeMap[a.type] || typeMap.info;
+        return `
+          <div class="glass rounded-xl p-4 border-l-4 ${t.border} border border-white/5">
+            <div class="flex items-start gap-3">
+              <i data-lucide="${t.icon}" style="width:16px;height:16px" class="${t.iconColor} flex-shrink-0 mt-1"></i>
+              <div>
+                <p class="text-xs font-medium ${t.textColor} mb-1">${t.label}</p>
+                <p class="text-xs font-semibold text-white mb-0.5">${escHtml(a.title)}</p>
+                <p class="text-xs text-gray-300 mb-2">${escHtml(a.body)}</p>
+                <p class="text-[10px] text-gray-500">${timeAgo(a.created_at)}</p>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // ─── Resolutions ─────────────────────────────────────────────────
+    function renderResolutions(items, committee) {
+      const container = document.getElementById('resolutions-list');
+
+      if (!items.length) {
+        container.innerHTML = `<p class="text-xs text-gray-500 text-center py-4">No resolutions posted yet for ${committee}.</p>`;
+        return;
+      }
+
+      container.innerHTML = items.map(r => `
+        <div class="glass rounded-xl p-4 border border-purple-500/20 hover:border-purple-500/40 transition">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="text-sm font-semibold text-purple-300 mb-1">${escHtml(r.code)}</p>
+              <p class="text-xs text-gray-400">${escHtml(r.title)}</p>
+            </div>
+            <div class="flex gap-2 flex-shrink-0">
+              <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 transition border border-purple-500/30">View</button>
+              ${r.file_url
+                ? `<a href="${escHtml(r.file_url)}" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10">Download</a>`
+                : `<button disabled class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/3 text-gray-600 border border-white/5 cursor-not-allowed">Download</button>`}
+              <button class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10">Amend</button>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    // ─── Committee Feed ──────────────────────────────────────────────
+    function renderFeed(items) {
+      const container = document.getElementById('feed-list');
+
+      if (!items.length) {
+        container.innerHTML = '<p class="text-xs text-gray-500 text-center py-4">No activity yet.</p>';
+        return;
+      }
+
+      const tagClass = (tag) => {
+        const t = tag.toLowerCase();
+        if (t.includes('amendment')) return 'tag-amendment';
+        if (t.includes('order'))     return 'tag-order';
+        if (t.includes('paper'))     return 'tag-paper';
+        if (t.includes('coalition')) return 'tag-coalition';
+        return 'tag-default';
+      };
+
+      container.innerHTML = items.map(f => `
+        <div class="glass rounded-xl p-4 border border-white/10">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-sm flex-shrink-0">
+              ${escHtml(f.country_flag)}
+            </div>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-white mb-1">${escHtml(f.country)} <span class="text-xs text-gray-500">${escHtml(f.action)}</span></p>
+              <p class="text-xs text-gray-400 mb-2">${escHtml(f.body)}</p>
+              <div class="flex gap-2">
+                <span class="text-[10px] px-2 py-1 rounded ${tagClass(f.tag)}">${escHtml(f.tag)}</span>
+                <span class="text-[10px] text-gray-500">${timeAgo(f.created_at)}</span>
+              </div>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function timeAgo(isoString) {
+      if (!isoString) return '';
+      const diff = Math.round((Date.now() - new Date(isoString)) / 60000);
+      if (diff < 1)   return 'just now';
+      if (diff < 60)  return `${diff} min ago`;
+      if (diff < 1440) return `${Math.floor(diff/60)}h ago`;
+      return `${Math.floor(diff/1440)}d ago`;
+    }
+
+    // ─── Boot ────────────────────────────────────────────────────────
+    init();
+  </script>
+</body>
+</html>
