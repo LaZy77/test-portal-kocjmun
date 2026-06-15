@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en" class="h-full" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,59 +10,79 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     html,body{height:100%;margin:0;font-family:'Outfit',sans-serif}
-    .glass{background:rgba(255,255,255,0.04);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
-    .glass-strong{background:rgba(255,255,255,0.07);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.12)}
-    .glow-border{box-shadow:0 0 20px rgba(93,23,95,0.25),inset 0 0 20px rgba(93,23,95,0.1);border:1px solid rgba(93,23,95,0.4)}
-    .bg-grid{background-image:linear-gradient(rgba(93,23,95,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.05) 1px,transparent 1px);background-size:60px 60px}
-    @keyframes pulse-glow{0%,100%{opacity:.4}50%{opacity:.8}}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .animate-pulse-glow{animation:pulse-glow 3s ease-in-out infinite}
-    .animate-fadein{animation:fadeIn 0.4s ease-out forwards}
-    .input-field{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;transition:border-color .2s,box-shadow .2s}
+    [data-theme="dark"] body{background:#0a0e1a;color:#fff}
+    [data-theme="dark"] .surface{background:rgba(255,255,255,0.04);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
+    [data-theme="dark"] .surface-strong{background:rgba(255,255,255,0.07);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.12)}
+    [data-theme="dark"] .glow-border{box-shadow:0 0 20px rgba(93,23,95,0.25),inset 0 0 20px rgba(93,23,95,0.1);border:1px solid rgba(93,23,95,0.4)}
+    [data-theme="dark"] .bg-grid{background-image:linear-gradient(rgba(93,23,95,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.05) 1px,transparent 1px);background-size:60px 60px}
+    [data-theme="dark"] .input-field{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0}
+    [data-theme="dark"] .input-field::placeholder{color:#4b5563}
+    [data-theme="dark"] .muted{color:#9ca3af}
+    [data-theme="dark"] .label-text{color:#9ca3af}
+    [data-theme="dark"] .stat-card{background:rgba(255,255,255,0.04)}
+    [data-theme="dark"] .item-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)}
+    [data-theme="light"] body{background:#f5f3f7;color:#1a1523}
+    [data-theme="light"] .surface{background:rgba(255,255,255,0.7);backdrop-filter:blur(16px);border:1px solid rgba(93,23,95,0.1)}
+    [data-theme="light"] .surface-strong{background:#ffffff;border:1px solid rgba(93,23,95,0.12);box-shadow:0 4px 20px rgba(93,23,95,0.06)}
+    [data-theme="light"] .glow-border{box-shadow:0 4px 24px rgba(93,23,95,0.1);border:1px solid rgba(93,23,95,0.2)}
+    [data-theme="light"] .bg-grid{background-image:linear-gradient(rgba(93,23,95,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.03) 1px,transparent 1px);background-size:60px 60px}
+    [data-theme="light"] .input-field{background:#ffffff;border:1px solid rgba(93,23,95,0.2);color:#1a1523}
+    [data-theme="light"] .input-field::placeholder{color:#9ca3af}
+    [data-theme="light"] .muted{color:#6b7280}
+    [data-theme="light"] .label-text{color:#6b7280}
+    [data-theme="light"] .stat-card{background:#faf9fb;border:1px solid rgba(93,23,95,0.08)}
+    [data-theme="light"] .item-card{background:#faf9fb;border:1px solid rgba(93,23,95,0.1)}
+    .input-field{transition:border-color .2s,box-shadow .2s}
     .input-field:focus{outline:none;border-color:rgba(93,23,95,0.7);box-shadow:0 0 0 3px rgba(93,23,95,0.15)}
-    .input-field::placeholder{color:#4b5563}
-    .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
-    .status-pending{background:rgba(234,179,8,0.15);color:#fde047;border:1px solid rgba(234,179,8,0.3)}
-    .status-received{background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.3)}
-    .status-published{background:rgba(34,197,94,0.15);color:#86efac;border:1px solid rgba(34,197,94,0.3)}
-    .status-withdrawn{background:rgba(107,114,128,0.15);color:#9ca3af;border:1px solid rgba(107,114,128,0.3)}
-    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem}
-    .skeleton{background:linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.04) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    .animate-fadein{animation:fadeIn 0.4s ease-out forwards}
+    .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
+    .skeleton{background:linear-gradient(90deg,rgba(128,128,128,0.1) 25%,rgba(128,128,128,0.2) 50%,rgba(128,128,128,0.1) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px}
+    .status-pending{background:rgba(234,179,8,0.15);color:#a16207;border:1px solid rgba(234,179,8,0.3)}
+    .status-received{background:rgba(59,130,246,0.15);color:#1d4ed8;border:1px solid rgba(59,130,246,0.3)}
+    .status-published{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
+    .status-withdrawn{background:rgba(107,114,128,0.15);color:#6b7280;border:1px solid rgba(107,114,128,0.3)}
+    [data-theme="dark"] .status-pending{color:#fde047}
+    [data-theme="dark"] .status-received{color:#93c5fd}
+    [data-theme="dark"] .status-published{color:#86efac}
+    [data-theme="dark"] .status-withdrawn{color:#9ca3af}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem}
+    .tab-btn{color:#9ca3af;border-bottom:2px solid transparent;transition:all .3s;padding-bottom:8px}
+    .tab-btn.active{color:#a855f7;border-bottom-color:#5D175F}
+    [data-theme="light"] .tab-btn{color:#6b7280}
+    [data-theme="light"] .tab-btn.active{color:#7c3aed}
+    .badge-new{background:rgba(239,68,68,0.2);color:#dc2626;border:1px solid rgba(239,68,68,0.3);font-size:10px;padding:1px 6px;border-radius:99px}
+    [data-theme="dark"] .badge-new{color:#fca5a5}
   </style>
 </head>
-<body class="h-full overflow-auto bg-[#0a0e1a] text-white bg-grid">
-  <div class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0">
-    <div class="absolute top-[10%] left-[15%] w-96 h-96 rounded-full bg-purple-900/10 blur-3xl animate-pulse-glow"></div>
-    <div class="absolute bottom-[20%] right-[10%] w-80 h-80 rounded-full bg-purple-800/8 blur-3xl animate-pulse-glow" style="animation-delay:1.5s"></div>
-  </div>
-
+<body class="h-full overflow-auto bg-grid">
   <div class="relative z-10 w-full">
-    <!-- Nav -->
-    <nav class="w-full px-4 sm:px-8 py-4 border-b border-white/5">
+    <nav class="w-full px-4 sm:px-8 py-4 border-b" style="border-color:rgba(128,128,128,0.1)">
       <div class="max-w-7xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-3">
           <img src="https://i.ibb.co/pBH9L8Sk/jmun26logoblack-e.png" alt="Koç JMUN" style="height:40px;width:auto">
-          <div class="h-5 w-px bg-white/10"></div>
+          <div class="h-5 w-px" style="background:rgba(128,128,128,0.2)"></div>
           <span class="text-xs font-medium text-amber-400 uppercase tracking-wider">Chair Portal</span>
         </div>
         <div class="flex items-center gap-3">
-          <span class="text-sm text-gray-400">Signed in as <span class="text-white font-medium" id="nav-name">—</span></span>
+          <button onclick="toggleTheme()" class="p-2 rounded-lg surface hover:opacity-80 transition" title="Toggle theme">
+            <i data-lucide="sun" style="width:18px;height:18px" id="theme-icon"></i>
+          </button>
+          <span class="text-sm muted hidden sm:inline">Signed in as <span class="font-medium" id="nav-name" style="color:inherit">—</span></span>
           <button onclick="handleSignOut()" class="px-3 py-1.5 rounded-lg text-xs text-purple-200 hover:bg-purple-500/10 transition" style="border:1px solid rgba(93,23,95,0.4)">Sign Out</button>
         </div>
       </div>
     </nav>
 
     <section class="max-w-7xl mx-auto px-4 sm:px-8 pt-8 pb-16 animate-fadein">
-
-      <!-- Header -->
-      <div class="glass-strong rounded-2xl p-6 glow-border mb-8">
-        <div class="flex items-start justify-between">
+      <div class="surface-strong rounded-2xl p-6 glow-border mb-8">
+        <div class="flex items-start justify-between flex-wrap gap-4">
           <div>
-            <p class="text-xs text-gray-500 mb-1">Chair Dashboard</p>
+            <p class="text-xs label-text mb-1">Chair Dashboard</p>
             <h1 class="text-xl font-semibold">Welcome, <span class="text-amber-400" id="chair-name">—</span></h1>
-            <p class="text-sm text-gray-400 mt-1">Committee: <span class="text-white font-medium" id="chair-committee">—</span> · Room <span class="text-white font-medium" id="chair-room">—</span></p>
+            <p class="text-sm muted mt-1">Committee: <span class="font-medium" id="chair-committee" style="color:inherit">—</span> · Room <span class="font-medium" id="chair-room" style="color:inherit">—</span></p>
           </div>
           <button onclick="openSubmitModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
             <i data-lucide="plus" style="width:16px;height:16px"></i>
@@ -71,82 +91,107 @@
         </div>
       </div>
 
-      <!-- Stats row -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-        <div class="glass rounded-xl p-4">
-          <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Total Submitted</p>
-          <p class="text-2xl font-bold text-white" id="stat-total">—</p>
-        </div>
-        <div class="glass rounded-xl p-4">
-          <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Pending Review</p>
-          <p class="text-2xl font-bold text-amber-400" id="stat-pending">—</p>
-        </div>
-        <div class="glass rounded-xl p-4">
-          <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">With Exec</p>
-          <p class="text-2xl font-bold text-blue-400" id="stat-received">—</p>
-        </div>
-        <div class="glass rounded-xl p-4">
-          <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Published</p>
-          <p class="text-2xl font-bold text-green-400" id="stat-published">—</p>
-        </div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Total</p><p class="text-2xl font-bold" id="stat-total">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Pending</p><p class="text-2xl font-bold text-amber-400" id="stat-pending">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">With Exec</p><p class="text-2xl font-bold text-blue-400" id="stat-received">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Published</p><p class="text-2xl font-bold text-green-400" id="stat-published">—</p></div>
       </div>
 
-      <!-- Resolutions list -->
-      <div>
-        <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Your Resolutions</h2>
-        <div class="glass-strong rounded-2xl p-5 sm:p-6 glow-border">
-          <div id="resolutions-list" class="space-y-3">
-            <div class="glass rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>
-            <div class="glass rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-56"></div></div>
-          </div>
+      <div class="flex gap-6 border-b mb-6 overflow-x-auto" style="border-color:rgba(128,128,128,0.1)">
+        <button class="tab-btn active text-sm font-medium whitespace-nowrap" onclick="switchTab('resolutions')" id="tab-resolutions">Resolutions</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('amendments')" id="tab-amendments">Amendments <span id="amend-badge" class="badge-new ml-1 hidden">0</span></button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('feed')" id="tab-feed">Committee Feed</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('announcements')" id="tab-announcements">Announcements</button>
+      </div>
+
+      <div id="tab-actions" class="mb-4 hidden">
+        <button onclick="openFeedModal()" id="add-feed-btn" class="hidden flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
+          <i data-lucide="plus" style="width:14px;height:14px"></i> Add Feed Item
+        </button>
+      </div>
+
+      <div class="surface-strong rounded-2xl p-5 sm:p-6 glow-border">
+        <div id="content-list" class="space-y-3">
+          <div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>
+          <div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-56"></div></div>
         </div>
       </div>
     </section>
   </div>
 
-  <!-- Submit Modal -->
+  <!-- Submit Resolution Modal -->
   <div id="submit-modal" class="modal-overlay hidden">
-    <div class="glass-strong rounded-2xl p-6 w-full max-w-lg glow-border">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-lg font-semibold">Submit Resolution</h2>
-        <button onclick="closeSubmitModal()" class="text-gray-500 hover:text-white transition">
-          <i data-lucide="x" style="width:20px;height:20px"></i>
-        </button>
+        <button onclick="closeSubmitModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
       </div>
       <div class="space-y-4">
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Resolution Title</label>
-          <input id="res-title" type="text" placeholder="e.g. Addressing Climate Action in Developing Nations" class="input-field w-full px-4 py-3 rounded-xl text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Resolution Code</label>
-          <input id="res-code" type="text" placeholder="e.g. UNHRC 1.1" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Google Docs Link</label>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Title</label>
+          <input id="res-title" type="text" placeholder="e.g. Addressing Climate Action" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Code</label>
+          <input id="res-code" type="text" placeholder="e.g. UNHRC 1.1" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Agenda Item</label>
+          <select id="res-agenda" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+            <option value="Agenda Item 1">Agenda Item 1</option>
+            <option value="Agenda Item 2">Agenda Item 2</option>
+            <option value="Agenda Item 3">Agenda Item 3</option>
+          </select></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Google Docs Link</label>
           <input id="res-doc-url" type="url" placeholder="https://docs.google.com/document/d/..." class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono">
-          <p class="text-[10px] text-gray-500 mt-1.5">Make sure sharing is set to "Anyone with the link can view"</p>
-        </div>
+          <p class="text-[10px] muted mt-1.5">Set sharing to "Anyone with the link can view"</p></div>
         <div id="submit-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
         <div class="flex gap-3 pt-2">
-          <button onclick="closeSubmitModal()" class="flex-1 py-3 rounded-xl text-sm font-medium text-gray-400 hover:text-white transition glass">Cancel</button>
+          <button onclick="closeSubmitModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
           <button onclick="submitResolution()" id="submit-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
-            <span id="submit-btn-text">Submit to Exec</span>
-            <span id="submit-spinner" class="hidden"><span class="spinner"></span></span>
+            <span id="submit-btn-text">Submit to Exec</span><span id="submit-spinner" class="hidden"><span class="spinner"></span></span>
           </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- PDF Viewer Modal -->
+  <!-- Feed Modal -->
+  <div id="feed-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold" id="feed-modal-title">Add Feed Item</h2>
+        <button onclick="closeFeedModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Country</label>
+            <input id="feed-country" type="text" placeholder="e.g. Germany" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+          <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Flag</label>
+            <input id="feed-flag" type="text" placeholder="🇩🇪" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+        </div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Action</label>
+          <select id="feed-action" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+            <option value="submitted">submitted</option><option value="raised">raised</option>
+            <option value="proposed">proposed</option><option value="requested">requested</option>
+          </select></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Description</label>
+          <input id="feed-body" type="text" placeholder="e.g. Amendment to UNHRC 1.1" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Tag</label>
+          <input id="feed-tag" type="text" placeholder="e.g. Amendment / Working Paper / Point of Order" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+        <div id="feed-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+        <div class="flex gap-3 pt-2">
+          <button onclick="closeFeedModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+          <button onclick="saveFeedItem()" id="feed-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
+            <span id="feed-btn-text">Add Item</span><span id="feed-spinner" class="hidden"><span class="spinner"></span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF Modal -->
   <div id="pdf-modal" class="modal-overlay hidden">
-    <div class="glass-strong rounded-2xl w-full max-w-4xl glow-border overflow-hidden" style="height:85vh">
-      <div class="flex items-center justify-between p-4 border-b border-white/5">
+    <div class="surface-strong rounded-2xl w-full max-w-4xl glow-border overflow-hidden" style="height:85vh">
+      <div class="flex items-center justify-between p-4 border-b" style="border-color:rgba(128,128,128,0.1)">
         <h3 class="text-sm font-semibold" id="pdf-modal-title">Resolution</h3>
-        <button onclick="closePdfModal()" class="text-gray-500 hover:text-white transition">
-          <i data-lucide="x" style="width:20px;height:20px"></i>
-        </button>
+        <button onclick="closePdfModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
       </div>
       <iframe id="pdf-frame" src="" class="w-full" style="height:calc(85vh - 57px);border:none;background:#fff"></iframe>
     </div>
@@ -158,183 +203,278 @@
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let currentProfile = null;
+    let currentTab = 'resolutions';
+    let cachedResolutions = [];
+    let editingFeedId = null;
 
+    function toggleTheme() {
+      const html = document.documentElement;
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('jmun_theme', next); } catch(e){}
+      document.getElementById('theme-icon').setAttribute('data-lucide', next === 'dark' ? 'sun' : 'moon');
+      lucide.createIcons();
+    }
+    (function(){ let s='dark'; try{s=localStorage.getItem('jmun_theme')||'dark';}catch(e){} document.documentElement.setAttribute('data-theme',s); })();
+    lucide.createIcons();
+    document.getElementById('theme-icon').setAttribute('data-lucide', document.documentElement.getAttribute('data-theme')==='dark'?'sun':'moon');
     lucide.createIcons();
 
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = 'login.html'; return; }
-
       const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
       if (!profile || profile.role !== 'chair') { window.location.href = 'login.html'; return; }
-
       currentProfile = profile;
       document.getElementById('nav-name').textContent = profile.name;
       document.getElementById('chair-name').textContent = profile.name;
       document.getElementById('chair-committee').textContent = profile.committee;
       document.getElementById('chair-room').textContent = profile.room || '—';
-
       await loadResolutions();
+      await checkAmendmentCount();
     }
 
     async function loadResolutions() {
-      const { data, error } = await sb
-        .from('resolutions')
-        .select('*')
-        .eq('committee', currentProfile.committee)
-        .order('created_at', { ascending: false });
-
+      const { data, error } = await sb.from('resolutions').select('*')
+        .eq('committee', currentProfile.committee).order('created_at', { ascending: false });
       if (error) { console.error(error); return; }
+      cachedResolutions = data || [];
+      document.getElementById('stat-total').textContent = data.length;
+      document.getElementById('stat-pending').textContent = data.filter(r=>r.status==='pending').length;
+      document.getElementById('stat-received').textContent = data.filter(r=>r.status==='received').length;
+      document.getElementById('stat-published').textContent = data.filter(r=>r.status==='published').length;
+      if (currentTab === 'resolutions') renderResolutions(data);
+      lucide.createIcons();
+    }
 
-      // Stats
-      const total     = data.length;
-      const pending   = data.filter(r => r.status === 'pending').length;
-      const received  = data.filter(r => r.status === 'received').length;
-      const published = data.filter(r => r.status === 'published').length;
+    async function checkAmendmentCount() {
+      const { data } = await sb.from('amendments').select('id,status').eq('committee', currentProfile.committee).eq('status','pending');
+      const badge = document.getElementById('amend-badge');
+      if (data && data.length) { badge.textContent = data.length; badge.classList.remove('hidden'); }
+      else badge.classList.add('hidden');
+    }
 
-      document.getElementById('stat-total').textContent     = total;
-      document.getElementById('stat-pending').textContent   = pending;
-      document.getElementById('stat-received').textContent  = received;
-      document.getElementById('stat-published').textContent = published;
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.getElementById('tab-'+tab).classList.add('active');
+      const addFeedBtn = document.getElementById('add-feed-btn');
+      const tabActions = document.getElementById('tab-actions');
+      if (tab === 'feed') { tabActions.classList.remove('hidden'); addFeedBtn.classList.remove('hidden'); }
+      else { tabActions.classList.add('hidden'); addFeedBtn.classList.add('hidden'); }
 
-      renderResolutions(data);
+      if (tab === 'resolutions') renderResolutions(cachedResolutions);
+      else if (tab === 'amendments') renderAmendments();
+      else if (tab === 'feed') renderFeed();
+      else if (tab === 'announcements') renderAnnouncements();
       lucide.createIcons();
     }
 
     function renderResolutions(items) {
-      const container = document.getElementById('resolutions-list');
-      if (!items.length) {
-        container.innerHTML = `<div class="text-center py-12 text-gray-500">
-          <i data-lucide="file-text" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i>
-          <p class="text-sm">No resolutions submitted yet.</p>
-          <p class="text-xs mt-1">Click "Submit Resolution" to get started.</p>
-        </div>`;
-        return;
-      }
-
-      container.innerHTML = items.map(r => {
-        const statusClass = `status-${r.status}`;
-        const statusLabel = { pending: 'Pending Review', received: 'With Exec', published: 'Published', withdrawn: 'Withdrawn' }[r.status] || r.status;
+      const c = document.getElementById('content-list');
+      if (!items.length) { c.innerHTML = emptyState('file-text','No resolutions yet','Click "Submit Resolution" to start.'); return; }
+      c.innerHTML = items.map(r => {
+        const statusLabel = {pending:'Pending Review',received:'With Exec',published:'Published',withdrawn:'Withdrawn'}[r.status];
         const canWithdraw = r.status === 'pending';
-        const hasPublishedPdf = r.status === 'published' && r.pdf_url;
-        const execDocReady = r.status === 'received' && r.exec_doc_url;
-
-        return `<div class="glass rounded-xl p-4 border border-white/5 hover:border-purple-500/20 transition">
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1 flex-wrap">
-                <span class="text-xs font-mono font-semibold text-purple-300">${escHtml(r.code || '—')}</span>
-                <span class="text-[10px] px-2 py-0.5 rounded-full ${statusClass}">${statusLabel}</span>
-              </div>
-              <p class="text-sm font-medium text-white mb-1 truncate">${escHtml(r.title)}</p>
-              <p class="text-[10px] text-gray-500">${timeAgo(r.created_at)}</p>
-              ${r.exec_note ? `<p class="text-xs text-amber-400 mt-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5">📝 Exec note: ${escHtml(r.exec_note)}</p>` : ''}
-            </div>
-            <div class="flex gap-2 flex-shrink-0 flex-wrap justify-end">
-              ${r.chair_doc_url ? `<a href="${escHtml(r.chair_doc_url)}" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10 flex items-center gap-1"><i data-lucide="external-link" style="width:12px;height:12px"></i> Doc</a>` : ''}
-              ${execDocReady ? `<a href="${escHtml(r.exec_doc_url)}" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500/15 text-blue-300 hover:bg-blue-500/25 transition border border-blue-500/30 flex items-center gap-1"><i data-lucide="external-link" style="width:12px;height:12px"></i> Exec Draft</a>` : ''}
-              ${hasPublishedPdf ? `<button onclick="openPdf('${escHtml(r.pdf_url)}','${escHtml(r.title)}')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500/15 text-green-300 hover:bg-green-500/25 transition border border-green-500/30">View PDF</button>` : ''}
-              ${canWithdraw ? `<button onclick="withdrawResolution('${r.id}')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Withdraw</button>` : ''}
-            </div>
-          </div>
-        </div>`;
+        const submitterLine = r.submitter_role === 'delegate' && r.submitter_country
+          ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">📍 ' + escHtml(r.submitter_country) + '</span>' : '';
+        return '<div class="item-card rounded-xl p-4 hover:opacity-95 transition">'+
+          '<div class="flex items-start justify-between gap-4">'+
+            '<div class="flex-1 min-w-0">'+
+              '<div class="flex items-center gap-2 mb-1 flex-wrap">'+
+                '<span class="text-xs font-mono font-semibold text-purple-400">'+escHtml(r.code||'—')+'</span>'+
+                '<span class="text-[10px] px-2 py-0.5 rounded-full status-'+r.status+'">'+statusLabel+'</span>'+
+                (r.agenda_item ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.1)">'+escHtml(r.agenda_item)+'</span>' : '')+
+                submitterLine+
+              '</div>'+
+              '<p class="text-sm font-medium mb-1 truncate">'+escHtml(r.title)+'</p>'+
+              '<p class="text-[10px] muted">'+timeAgo(r.created_at)+'</p>'+
+              (r.exec_note ? '<p class="text-xs text-amber-500 mt-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5">📝 '+escHtml(r.exec_note)+'</p>' : '')+
+            '</div>'+
+            '<div class="flex gap-2 flex-shrink-0 flex-wrap justify-end">'+
+              (r.chair_doc_url ? '<a href="'+escHtml(r.chair_doc_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg surface hover:opacity-80 transition flex items-center gap-1"><i data-lucide="external-link" style="width:12px;height:12px"></i> Doc</a>' : '')+
+              (r.status==='published'&&r.pdf_url ? '<button onclick="openPdf(\''+escHtml(r.pdf_url)+'\',\''+escAttr(r.title)+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500/15 text-green-400 hover:bg-green-500/25 transition border border-green-500/30">View PDF</button>' : '')+
+              (canWithdraw ? '<button onclick="withdrawResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Withdraw</button>' : '')+
+            '</div>'+
+          '</div></div>';
       }).join('');
     }
 
+    async function renderAmendments() {
+      const c = document.getElementById('content-list');
+      c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
+      const { data: amendments } = await sb.from('amendments').select('*').eq('committee', currentProfile.committee).order('created_at',{ascending:false});
+      if (!amendments || !amendments.length) { c.innerHTML = emptyState('git-pull-request','No amendments yet','Delegates can submit amendments from their dashboard.'); return; }
+      const resMap = {}; cachedResolutions.forEach(r => resMap[r.id] = r);
+      const typeLabels = {insert:'Insert',add:'Add',strike:'Strike Out',change:'Change'};
+      const typeColors = {insert:'#a855f7',add:'#22c55e',strike:'#ef4444',change:'#3b82f6'};
+      c.innerHTML = amendments.map(a => {
+        const res = resMap[a.resolution_id];
+        const statusBadge = a.status==='pending' ? '<span class="text-[10px] px-2 py-0.5 rounded-full status-pending">Pending</span>'
+          : a.status==='approved' ? '<span class="text-[10px] px-2 py-0.5 rounded-full status-published">Approved</span>'
+          : '<span class="text-[10px] px-2 py-0.5 rounded-full status-withdrawn">Rejected</span>';
+        const actions = a.status==='pending'
+          ? '<button onclick="reviewAmendment(\''+a.id+'\',\'approved\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500/15 text-green-400 hover:bg-green-500/25 transition border border-green-500/30">Approve</button>'+
+            '<button onclick="reviewAmendment(\''+a.id+'\',\'rejected\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Reject</button>'
+          : '';
+        return '<div class="item-card rounded-xl p-4">'+
+          '<div class="flex items-start justify-between gap-4">'+
+            '<div class="flex-1 min-w-0">'+
+              '<div class="flex items-center gap-2 mb-1 flex-wrap">'+
+                '<span class="text-[10px] px-2 py-0.5 rounded-full font-medium" style="background:'+typeColors[a.amendment_type]+'22;color:'+typeColors[a.amendment_type]+'">'+typeLabels[a.amendment_type]+'</span>'+
+                statusBadge+
+                (a.submitter_country ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">📍 '+escHtml(a.submitter_country)+'</span>' : '')+
+              '</div>'+
+              '<p class="text-xs muted mb-1">On: <span class="font-medium" style="color:inherit">'+escHtml(res ? (res.code||res.title) : 'Resolution')+'</span> · '+escHtml(a.target_clause)+'</p>'+
+              '<p class="text-sm mt-1.5 p-3 rounded-lg" style="background:rgba(128,128,128,0.06)">'+escHtml(a.amendment_text)+'</p>'+
+              '<p class="text-[10px] muted mt-1.5">'+timeAgo(a.created_at)+'</p>'+
+            '</div>'+
+            '<div class="flex gap-2 flex-shrink-0 flex-col">'+actions+'</div>'+
+          '</div></div>';
+      }).join('');
+    }
+
+    async function reviewAmendment(id, status) {
+      await sb.from('amendments').update({ status }).eq('id', id);
+      await renderAmendments();
+      await checkAmendmentCount();
+      lucide.createIcons();
+    }
+
+    async function renderFeed() {
+      const c = document.getElementById('content-list');
+      c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
+      const { data: feed } = await sb.from('committee_feed').select('*').eq('committee', currentProfile.committee).order('created_at',{ascending:false});
+      if (!feed || !feed.length) { c.innerHTML = emptyState('rss','No feed items yet','Click "Add Feed Item" to post committee activity.'); return; }
+      c.innerHTML = feed.map(f =>
+        '<div class="item-card rounded-xl p-4">'+
+          '<div class="flex items-start gap-3">'+
+            '<div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0" style="background:linear-gradient(135deg,#7c3aed,#5D175F)">'+escHtml(f.country_flag||'🌍')+'</div>'+
+            '<div class="flex-1 min-w-0">'+
+              '<p class="text-sm font-medium mb-0.5">'+escHtml(f.country)+' <span class="text-xs muted">'+escHtml(f.action)+'</span></p>'+
+              '<p class="text-xs muted mb-1">'+escHtml(f.body)+'</p>'+
+              '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(147,51,234,0.12);color:#a855f7">'+escHtml(f.tag)+'</span>'+
+            '</div>'+
+            '<div class="flex gap-1 flex-shrink-0">'+
+              '<button onclick="editFeedItem(\''+f.id+'\')" class="muted hover:text-purple-400 transition p-1"><i data-lucide="pencil" style="width:14px;height:14px"></i></button>'+
+              '<button onclick="deleteFeedItem(\''+f.id+'\')" class="muted hover:text-red-400 transition p-1"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>'+
+            '</div>'+
+          '</div></div>').join('');
+      lucide.createIcons();
+    }
+
+    async function renderAnnouncements() {
+      const c = document.getElementById('content-list');
+      c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-3 w-full mb-2"></div><div class="skeleton h-3 w-4/5"></div></div>';
+      const { data } = await sb.from('announcements').select('*')
+        .or('committee.is.null,committee.eq.'+currentProfile.committee).order('created_at',{ascending:false});
+      if (!data || !data.length) { c.innerHTML = emptyState('megaphone','No announcements','Announcements from the exec team appear here.'); return; }
+      const colors = {info:'#a855f7',urgent:'#ef4444',warning:'#f97316',success:'#22c55e'};
+      c.innerHTML = data.map(a =>
+        '<div class="item-card rounded-xl p-4 border-l-4" style="border-left-color:'+(colors[a.type]||'#a855f7')+'">'+
+          '<div class="flex items-center gap-2 mb-1">'+
+            '<span class="text-xs font-medium uppercase" style="color:'+(colors[a.type]||'#a855f7')+'">'+a.type+'</span>'+
+            (a.committee ? '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(128,128,128,0.1)">'+escHtml(a.committee)+'</span>' : '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(128,128,128,0.1)">All</span>')+
+          '</div>'+
+          '<p class="text-sm font-semibold mb-0.5">'+escHtml(a.title)+'</p>'+
+          '<p class="text-xs muted">'+escHtml(a.body)+'</p>'+
+          '<p class="text-[10px] muted mt-1">'+timeAgo(a.created_at)+'</p>'+
+        '</div>').join('');
+    }
+
+    // Resolution submit
+    function openSubmitModal(){ document.getElementById('submit-modal').classList.remove('hidden'); }
+    function closeSubmitModal(){ document.getElementById('submit-modal').classList.add('hidden'); }
     async function submitResolution() {
-      const title   = document.getElementById('res-title').value.trim();
-      const code    = document.getElementById('res-code').value.trim();
-      const docUrl  = document.getElementById('res-doc-url').value.trim();
-      const errEl   = document.getElementById('submit-error');
-
+      const title=document.getElementById('res-title').value.trim();
+      const code=document.getElementById('res-code').value.trim();
+      const agenda=document.getElementById('res-agenda').value;
+      const docUrl=document.getElementById('res-doc-url').value.trim();
+      const errEl=document.getElementById('submit-error');
       errEl.classList.add('hidden');
-
-      if (!title || !code || !docUrl) {
-        errEl.textContent = 'Please fill in all fields.';
-        errEl.classList.remove('hidden');
-        return;
-      }
-      if (!docUrl.includes('docs.google.com')) {
-        errEl.textContent = 'Please enter a valid Google Docs link.';
-        errEl.classList.remove('hidden');
-        return;
-      }
-
-      setSubmitLoading(true);
-
-      const { data: { session } } = await sb.auth.getSession();
+      if(!title||!code||!docUrl){ errEl.textContent='Please fill in all fields.'; errEl.classList.remove('hidden'); return; }
+      if(!docUrl.includes('docs.google.com')){ errEl.textContent='Please enter a valid Google Docs link.'; errEl.classList.remove('hidden'); return; }
+      document.getElementById('submit-btn').disabled=true;
+      document.getElementById('submit-btn-text').textContent='Submitting…';
+      document.getElementById('submit-spinner').classList.remove('hidden');
       const { error } = await sb.from('resolutions').insert({
-        title,
-        code,
-        committee: currentProfile.committee,
-        submitted_by: session.user.id,
-        chair_doc_url: docUrl,
-        status: 'pending'
+        title, code, agenda_item: agenda, committee: currentProfile.committee,
+        submitted_by: currentProfile.id, submitter_role: 'chair', chair_doc_url: docUrl, status: 'pending'
       });
-
-      if (error) {
-        errEl.textContent = 'Submission failed. Please try again.';
-        errEl.classList.remove('hidden');
-        setSubmitLoading(false);
-        return;
-      }
-
+      document.getElementById('submit-btn').disabled=false;
+      document.getElementById('submit-btn-text').textContent='Submit to Exec';
+      document.getElementById('submit-spinner').classList.add('hidden');
+      if(error){ errEl.textContent='Submission failed.'; errEl.classList.remove('hidden'); return; }
       closeSubmitModal();
-      document.getElementById('res-title').value = '';
-      document.getElementById('res-code').value = '';
-      document.getElementById('res-doc-url').value = '';
+      document.getElementById('res-title').value=''; document.getElementById('res-code').value=''; document.getElementById('res-doc-url').value='';
       await loadResolutions();
-      lucide.createIcons();
     }
-
     async function withdrawResolution(id) {
-      if (!confirm('Withdraw this resolution? It will be removed from exec review.')) return;
-      await sb.from('resolutions').update({ status: 'withdrawn' }).eq('id', id);
+      if(!confirm('Withdraw this resolution?')) return;
+      await sb.from('resolutions').update({status:'withdrawn'}).eq('id',id);
       await loadResolutions();
-      lucide.createIcons();
     }
 
-    function openSubmitModal()  { document.getElementById('submit-modal').classList.remove('hidden'); }
-    function closeSubmitModal() { document.getElementById('submit-modal').classList.add('hidden'); }
-    function openPdf(url, title) {
-      document.getElementById('pdf-modal-title').textContent = title;
-      document.getElementById('pdf-frame').src = url;
-      document.getElementById('pdf-modal').classList.remove('hidden');
+    // Feed CRUD
+    function openFeedModal(){ editingFeedId=null; document.getElementById('feed-modal-title').textContent='Add Feed Item';
+      document.getElementById('feed-btn-text').textContent='Add Item'; clearFeedForm(); document.getElementById('feed-modal').classList.remove('hidden'); }
+    function closeFeedModal(){ document.getElementById('feed-modal').classList.add('hidden'); }
+    function clearFeedForm(){ ['feed-country','feed-flag','feed-body','feed-tag'].forEach(id=>document.getElementById(id).value=''); }
+    async function editFeedItem(id) {
+      const { data } = await sb.from('committee_feed').select('*').eq('id',id).single();
+      if(!data) return;
+      editingFeedId=id;
+      document.getElementById('feed-modal-title').textContent='Edit Feed Item';
+      document.getElementById('feed-btn-text').textContent='Save Changes';
+      document.getElementById('feed-country').value=data.country||'';
+      document.getElementById('feed-flag').value=data.country_flag||'';
+      document.getElementById('feed-action').value=data.action||'submitted';
+      document.getElementById('feed-body').value=data.body||'';
+      document.getElementById('feed-tag').value=data.tag||'';
+      document.getElementById('feed-modal').classList.remove('hidden');
     }
-    function closePdfModal() {
-      document.getElementById('pdf-modal').classList.add('hidden');
-      document.getElementById('pdf-frame').src = '';
+    async function saveFeedItem() {
+      const country=document.getElementById('feed-country').value.trim();
+      const flag=document.getElementById('feed-flag').value.trim()||'🌍';
+      const action=document.getElementById('feed-action').value;
+      const body=document.getElementById('feed-body').value.trim();
+      const tag=document.getElementById('feed-tag').value.trim();
+      const errEl=document.getElementById('feed-error');
+      errEl.classList.add('hidden');
+      if(!country||!body||!tag){ errEl.textContent='Country, description and tag are required.'; errEl.classList.remove('hidden'); return; }
+      document.getElementById('feed-btn').disabled=true;
+      document.getElementById('feed-spinner').classList.remove('hidden');
+      let error;
+      if(editingFeedId){
+        ({ error } = await sb.from('committee_feed').update({country,country_flag:flag,action,body,tag}).eq('id',editingFeedId));
+      } else {
+        ({ error } = await sb.from('committee_feed').insert({committee:currentProfile.committee,country,country_flag:flag,action,body,tag}));
+      }
+      document.getElementById('feed-btn').disabled=false;
+      document.getElementById('feed-spinner').classList.add('hidden');
+      if(error){ console.error(error); errEl.textContent='Failed to save.'; errEl.classList.remove('hidden'); return; }
+      closeFeedModal();
+      renderFeed();
+    }
+    async function deleteFeedItem(id) {
+      if(!confirm('Delete this feed item?')) return;
+      await sb.from('committee_feed').delete().eq('id',id);
+      renderFeed();
     }
 
-    function setSubmitLoading(loading) {
-      document.getElementById('submit-btn').disabled = loading;
-      document.getElementById('submit-btn-text').textContent = loading ? 'Submitting…' : 'Submit to Exec';
-      document.getElementById('submit-spinner').classList.toggle('hidden', !loading);
-    }
+    function openPdf(url,title){ document.getElementById('pdf-modal-title').textContent=title; document.getElementById('pdf-frame').src=url; document.getElementById('pdf-modal').classList.remove('hidden'); }
+    function closePdfModal(){ document.getElementById('pdf-modal').classList.add('hidden'); document.getElementById('pdf-frame').src=''; }
 
-    async function handleSignOut() {
-      await sb.auth.signOut();
-      window.location.href = 'login.html';
-    }
+    async function handleSignOut(){ await sb.auth.signOut(); window.location.href='login.html'; }
 
-    function escHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-    function timeAgo(iso) {
-      if (!iso) return '';
-      const diff = Math.round((Date.now() - new Date(iso)) / 60000);
-      if (diff < 1) return 'just now';
-      if (diff < 60) return `${diff}m ago`;
-      if (diff < 1440) return `${Math.floor(diff/60)}h ago`;
-      return `${Math.floor(diff/1440)}d ago`;
-    }
+    function emptyState(icon,title,sub){ return '<div class="text-center py-12 muted"><i data-lucide="'+icon+'" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">'+title+'</p><p class="text-xs mt-1">'+sub+'</p></div>'; }
+    function escHtml(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function escAttr(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/'/g,'\\\'').replace(/"/g,'&quot;'); }
+    function timeAgo(iso){ if(!iso)return''; const d=Math.round((Date.now()-new Date(iso))/60000); if(d<1)return'just now'; if(d<60)return d+'m ago'; if(d<1440)return Math.floor(d/60)+'h ago'; return Math.floor(d/1440)+'d ago'; }
 
-    // Realtime updates
-    sb.channel('chair-resolutions')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'resolutions' }, () => {
-        loadResolutions().then(() => lucide.createIcons());
-      })
+    sb.channel('chair-updates')
+      .on('postgres_changes',{event:'*',schema:'public',table:'resolutions'},()=>loadResolutions())
+      .on('postgres_changes',{event:'*',schema:'public',table:'amendments'},()=>{checkAmendmentCount(); if(currentTab==='amendments')renderAmendments();})
       .subscribe();
 
     init();
