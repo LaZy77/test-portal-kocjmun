@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exec Dashboard — Koç JMUN</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html,body{height:100%;margin:0;font-family:'Outfit',sans-serif}
+    [data-theme="dark"] body{background:#0a0e1a;color:#fff}
+    [data-theme="dark"] .surface{background:rgba(255,255,255,0.04);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
+    [data-theme="dark"] .surface-strong{background:rgba(255,255,255,0.07);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.12)}
+    [data-theme="dark"] .glow-border{box-shadow:0 0 20px rgba(93,23,95,0.25),inset 0 0 20px rgba(93,23,95,0.1);border:1px solid rgba(93,23,95,0.4)}
+    [data-theme="dark"] .glow-border-gold{box-shadow:0 0 20px rgba(212,168,83,0.15);border:1px solid rgba(212,168,83,0.3)}
+    [data-theme="dark"] .bg-grid{background-image:linear-gradient(rgba(93,23,95,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.05) 1px,transparent 1px);background-size:60px 60px}
+    [data-theme="dark"] .input-field{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0}
+    [data-theme="dark"] .input-field::placeholder{color:#4b5563}
+    [data-theme="dark"] .muted{color:#9ca3af}
+    [data-theme="dark"] .label-text{color:#6b7280}
+    [data-theme="dark"] .stat-card{background:rgba(255,255,255,0.04)}
+    [data-theme="dark"] .item-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)}
+    [data-theme="light"] body{background:#f5f3f7;color:#1a1523}
+    [data-theme="light"] .surface{background:rgba(255,255,255,0.7);backdrop-filter:blur(16px);border:1px solid rgba(93,23,95,0.1)}
+    [data-theme="light"] .surface-strong{background:#ffffff;border:1px solid rgba(93,23,95,0.12);box-shadow:0 4px 20px rgba(93,23,95,0.06)}
+    [data-theme="light"] .glow-border{box-shadow:0 4px 24px rgba(93,23,95,0.1);border:1px solid rgba(93,23,95,0.2)}
+    [data-theme="light"] .glow-border-gold{box-shadow:0 4px 24px rgba(212,168,83,0.12);border:1px solid rgba(212,168,83,0.3)}
+    [data-theme="light"] .bg-grid{background-image:linear-gradient(rgba(93,23,95,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.03) 1px,transparent 1px);background-size:60px 60px}
+    [data-theme="light"] .input-field{background:#ffffff;border:1px solid rgba(93,23,95,0.2);color:#1a1523}
+    [data-theme="light"] .input-field::placeholder{color:#9ca3af}
+    [data-theme="light"] .muted{color:#6b7280}
+    [data-theme="light"] .label-text{color:#9ca3af}
+    [data-theme="light"] .stat-card{background:#faf9fb;border:1px solid rgba(93,23,95,0.08)}
+    [data-theme="light"] .item-card{background:#faf9fb;border:1px solid rgba(93,23,95,0.1)}
+    .input-field{transition:border-color .2s,box-shadow .2s}
+    .input-field:focus{outline:none;border-color:rgba(93,23,95,0.7);box-shadow:0 0 0 3px rgba(93,23,95,0.15)}
+    @keyframes pulse-glow{0%,100%{opacity:.4}50%{opacity:.8}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .animate-pulse-glow{animation:pulse-glow 3s ease-in-out infinite}
+    .animate-fadein{animation:fadeIn 0.4s ease-out forwards}
+    .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
+    .skeleton{background:linear-gradient(90deg,rgba(128,128,128,0.1) 25%,rgba(128,128,128,0.2) 50%,rgba(128,128,128,0.1) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px}
+    .status-pending{background:rgba(234,179,8,0.15);color:#a16207;border:1px solid rgba(234,179,8,0.3)}
+    .status-received{background:rgba(59,130,246,0.15);color:#1d4ed8;border:1px solid rgba(59,130,246,0.3)}
+    .status-under_review{background:rgba(99,102,241,0.15);color:#4338ca;border:1px solid rgba(99,102,241,0.3)}
+    .status-sent_to_panel{background:rgba(124,58,237,0.15);color:#6d28d9;border:1px solid rgba(124,58,237,0.3)}
+    .status-published{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
+    .status-withdrawn{background:rgba(107,114,128,0.15);color:#6b7280;border:1px solid rgba(107,114,128,0.3)}
+    [data-theme="dark"] .status-pending{color:#fde047}
+    [data-theme="dark"] .status-received{color:#93c5fd}
+    [data-theme="dark"] .status-under_review{color:#a5b4fc}
+    [data-theme="dark"] .status-sent_to_panel{color:#c4b5fd}
+    [data-theme="dark"] .status-published{color:#86efac}
+    [data-theme="dark"] .status-withdrawn{color:#9ca3af}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem}
+    .tab-btn{color:#9ca3af;border-bottom:2px solid transparent;transition:all .3s;padding-bottom:8px}
+    .tab-btn.active{color:#a855f7;border-bottom-color:#5D175F}
+    [data-theme="light"] .tab-btn{color:#6b7280}
+    [data-theme="light"] .tab-btn.active{color:#7c3aed}
+    .badge-new{background:rgba(239,68,68,0.2);color:#dc2626;border:1px solid rgba(239,68,68,0.3);font-size:10px;padding:1px 6px;border-radius:99px}
+    [data-theme="dark"] .badge-new{color:#fca5a5}
+  </style>
+</head>
+<body class="h-full overflow-auto bg-grid">
+  <div class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0">
+    <div class="absolute top-[10%] left-[15%] w-96 h-96 rounded-full bg-purple-900/10 blur-3xl animate-pulse-glow"></div>
+    <div class="absolute bottom-[20%] right-[10%] w-80 h-80 rounded-full bg-amber-900/5 blur-3xl animate-pulse-glow" style="animation-delay:1.5s"></div>
+  </div>
+
+  <div class="relative z-10 w-full">
+    <nav class="w-full px-4 sm:px-8 py-4 border-b" style="border-color:rgba(128,128,128,0.1)">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="https://i.ibb.co/pBH9L8Sk/jmun26logoblack-e.png" alt="Koç JMUN" style="height:40px;width:auto">
+          <div class="h-5 w-px" style="background:rgba(128,128,128,0.2)"></div>
+          <span class="text-xs font-medium text-yellow-500 uppercase tracking-wider">Executive Portal</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="toggleTheme()" class="p-2 rounded-lg surface hover:opacity-80 transition" title="Toggle theme">
+            <i data-lucide="sun" style="width:18px;height:18px" id="theme-icon"></i>
+          </button>
+          <span class="text-sm muted hidden sm:inline">Signed in as <span class="font-medium" id="nav-name" style="color:inherit">—</span></span>
+          <button onclick="handleSignOut()" class="px-3 py-1.5 rounded-lg text-xs text-purple-200 hover:bg-purple-500/10 transition" style="border:1px solid rgba(93,23,95,0.4)">Sign Out</button>
+        </div>
+      </div>
+    </nav>
+
+    <section class="max-w-7xl mx-auto px-4 sm:px-8 pt-8 pb-16 animate-fadein">
+      <div class="surface-strong rounded-2xl p-6 glow-border-gold mb-8">
+        <div class="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <p class="text-xs label-text mb-1">Executive Dashboard</p>
+            <h1 class="text-xl font-semibold">Welcome, <span class="text-yellow-500" id="exec-name">—</span></h1>
+            <p class="text-sm muted mt-1">Full access across all committees</p>
+          </div>
+          <button onclick="openAnnouncementModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition" style="background:linear-gradient(135deg,#92400e,#d97706)">
+            <i data-lucide="megaphone" style="width:16px;height:16px"></i> Post Announcement
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Incoming</p><p class="text-2xl font-bold text-amber-400" id="stat-pending">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">In Review</p><p class="text-2xl font-bold text-blue-400" id="stat-received">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Published</p><p class="text-2xl font-bold text-green-400" id="stat-published">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Total</p><p class="text-2xl font-bold" id="stat-total">—</p></div>
+      </div>
+
+      <div class="flex gap-6 border-b mb-6 overflow-x-auto" style="border-color:rgba(128,128,128,0.1)">
+        <button class="tab-btn active text-sm font-medium whitespace-nowrap" onclick="switchTab('inbox')" id="tab-inbox">Inbox <span id="inbox-badge" class="badge-new ml-1 hidden">0</span></button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('review')" id="tab-review">In Review</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('published')" id="tab-published">Published</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('all')" id="tab-all">All Resolutions</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('announcements')" id="tab-announcements">Announcements</button>
+      </div>
+
+      <!-- Filters -->
+      <div id="filter-bar" class="flex flex-wrap gap-3 mb-6">
+        <div>
+          <label class="block text-[10px] label-text uppercase tracking-wider mb-1">Committee</label>
+          <select id="filter-committee" onchange="applyFilters()" class="input-field px-4 py-2.5 rounded-xl text-sm">
+            <option value="">All Committees</option>
+            <option value="UNHRC">UNHRC</option>
+            <option value="UNSC">UNSC</option>
+            <option value="ECOSOC">ECOSOC</option>
+            <option value="GA1">GA1</option>
+            <option value="GA3">GA3</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[10px] label-text uppercase tracking-wider mb-1">Agenda Item</label>
+          <select id="filter-agenda" onchange="applyFilters()" class="input-field px-4 py-2.5 rounded-xl text-sm">
+            <option value="">All Agenda Items</option>
+            <option value="1">Agenda Item 1</option>
+            <option value="2">Agenda Item 2</option>
+            <option value="3">Agenda Item 3</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="surface-strong rounded-2xl p-5 sm:p-6 glow-border">
+        <div id="content-list" class="space-y-3">
+          <div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>
+          <div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-56"></div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Review Modal -->
+  <div id="review-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-xl glow-border overflow-y-auto" style="max-height:90vh">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold">Review Resolution</h2>
+        <button onclick="closeReviewModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <div class="item-card rounded-xl p-4 mb-5">
+        <p class="text-xs label-text mb-1">Resolution</p>
+        <p class="font-semibold" id="review-title">—</p>
+        <p class="text-xs muted mt-0.5" id="review-committee">—</p>
+        <p class="text-xs mt-1" id="review-submitter"></p>
+      </div>
+      <div class="space-y-4">
+        <a id="review-chair-doc" href="#" target="_blank" class="flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-blue-400 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition">
+          <i data-lucide="external-link" style="width:16px;height:16px"></i> Open Submitted Google Doc
+        </a>
+        <div class="border-t pt-4" style="border-color:rgba(128,128,128,0.1)">
+          <p class="text-xs font-medium label-text uppercase tracking-wider mb-3">Send Formatted Version Back</p>
+          <div class="space-y-3">
+            <div><label class="block text-xs muted mb-1.5">Formatted Google Doc Link</label>
+              <input id="exec-doc-url" type="url" placeholder="https://docs.google.com/..." class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
+            <div><label class="block text-xs muted mb-1.5">PDF Link for delegates <span class="label-text">(Drive share link)</span></label>
+              <input id="exec-pdf-url" type="url" placeholder="https://drive.google.com/file/d/.../view" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
+            <div><label class="block text-xs muted mb-1.5">Note to Chair (optional)</label>
+              <input id="exec-note" type="text" placeholder="e.g. Formatting applied to clauses 3 & 4" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+          </div>
+        </div>
+        <div id="review-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+        <div class="flex gap-3 pt-2">
+          <button onclick="markReceived()" class="flex-1 py-3 rounded-xl text-sm font-medium text-blue-400 hover:bg-blue-500/10 transition surface border border-blue-500/20">Mark as Received</button>
+          <button onclick="publishResolution()" id="btn-publish" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#14532d,#16a34a)">
+            <span id="publish-btn-text">Publish</span><span id="publish-spinner" class="hidden"><span class="spinner"></span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Announcement Modal -->
+  <div id="announcement-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold">Post Announcement</h2>
+        <button onclick="closeAnnouncementModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <div class="space-y-4">
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Title</label>
+          <input id="ann-title" type="text" placeholder="e.g. Lunch break extended" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Message</label>
+          <textarea id="ann-body" rows="3" placeholder="Full announcement text..." class="input-field w-full px-4 py-3 rounded-xl text-sm resize-none"></textarea></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Type</label>
+            <select id="ann-type" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+              <option value="info">Info</option><option value="urgent">Urgent</option>
+              <option value="warning">Warning</option><option value="success">Success</option>
+            </select></div>
+          <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Committee</label>
+            <select id="ann-committee" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+              <option value="">All Committees</option><option value="UNHRC">UNHRC</option><option value="UNSC">UNSC</option>
+              <option value="ECOSOC">ECOSOC</option><option value="GA1">GA1</option><option value="GA3">GA3</option>
+            </select></div>
+        </div>
+        <div id="ann-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+        <div class="flex gap-3 pt-2">
+          <button onclick="closeAnnouncementModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+          <button onclick="postAnnouncement()" id="ann-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#92400e,#d97706)">
+            <span id="ann-btn-text">Post</span><span id="ann-spinner" class="hidden"><span class="spinner"></span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF Modal -->
+  <div id="pdf-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl w-full max-w-4xl glow-border overflow-hidden" style="height:85vh">
+      <div class="flex items-center justify-between p-4 border-b" style="border-color:rgba(128,128,128,0.1)">
+        <h3 class="text-sm font-semibold" id="pdf-title">—</h3>
+        <button onclick="closePdfModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <iframe id="pdf-frame" src="" class="w-full" style="height:calc(85vh - 57px);border:none;background:#fff"></iframe>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const BUILD = '2026-06-16';
+    console.log('%cKoç JMUN · exec.html · build '+BUILD,'color:#7c3aed;font-weight:700;font-size:13px');
+    document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#7c3aed;pointer-events:none;z-index:9999';document.body.appendChild(b);});
+
+    let currentTab = 'inbox';
+    let allResolutions = [];
+    let currentReviewId = null;
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('jmun_theme', next); } catch(e){}
+      document.getElementById('theme-icon').setAttribute('data-lucide', next === 'dark' ? 'sun' : 'moon');
+      lucide.createIcons();
+    }
+    (function(){ let s='dark'; try{s=localStorage.getItem('jmun_theme')||'dark';}catch(e){} document.documentElement.setAttribute('data-theme',s); })();
+    lucide.createIcons();
+    document.getElementById('theme-icon').setAttribute('data-lucide', document.documentElement.getAttribute('data-theme')==='dark'?'sun':'moon');
+    lucide.createIcons();
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'login.html'; return; }
+      const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+      if (!profile || profile.role !== 'exec') { window.location.href = 'login.html'; return; }
+      document.getElementById('nav-name').textContent = profile.name;
+      document.getElementById('exec-name').textContent = profile.name;
+      await loadAll();
+    }
+
+    async function loadAll() {
+      const { data, error } = await sb.from('resolutions').select('*').order('created_at',{ascending:false});
+      if (error) { console.error(error); return; }
+      allResolutions = data || [];
+      updateStats();
+      renderTab(currentTab);
+      lucide.createIcons();
+    }
+
+    function updateStats() {
+      document.getElementById('stat-pending').textContent = allResolutions.filter(r=>r.status==='pending').length;
+      document.getElementById('stat-received').textContent = allResolutions.filter(r=>r.status==='received').length;
+      document.getElementById('stat-published').textContent = allResolutions.filter(r=>r.status==='published').length;
+      document.getElementById('stat-total').textContent = allResolutions.length;
+      const pending = allResolutions.filter(r=>r.status==='pending').length;
+      const badge = document.getElementById('inbox-badge');
+      if (pending>0){ badge.textContent=pending; badge.classList.remove('hidden'); } else badge.classList.add('hidden');
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.getElementById('tab-'+tab).classList.add('active');
+      document.getElementById('filter-bar').style.display = tab === 'announcements' ? 'none' : 'flex';
+      renderTab(tab);
+      lucide.createIcons();
+    }
+
+    // "UNHRC 1.2" / "GA1 2.3" / "1.2" -> agenda number "1" (the part before the dot)
+    function agendaFromCode(code) {
+      const m = String(code||'').match(/(\d+)\s*\.\s*\d+/);
+      return m ? m[1] : null;
+    }
+    function matchesAgenda(r, sel) {
+      if (!sel) return true;
+      const fromCode = agendaFromCode(r.code);
+      if (fromCode) return fromCode === sel;          // code is the source of truth
+      const am = String(r.agenda_item||'').match(/(\d+)/);  // fallback to the agenda_item field
+      return am ? am[1] === sel : false;
+    }
+
+    function getFiltered(statusFilter) {
+      const committee = document.getElementById('filter-committee').value;
+      const agenda = document.getElementById('filter-agenda').value;
+      return allResolutions.filter(r => {
+        if (statusFilter && r.status !== statusFilter) return false;
+        if (committee && r.committee !== committee) return false;
+        if (!matchesAgenda(r, agenda)) return false;
+        return true;
+      });
+    }
+
+    function applyFilters() { renderTab(currentTab); lucide.createIcons(); }
+
+    function renderTab(tab) {
+      const c = document.getElementById('content-list');
+      if (tab === 'inbox') renderResList(getFiltered('pending'), c, 'inbox');
+      else if (tab === 'review') renderResList(getFiltered('received'), c, 'review');
+      else if (tab === 'published') renderResList(getFiltered('published'), c, 'published');
+      else if (tab === 'all') renderResList(getFiltered(null), c, 'all');
+      else if (tab === 'announcements') renderAnnouncementsTab(c);
+    }
+
+    function renderResList(items, c, mode) {
+      if (!items.length) { c.innerHTML = '<div class="text-center py-12 muted"><i data-lucide="inbox" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">Nothing here.</p></div>'; return; }
+      c.innerHTML = items.map(r => {
+        const statusLabel = {pending:'Pending',received:'In Review',published:'Published',withdrawn:'Withdrawn'}[r.status];
+        const submitterTag = r.submitter_role==='delegate' && r.submitter_country
+          ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">📍 '+escHtml(r.submitter_country)+'</span>' : '';
+        const actions = (mode==='inbox'||mode==='review')
+          ? '<button onclick="openReviewModal(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/15 text-purple-400 hover:bg-purple-500/25 transition border border-purple-500/30">'+(mode==='inbox'?'Review':'Continue')+'</button>'
+          : (r.pdf_url ? '<button onclick="openPdf(\''+escHtml(r.pdf_url)+'\',\''+escAttr(r.title)+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500/15 text-green-400 hover:bg-green-500/25 transition border border-green-500/30">View PDF</button>'
+             : (r.chair_doc_url ? '<a href="'+escHtml(r.chair_doc_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg surface hover:opacity-80 transition">Doc</a>' : ''));
+        return '<div class="item-card rounded-xl p-4 hover:opacity-95 transition">'+
+          '<div class="flex items-start justify-between gap-4">'+
+            '<div class="flex-1 min-w-0">'+
+              '<div class="flex items-center gap-2 mb-1 flex-wrap">'+
+                '<span class="text-xs font-mono font-semibold text-purple-400">'+escHtml(r.code||'—')+'</span>'+
+                '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.1)">'+escHtml(r.committee)+'</span>'+
+                (r.agenda_item ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.08)">'+escHtml(r.agenda_item)+'</span>' : (agendaFromCode(r.code) ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.08)">Agenda Item '+agendaFromCode(r.code)+'</span>' : ''))+
+                '<span class="text-[10px] px-2 py-0.5 rounded-full status-'+r.status+'">'+statusLabel+'</span>'+
+                submitterTag+
+              '</div>'+
+              '<p class="text-sm font-medium mb-1 truncate">'+escHtml(r.title)+'</p>'+
+              '<p class="text-[10px] muted">'+timeAgo(r.created_at)+'</p>'+
+            '</div>'+
+            '<div class="flex gap-2 flex-shrink-0">'+actions+'</div>'+
+          '</div></div>';
+      }).join('');
+    }
+
+    async function renderAnnouncementsTab(c) {
+      const { data } = await sb.from('announcements').select('*').order('created_at',{ascending:false});
+      if (!data || !data.length) { c.innerHTML = '<p class="text-center muted py-8 text-sm">No announcements yet.</p>'; return; }
+      const colors = {info:'#a855f7',urgent:'#ef4444',warning:'#f97316',success:'#22c55e'};
+      c.innerHTML = data.map(a =>
+        '<div class="item-card rounded-xl p-4">'+
+          '<div class="flex items-start justify-between gap-4">'+
+            '<div>'+
+              '<div class="flex items-center gap-2 mb-1">'+
+                '<span class="text-xs font-medium uppercase" style="color:'+(colors[a.type]||'#a855f7')+'">'+a.type+'</span>'+
+                (a.committee ? '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(128,128,128,0.1)">'+escHtml(a.committee)+'</span>' : '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(128,128,128,0.1)">All</span>')+
+              '</div>'+
+              '<p class="text-sm font-semibold mb-0.5">'+escHtml(a.title)+'</p>'+
+              '<p class="text-xs muted">'+escHtml(a.body)+'</p>'+
+              '<p class="text-[10px] muted mt-1">'+timeAgo(a.created_at)+'</p>'+
+            '</div>'+
+            '<button onclick="deleteAnnouncement(\''+a.id+'\')" class="muted hover:text-red-400 transition flex-shrink-0"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>'+
+          '</div></div>').join('');
+      lucide.createIcons();
+    }
+
+    function openReviewModal(id) {
+      const r = allResolutions.find(x=>x.id===id);
+      if (!r) return;
+      currentReviewId = id;
+      document.getElementById('review-title').textContent = r.title;
+      document.getElementById('review-committee').textContent = r.committee + ' · ' + (r.code||'') + (r.agenda_item ? ' · '+r.agenda_item : '');
+      document.getElementById('review-submitter').innerHTML = r.submitter_role==='delegate' && r.submitter_country
+        ? '<span style="color:#a855f7">Submitted by delegation: '+escHtml(r.submitter_country)+'</span>' : '<span class="muted">Submitted by chair</span>';
+      document.getElementById('review-chair-doc').href = r.chair_doc_url || '#';
+      document.getElementById('exec-doc-url').value = r.exec_doc_url || '';
+      document.getElementById('exec-pdf-url').value = r.pdf_url || '';
+      document.getElementById('exec-note').value = r.exec_note || '';
+      document.getElementById('review-error').classList.add('hidden');
+      document.getElementById('review-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+    function closeReviewModal() { document.getElementById('review-modal').classList.add('hidden'); currentReviewId=null; }
+
+    async function markReceived() {
+      if (!currentReviewId) return;
+      await sb.from('resolutions').update({status:'received',updated_at:new Date().toISOString()}).eq('id',currentReviewId);
+      closeReviewModal(); await loadAll(); lucide.createIcons();
+    }
+
+    async function publishResolution() {
+      const execDocUrl=document.getElementById('exec-doc-url').value.trim();
+      const pdfUrl=document.getElementById('exec-pdf-url').value.trim();
+      const note=document.getElementById('exec-note').value.trim();
+      const errEl=document.getElementById('review-error');
+      errEl.classList.add('hidden');
+      if(!pdfUrl){ errEl.textContent='A PDF link is required to publish.'; errEl.classList.remove('hidden'); return; }
+      document.getElementById('publish-btn-text').textContent='Publishing…';
+      document.getElementById('publish-spinner').classList.remove('hidden');
+      const { error } = await sb.from('resolutions').update({
+        exec_doc_url: execDocUrl||null, pdf_url: pdfUrl, exec_note: note||null,
+        status:'published', updated_at:new Date().toISOString()
+      }).eq('id',currentReviewId);
+      document.getElementById('publish-btn-text').textContent='Publish';
+      document.getElementById('publish-spinner').classList.add('hidden');
+      if(error){ errEl.textContent='Failed to publish.'; errEl.classList.remove('hidden'); return; }
+      closeReviewModal(); await loadAll(); lucide.createIcons();
+    }
+
+    function openAnnouncementModal(){ document.getElementById('announcement-modal').classList.remove('hidden'); }
+    function closeAnnouncementModal(){ document.getElementById('announcement-modal').classList.add('hidden'); }
+    async function postAnnouncement() {
+      const title=document.getElementById('ann-title').value.trim();
+      const body=document.getElementById('ann-body').value.trim();
+      const type=document.getElementById('ann-type').value;
+      const committee=document.getElementById('ann-committee').value||null;
+      const errEl=document.getElementById('ann-error');
+      errEl.classList.add('hidden');
+      if(!title||!body){ errEl.textContent='Title and message are required.'; errEl.classList.remove('hidden'); return; }
+      document.getElementById('ann-btn').disabled=true;
+      document.getElementById('ann-btn-text').textContent='Posting…';
+      document.getElementById('ann-spinner').classList.remove('hidden');
+      const { error } = await sb.from('announcements').insert({title,body,type,committee});
+      document.getElementById('ann-btn').disabled=false;
+      document.getElementById('ann-btn-text').textContent='Post';
+      document.getElementById('ann-spinner').classList.add('hidden');
+      if(error){ console.error(error); errEl.textContent='Failed to post.'; errEl.classList.remove('hidden'); return; }
+      closeAnnouncementModal();
+      document.getElementById('ann-title').value=''; document.getElementById('ann-body').value='';
+      if(currentTab==='announcements'){ renderAnnouncementsTab(document.getElementById('content-list')); lucide.createIcons(); }
+    }
+
+    async function deleteAnnouncement(id) {
+      if(!confirm('Delete this announcement?')) return;
+      await sb.from('announcements').delete().eq('id',id);
+      renderAnnouncementsTab(document.getElementById('content-list')); lucide.createIcons();
+    }
+
+    function openPdf(url,title){ document.getElementById('pdf-title').textContent=title; document.getElementById('pdf-frame').src=url; document.getElementById('pdf-modal').classList.remove('hidden'); }
+    function closePdfModal(){ document.getElementById('pdf-modal').classList.add('hidden'); document.getElementById('pdf-frame').src=''; }
+
+    async function handleSignOut(){ await sb.auth.signOut(); window.location.href='login.html'; }
+
+    function escHtml(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function escAttr(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/'/g,'\\\'').replace(/"/g,'&quot;'); }
+    function timeAgo(iso){
+      if(!iso) return '';
+      let s = String(iso).trim();
+      if(!/[zZ]$|[+\-]\d\d:?\d\d$/.test(s)){ s = s.replace(' ','T') + 'Z'; }
+      const then = new Date(s).getTime();
+      if(isNaN(then)) return '';
+      const d = Math.round((Date.now()-then)/60000);
+      if(d<1) return 'just now';
+      if(d<60) return d+'m ago';
+      if(d<1440) return Math.floor(d/60)+'h ago';
+      return Math.floor(d/1440)+'d ago';
+    }
+
+    sb.channel('exec-updates')
+      .on('postgres_changes',{event:'*',schema:'public',table:'resolutions'},()=>loadAll())
+      .subscribe();
+
+    init();
+  </script>
+</body>
+</html>
