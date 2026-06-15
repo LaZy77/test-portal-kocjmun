@@ -21,6 +21,7 @@
     [data-theme="dark"] .label-text{color:#6b7280}
     [data-theme="dark"] .stat-card{background:rgba(255,255,255,0.05)}
     [data-theme="dark"] .item-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)}
+    [data-theme="dark"] .subbox{background:rgba(0,0,0,0.25)}
     [data-theme="light"] body{background:#f5f3f7;color:#1a1523}
     [data-theme="light"] .surface{background:rgba(255,255,255,0.7);backdrop-filter:blur(16px);border:1px solid rgba(93,23,95,0.1)}
     [data-theme="light"] .surface-strong{background:#ffffff;border:1px solid rgba(93,23,95,0.12);box-shadow:0 4px 20px rgba(93,23,95,0.06)}
@@ -32,6 +33,7 @@
     [data-theme="light"] .label-text{color:#9ca3af}
     [data-theme="light"] .stat-card{background:#faf9fb;border:1px solid rgba(93,23,95,0.08)}
     [data-theme="light"] .item-card{background:#faf9fb;border:1px solid rgba(93,23,95,0.1)}
+    [data-theme="light"] .subbox{background:#f1eef5}
     .input-field{transition:border-color .2s,box-shadow .2s}
     .input-field:focus{outline:none;border-color:rgba(93,23,95,0.7);box-shadow:0 0 0 3px rgba(93,23,95,0.15)}
     @keyframes pulse-glow{0%,100%{opacity:.4}50%{opacity:.8}}
@@ -48,9 +50,17 @@
     [data-theme="light"] .tab-btn{color:#6b7280}
     [data-theme="light"] .tab-btn.active{color:#7c3aed}
     .status-pending{background:rgba(234,179,8,0.15);color:#a16207;border:1px solid rgba(234,179,8,0.3)}
+    .status-received{background:rgba(59,130,246,0.15);color:#1d4ed8;border:1px solid rgba(59,130,246,0.3)}
     .status-published{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
+    .status-withdrawn{background:rgba(107,114,128,0.15);color:#6b7280;border:1px solid rgba(107,114,128,0.3)}
+    .status-approved{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
+    .status-rejected{background:rgba(239,68,68,0.15);color:#b91c1c;border:1px solid rgba(239,68,68,0.3)}
     [data-theme="dark"] .status-pending{color:#fde047}
+    [data-theme="dark"] .status-received{color:#93c5fd}
     [data-theme="dark"] .status-published{color:#86efac}
+    [data-theme="dark"] .status-withdrawn{color:#9ca3af}
+    [data-theme="dark"] .status-approved{color:#86efac}
+    [data-theme="dark"] .status-rejected{color:#fca5a5}
   </style>
 </head>
 <body class="h-full overflow-auto bg-grid">
@@ -104,9 +114,9 @@
         </div>
       </div>
 
-      <!-- Tabs -->
       <div class="flex gap-6 border-b mt-8 mb-6 overflow-x-auto" style="border-color:rgba(128,128,128,0.1)">
         <button class="tab-btn active text-sm font-medium whitespace-nowrap" onclick="switchTab('resolutions')" id="tab-resolutions">Resolutions</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('amendments')" id="tab-amendments">My Amendments</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('announcements')" id="tab-announcements">Announcements</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('feed')" id="tab-feed">Committee Feed</button>
       </div>
@@ -144,7 +154,7 @@
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Title</label>
           <input id="res-title" type="text" placeholder="e.g. Addressing Climate Action" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Code</label>
-          <input id="res-code" type="text" placeholder="e.g. UNHRC 2.1" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
+          <input id="res-code" type="text" placeholder="e.g. UNHRC 1.2  (agenda 1, resolution 2)" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Agenda Item</label>
           <select id="res-agenda" class="input-field w-full px-4 py-3 rounded-xl text-sm">
             <option value="Agenda Item 1">Agenda Item 1</option>
@@ -184,6 +194,7 @@
     let currentProfile = null;
     let currentTab = 'resolutions';
     let cachedAnnouncements = [];
+    let cachedResolutions = [];
 
     function toggleTheme() {
       const html = document.documentElement;
@@ -243,6 +254,7 @@
 
     function renderTab(tab) {
       if (tab === 'resolutions') renderResolutions();
+      else if (tab === 'amendments') renderMyAmendments();
       else if (tab === 'announcements') renderAnnouncements();
       else if (tab === 'feed') renderFeed();
     }
@@ -250,28 +262,82 @@
     async function renderResolutions() {
       const c = document.getElementById('content-list');
       c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-24 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
-      const { data: items } = await sb.from('resolutions').select('*')
-        .eq('committee', currentProfile.committee).eq('status','published').order('created_at',{ascending:true});
-      if (!items || !items.length) { c.innerHTML = emptyState('file-text','No resolutions yet','Published resolutions for '+currentProfile.committee+' appear here.'); return; }
-      c.innerHTML = items.map(r =>
-        '<div class="item-card rounded-xl p-4 hover:opacity-95 transition">'+
+      const { data: all } = await sb.from('resolutions').select('*')
+        .eq('committee', currentProfile.committee).order('created_at',{ascending:true});
+      cachedResolutions = all || [];
+      // Show published committee resolutions + my own submissions (any status)
+      const items = cachedResolutions.filter(r => r.status==='published' || r.submitted_by===currentProfile.id);
+      if (!items.length) { c.innerHTML = emptyState('file-text','No resolutions yet','Published resolutions for '+currentProfile.committee+' appear here.'); return; }
+      const statusLabel = {pending:'Pending',received:'With Exec',published:'Published',withdrawn:'Withdrawn'};
+      c.innerHTML = items.map(r => {
+        const isMine = r.submitted_by===currentProfile.id;
+        return '<div class="item-card rounded-xl p-4 hover:opacity-95 transition">'+
           '<div class="flex items-start justify-between gap-4">'+
             '<div class="min-w-0">'+
               '<div class="flex items-center gap-2 mb-1 flex-wrap">'+
                 '<p class="text-sm font-semibold text-purple-400">'+escHtml(r.code)+'</p>'+
                 (r.agenda_item ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.1)">'+escHtml(r.agenda_item)+'</span>' : '')+
+                (r.status!=='published' ? '<span class="text-[10px] px-2 py-0.5 rounded-full status-'+r.status+'">'+statusLabel[r.status]+'</span>' : '')+
+                (isMine ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">Yours</span>' : '')+
               '</div>'+
               '<p class="text-xs muted">'+escHtml(r.title)+'</p>'+
             '</div>'+
             '<div class="flex gap-2 flex-shrink-0 flex-wrap justify-end">'+
-              (r.pdf_url ?
+              (r.status==='published'&&r.pdf_url ?
                 '<button onclick="openPdf(\''+escHtml(r.pdf_url)+'\',\''+escAttr(r.title)+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/15 text-purple-400 hover:bg-purple-500/25 transition border border-purple-500/30">View PDF</button>'+
                 '<a href="'+escHtml(r.pdf_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg surface hover:opacity-80 transition">Open</a>'
-                : '<button disabled class="px-3 py-1.5 text-xs font-medium rounded-lg surface opacity-50 cursor-not-allowed">No PDF</button>')+
-              '<a href="amend.html?resolution='+r.id+'" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-500/15 text-amber-500 hover:bg-amber-500/25 transition border border-amber-500/30">Amend</a>'+
+                : '')+
+              (r.status==='published' ? '<a href="amend.html?resolution='+r.id+'" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-500/15 text-amber-500 hover:bg-amber-500/25 transition border border-amber-500/30">Amend</a>' : '')+
+              (isMine ? '<button onclick="deleteResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Delete</button>' : '')+
             '</div>'+
-          '</div></div>').join('');
+          '</div></div>';
+      }).join('');
       lucide.createIcons();
+    }
+
+    async function renderMyAmendments() {
+      const c = document.getElementById('content-list');
+      c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-24 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
+      // need resolution titles for context
+      if (!cachedResolutions.length) {
+        const { data: rs } = await sb.from('resolutions').select('id,code,title').eq('committee', currentProfile.committee);
+        cachedResolutions = rs || [];
+      }
+      const resMap = {}; cachedResolutions.forEach(r => resMap[r.id] = r);
+      const { data: all } = await sb.from('amendments').select('*').eq('committee', currentProfile.committee).order('created_at',{ascending:false});
+      const mine = (all||[]).filter(a => a.submitted_by===currentProfile.id);
+      if (!mine.length) { c.innerHTML = emptyState('git-pull-request','No amendments yet','Open a resolution and hit "Amend" to propose a change. Their status will show here.'); return; }
+      const typeLabels = {insert:'Insert',add:'Add',strike:'Strike Out',change:'Change'};
+      const typeColors = {insert:'#a855f7',add:'#22c55e',strike:'#ef4444',change:'#3b82f6'};
+      c.innerHTML = mine.map(a => {
+        const res = resMap[a.resolution_id];
+        const resLabel = res ? ((res.code? res.code+' — ':'')+res.title) : 'Resolution';
+        const statusLabel = {pending:'Pending review',approved:'Approved',rejected:'Rejected'}[a.status];
+        const row = (label,val) => '<div><p class="text-[10px] label-text uppercase tracking-wider mb-0.5">'+label+'</p><p class="text-sm">'+val+'</p></div>';
+        return '<div class="item-card rounded-xl p-5 space-y-3">'+
+          '<div class="flex items-center justify-between gap-3 flex-wrap">'+
+            '<div class="flex items-center gap-2 flex-wrap">'+
+              '<span class="text-[11px] px-2.5 py-1 rounded-full font-semibold" style="background:'+typeColors[a.amendment_type]+'22;color:'+typeColors[a.amendment_type]+'">'+typeLabels[a.amendment_type]+'</span>'+
+              '<span class="text-[11px] px-2.5 py-1 rounded-full status-'+a.status+'">'+statusLabel+'</span>'+
+            '</div>'+
+            (a.status==='pending' ? '<button onclick="deleteAmendment(\''+a.id+'\')" class="muted hover:text-red-400 transition flex items-center gap-1 text-[11px]"><i data-lucide="trash-2" style="width:13px;height:13px"></i> Delete</button>' : '')+
+          '</div>'+
+          row('On Resolution', escHtml(resLabel))+
+          row('Part / Clause', escHtml(a.target_clause||'—'))+
+          '<div><p class="text-[10px] label-text uppercase tracking-wider mb-1">Your amendment</p><p class="text-sm leading-relaxed subbox rounded-lg p-3">'+escHtml(a.amendment_text)+'</p></div>'+
+          (a.status==='rejected'&&a.review_note ? '<div><p class="text-[10px] label-text uppercase tracking-wider mb-1">Chair\'s reason</p><p class="text-sm subbox rounded-lg p-3 text-red-400">'+escHtml(a.review_note)+'</p></div>' : '')+
+          (a.status==='approved' ? '<p class="text-xs text-green-400">✓ Your chair approved this amendment.</p>' : '')+
+          '<p class="text-[10px] muted">Submitted '+timeAgo(a.created_at)+'</p>'+
+        '</div>';
+      }).join('');
+      lucide.createIcons();
+    }
+
+    async function deleteAmendment(id) {
+      if(!confirm('Delete this amendment? You can only do this while it is still pending.')) return;
+      const { error } = await sb.from('amendments').delete().eq('id', id);
+      if(error){ console.error(error); alert('Could not delete — it may have already been reviewed.'); }
+      renderMyAmendments();
     }
 
     function renderAnnouncements() {
@@ -294,18 +360,16 @@
     async function renderFeed() {
       const c = document.getElementById('content-list');
       c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-24 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
-      const { data: feed } = await sb.from('committee_feed').select('*').eq('committee', currentProfile.committee).order('created_at',{ascending:false}).limit(20);
-      if (!feed || !feed.length) { c.innerHTML = emptyState('rss','No activity yet','Committee activity appears here.'); return; }
-      c.innerHTML = feed.map(f =>
-        '<div class="item-card rounded-xl p-4">'+
-          '<div class="flex items-start gap-3">'+
-            '<div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0" style="background:linear-gradient(135deg,#7c3aed,#5D175F)">'+escHtml(f.country_flag||'🌍')+'</div>'+
-            '<div class="flex-1 min-w-0">'+
-              '<p class="text-sm font-medium mb-0.5">'+escHtml(f.country)+' <span class="text-xs muted">'+escHtml(f.action)+'</span></p>'+
-              '<p class="text-xs muted mb-1">'+escHtml(f.body)+'</p>'+
-              '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(147,51,234,0.12);color:#a855f7">'+escHtml(f.tag)+'</span>'+
-            '</div>'+
-          '</div></div>').join('');
+      const { data: feed } = await sb.from('committee_feed').select('*').eq('committee', currentProfile.committee).order('created_at',{ascending:false}).limit(30);
+      if (!feed || !feed.length) { c.innerHTML = emptyState('rss','No activity yet','Committee updates from your chair appear here.'); return; }
+      c.innerHTML = feed.map(f => {
+        const author = ((f.posted_by_role||'').charAt(0).toUpperCase()+(f.posted_by_role||'').slice(1)+' '+(f.posted_by_name||'')).trim();
+        return '<div class="item-card rounded-xl p-4 border-l-4" style="border-left-color:#7c3aed">'+
+          '<p class="text-sm font-semibold mb-0.5">'+escHtml(f.title)+'</p>'+
+          '<p class="text-xs muted mb-2">'+escHtml(f.body)+'</p>'+
+          '<p class="text-[10px] muted">Posted by '+escHtml(author||'Chair')+' · '+timeAgo(f.created_at)+'</p>'+
+        '</div>';
+      }).join('');
       lucide.createIcons();
     }
 
@@ -359,7 +423,15 @@
       if(error){ console.error(error); errEl.textContent='Submission failed.'; errEl.classList.remove('hidden'); return; }
       closeSubmitModal();
       document.getElementById('res-title').value=''; document.getElementById('res-code').value=''; document.getElementById('res-doc-url').value='';
+      if(currentTab==='resolutions') renderResolutions();
       alert('Resolution submitted to your chair for review.');
+    }
+
+    async function deleteResolution(id) {
+      if(!confirm('Delete this resolution? This removes it for everyone.')) return;
+      const { error } = await sb.from('resolutions').delete().eq('id', id);
+      if(error){ console.error(error); alert('Could not delete (you can only delete resolutions you submitted).'); return; }
+      renderResolutions();
     }
 
     function openPdf(url, title) {
@@ -373,10 +445,23 @@
     function emptyState(icon,title,sub){ return '<div class="text-center py-12 muted"><i data-lucide="'+icon+'" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">'+title+'</p><p class="text-xs mt-1">'+sub+'</p></div>'; }
     function escHtml(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function escAttr(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/'/g,'\\\'').replace(/"/g,'&quot;'); }
-    function timeAgo(iso){ if(!iso)return''; const d=Math.round((Date.now()-new Date(iso))/60000); if(d<1)return'just now'; if(d<60)return d+'m ago'; if(d<1440)return Math.floor(d/60)+'h ago'; return Math.floor(d/1440)+'d ago'; }
+    function timeAgo(iso){
+      if(!iso) return '';
+      let s = String(iso).trim();
+      if(!/[zZ]$|[+\-]\d\d:?\d\d$/.test(s)){ s = s.replace(' ','T') + 'Z'; }
+      const then = new Date(s).getTime();
+      if(isNaN(then)) return '';
+      const d = Math.round((Date.now()-then)/60000);
+      if(d<1) return 'just now';
+      if(d<60) return d+'m ago';
+      if(d<1440) return Math.floor(d/60)+'h ago';
+      return Math.floor(d/1440)+'d ago';
+    }
 
     sb.channel('delegate-updates')
       .on('postgres_changes',{event:'*',schema:'public',table:'resolutions'},()=>{ if(currentTab==='resolutions')renderResolutions(); })
+      .on('postgres_changes',{event:'*',schema:'public',table:'amendments'},()=>{ if(currentTab==='amendments')renderMyAmendments(); })
+      .on('postgres_changes',{event:'*',schema:'public',table:'committee_feed'},()=>{ if(currentTab==='feed')renderFeed(); })
       .on('postgres_changes',{event:'*',schema:'public',table:'announcements'},()=>{ if(currentProfile) loadDashboard(currentProfile.id); })
       .subscribe();
 
