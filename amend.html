@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Amendment — Koç JMUN</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html,body{height:100%;margin:0;font-family:'Outfit',sans-serif}
+    [data-theme="dark"] body{background:#0a0e1a;color:#fff}
+    [data-theme="dark"] .surface{background:rgba(255,255,255,0.04);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
+    [data-theme="dark"] .surface-strong{background:rgba(255,255,255,0.07);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.12)}
+    [data-theme="dark"] .glow-border{box-shadow:0 0 20px rgba(93,23,95,0.25),inset 0 0 20px rgba(93,23,95,0.1);border:1px solid rgba(93,23,95,0.4)}
+    [data-theme="dark"] .bg-grid{background-image:linear-gradient(rgba(93,23,95,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.05) 1px,transparent 1px);background-size:60px 60px}
+    [data-theme="dark"] .input-field{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0}
+    [data-theme="dark"] .input-field::placeholder{color:#4b5563}
+    [data-theme="dark"] .muted{color:#9ca3af}
+    [data-theme="dark"] .label-text{color:#9ca3af}
+    [data-theme="dark"] .type-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)}
+    [data-theme="dark"] .type-card.selected{background:rgba(147,51,234,0.15);border-color:rgba(147,51,234,0.5)}
+    [data-theme="light"] body{background:#f5f3f7;color:#1a1523}
+    [data-theme="light"] .surface{background:rgba(255,255,255,0.7);backdrop-filter:blur(16px);border:1px solid rgba(93,23,95,0.1)}
+    [data-theme="light"] .surface-strong{background:#ffffff;border:1px solid rgba(93,23,95,0.12);box-shadow:0 4px 20px rgba(93,23,95,0.06)}
+    [data-theme="light"] .glow-border{box-shadow:0 4px 24px rgba(93,23,95,0.1);border:1px solid rgba(93,23,95,0.2)}
+    [data-theme="light"] .bg-grid{background-image:linear-gradient(rgba(93,23,95,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.03) 1px,transparent 1px);background-size:60px 60px}
+    [data-theme="light"] .input-field{background:#ffffff;border:1px solid rgba(93,23,95,0.2);color:#1a1523}
+    [data-theme="light"] .input-field::placeholder{color:#9ca3af}
+    [data-theme="light"] .muted{color:#6b7280}
+    [data-theme="light"] .label-text{color:#6b7280}
+    [data-theme="light"] .type-card{background:#ffffff;border:1px solid rgba(93,23,95,0.15)}
+    [data-theme="light"] .type-card.selected{background:rgba(147,51,234,0.08);border-color:rgba(147,51,234,0.5)}
+    .input-field{transition:border-color .2s,box-shadow .2s}
+    .input-field:focus{outline:none;border-color:rgba(93,23,95,0.7);box-shadow:0 0 0 3px rgba(93,23,95,0.15)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
+    .type-card{cursor:pointer;transition:all .2s}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .animate-fadein{animation:fadeIn 0.4s ease-out forwards}
+  </style>
+</head>
+<body class="h-full overflow-auto bg-grid">
+  <div class="relative z-10 w-full min-h-full">
+    <nav class="w-full px-4 sm:px-8 py-4 border-b" style="border-color:rgba(128,128,128,0.1)">
+      <div class="max-w-3xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <a href="dashboard.html" class="flex items-center gap-2 text-sm muted hover:opacity-80 transition">
+            <i data-lucide="arrow-left" style="width:18px;height:18px"></i>
+            Back to Dashboard
+          </a>
+        </div>
+        <button onclick="toggleTheme()" id="theme-btn" class="p-2 rounded-lg surface hover:opacity-80 transition" title="Toggle theme">
+          <i data-lucide="sun" style="width:18px;height:18px" id="theme-icon"></i>
+        </button>
+      </div>
+    </nav>
+
+    <section class="max-w-3xl mx-auto px-4 sm:px-8 pt-8 pb-16 animate-fadein">
+      <div class="mb-6">
+        <p class="text-xs label-text uppercase tracking-wider mb-1">Amendment</p>
+        <h1 class="text-2xl font-semibold">Submit an Amendment</h1>
+        <p class="text-sm muted mt-1">Propose a change to a resolution in your committee. It will be sent to your chair for review.</p>
+      </div>
+
+      <div class="surface-strong rounded-2xl p-6 glow-border space-y-6">
+        <div>
+          <label class="block text-xs font-medium label-text mb-2 uppercase tracking-wider">Resolution</label>
+          <select id="resolution-select" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+            <option value="">Loading resolutions…</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium label-text mb-2 uppercase tracking-wider">Amendment Type</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div class="type-card rounded-xl p-3 text-center" data-type="insert" onclick="selectType('insert')">
+              <i data-lucide="plus-circle" style="width:20px;height:20px;margin:0 auto 4px;display:block"></i>
+              <span class="text-xs font-medium">Insert</span>
+            </div>
+            <div class="type-card rounded-xl p-3 text-center" data-type="add" onclick="selectType('add')">
+              <i data-lucide="file-plus" style="width:20px;height:20px;margin:0 auto 4px;display:block"></i>
+              <span class="text-xs font-medium">Add</span>
+            </div>
+            <div class="type-card rounded-xl p-3 text-center" data-type="strike" onclick="selectType('strike')">
+              <i data-lucide="minus-circle" style="width:20px;height:20px;margin:0 auto 4px;display:block"></i>
+              <span class="text-xs font-medium">Strike Out</span>
+            </div>
+            <div class="type-card rounded-xl p-3 text-center" data-type="change" onclick="selectType('change')">
+              <i data-lucide="replace" style="width:20px;height:20px;margin:0 auto 4px;display:block"></i>
+              <span class="text-xs font-medium">Change</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium label-text mb-2 uppercase tracking-wider">Which clause or part?</label>
+          <input id="target-clause" type="text" placeholder="e.g. Operative Clause 3, or Preambulatory Clause 2" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+          <p class="text-[10px] muted mt-1.5">Specify exactly which part of the resolution you want to amend</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium label-text mb-2 uppercase tracking-wider">Amendment</label>
+          <textarea id="amendment-text" rows="5" placeholder="Write your proposed amendment in full…" class="input-field w-full px-4 py-3 rounded-xl text-sm resize-none"></textarea>
+        </div>
+
+        <div id="amend-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+        <div id="amend-success" class="hidden text-xs text-green-400 bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-3 flex items-center gap-2">
+          <i data-lucide="check-circle" style="width:16px;height:16px"></i>
+          Amendment submitted to your chair for review.
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <a href="dashboard.html" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface text-center">Cancel</a>
+          <button onclick="submitAmendment()" id="submit-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
+            <span id="submit-text">Submit Amendment</span>
+            <span id="submit-spinner" class="hidden"><span class="spinner"></span></span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentProfile = null;
+    let selectedType = null;
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('jmun_theme', next); } catch(e){}
+      document.getElementById('theme-icon').setAttribute('data-lucide', next === 'dark' ? 'sun' : 'moon');
+      lucide.createIcons();
+    }
+    (function initTheme(){
+      let saved = 'dark';
+      try { saved = localStorage.getItem('jmun_theme') || 'dark'; } catch(e){}
+      document.documentElement.setAttribute('data-theme', saved);
+    })();
+
+    lucide.createIcons();
+    document.getElementById('theme-icon').setAttribute('data-lucide', document.documentElement.getAttribute('data-theme') === 'dark' ? 'sun' : 'moon');
+    lucide.createIcons();
+
+    function selectType(type) {
+      selectedType = type;
+      document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+      document.querySelector('.type-card[data-type="' + type + '"]').classList.add('selected');
+    }
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'login.html'; return; }
+
+      const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+      if (!profile) { window.location.href = 'login.html'; return; }
+      currentProfile = profile;
+
+      const { data: resolutions } = await sb
+        .from('resolutions')
+        .select('id, code, title, status')
+        .eq('committee', profile.committee)
+        .order('created_at', { ascending: false });
+
+      const select = document.getElementById('resolution-select');
+      if (!resolutions || !resolutions.length) {
+        select.innerHTML = '<option value="">No resolutions available yet</option>';
+      } else {
+        select.innerHTML = '<option value="">Select a resolution…</option>' +
+          resolutions.map(r => '<option value="' + r.id + '">' + escAttr(r.code || '') + ' — ' + escAttr(r.title) + (r.status !== 'published' ? ' (draft)' : '') + '</option>').join('');
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const preId = params.get('resolution');
+      if (preId) select.value = preId;
+    }
+
+    async function submitAmendment() {
+      const resolutionId = document.getElementById('resolution-select').value;
+      const targetClause = document.getElementById('target-clause').value.trim();
+      const amendmentText = document.getElementById('amendment-text').value.trim();
+      const errEl = document.getElementById('amend-error');
+      const successEl = document.getElementById('amend-success');
+
+      errEl.classList.add('hidden');
+      successEl.classList.add('hidden');
+
+      if (!resolutionId) { showErr('Please select a resolution.'); return; }
+      if (!selectedType)  { showErr('Please choose an amendment type.'); return; }
+      if (!targetClause)  { showErr('Please specify which clause to amend.'); return; }
+      if (!amendmentText) { showErr('Please write your amendment.'); return; }
+
+      setLoading(true);
+
+      const { error } = await sb.from('amendments').insert({
+        resolution_id: resolutionId,
+        committee: currentProfile.committee,
+        submitted_by: currentProfile.id,
+        submitter_country: currentProfile.country,
+        amendment_type: selectedType,
+        target_clause: targetClause,
+        amendment_text: amendmentText,
+        status: 'pending'
+      });
+
+      setLoading(false);
+
+      if (error) {
+        console.error(error);
+        showErr('Submission failed. Please try again.');
+        return;
+      }
+
+      successEl.classList.remove('hidden');
+      lucide.createIcons();
+      document.getElementById('resolution-select').value = '';
+      document.getElementById('target-clause').value = '';
+      document.getElementById('amendment-text').value = '';
+      document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+      selectedType = null;
+    }
+
+    function showErr(msg) {
+      const errEl = document.getElementById('amend-error');
+      errEl.textContent = msg;
+      errEl.classList.remove('hidden');
+    }
+    function setLoading(loading) {
+      document.getElementById('submit-btn').disabled = loading;
+      document.getElementById('submit-text').textContent = loading ? 'Submitting…' : 'Submit Amendment';
+      document.getElementById('submit-spinner').classList.toggle('hidden', !loading);
+    }
+    function escAttr(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    init();
+  </script>
+</body>
+</html>
