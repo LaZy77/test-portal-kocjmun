@@ -131,9 +131,9 @@
           <label class="block text-[10px] label-text uppercase tracking-wider mb-1">Agenda Item</label>
           <select id="filter-agenda" onchange="applyFilters()" class="input-field px-4 py-2.5 rounded-xl text-sm">
             <option value="">All Agenda Items</option>
-            <option value="Agenda Item 1">Agenda Item 1</option>
-            <option value="Agenda Item 2">Agenda Item 2</option>
-            <option value="Agenda Item 3">Agenda Item 3</option>
+            <option value="1">Agenda Item 1</option>
+            <option value="2">Agenda Item 2</option>
+            <option value="3">Agenda Item 3</option>
           </select>
         </div>
       </div>
@@ -292,13 +292,26 @@
       lucide.createIcons();
     }
 
+    // "UNHRC 1.2" / "GA1 2.3" / "1.2" -> agenda number "1" (the part before the dot)
+    function agendaFromCode(code) {
+      const m = String(code||'').match(/(\d+)\s*\.\s*\d+/);
+      return m ? m[1] : null;
+    }
+    function matchesAgenda(r, sel) {
+      if (!sel) return true;
+      const fromCode = agendaFromCode(r.code);
+      if (fromCode) return fromCode === sel;          // code is the source of truth
+      const am = String(r.agenda_item||'').match(/(\d+)/);  // fallback to the agenda_item field
+      return am ? am[1] === sel : false;
+    }
+
     function getFiltered(statusFilter) {
       const committee = document.getElementById('filter-committee').value;
       const agenda = document.getElementById('filter-agenda').value;
       return allResolutions.filter(r => {
         if (statusFilter && r.status !== statusFilter) return false;
         if (committee && r.committee !== committee) return false;
-        if (agenda && r.agenda_item !== agenda) return false;
+        if (!matchesAgenda(r, agenda)) return false;
         return true;
       });
     }
@@ -330,7 +343,7 @@
               '<div class="flex items-center gap-2 mb-1 flex-wrap">'+
                 '<span class="text-xs font-mono font-semibold text-purple-400">'+escHtml(r.code||'—')+'</span>'+
                 '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.1)">'+escHtml(r.committee)+'</span>'+
-                (r.agenda_item ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.08)">'+escHtml(r.agenda_item)+'</span>' : '')+
+                (r.agenda_item ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.08)">'+escHtml(r.agenda_item)+'</span>' : (agendaFromCode(r.code) ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.08)">Agenda Item '+agendaFromCode(r.code)+'</span>' : ''))+
                 '<span class="text-[10px] px-2 py-0.5 rounded-full status-'+r.status+'">'+statusLabel+'</span>'+
                 submitterTag+
               '</div>'+
@@ -442,7 +455,18 @@
 
     function escHtml(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function escAttr(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/'/g,'\\\'').replace(/"/g,'&quot;'); }
-    function timeAgo(iso){ if(!iso)return''; const d=Math.round((Date.now()-new Date(iso))/60000); if(d<1)return'just now'; if(d<60)return d+'m ago'; if(d<1440)return Math.floor(d/60)+'h ago'; return Math.floor(d/1440)+'d ago'; }
+    function timeAgo(iso){
+      if(!iso) return '';
+      let s = String(iso).trim();
+      if(!/[zZ]$|[+\-]\d\d:?\d\d$/.test(s)){ s = s.replace(' ','T') + 'Z'; }
+      const then = new Date(s).getTime();
+      if(isNaN(then)) return '';
+      const d = Math.round((Date.now()-then)/60000);
+      if(d<1) return 'just now';
+      if(d<60) return d+'m ago';
+      if(d<1440) return Math.floor(d/60)+'h ago';
+      return Math.floor(d/1440)+'d ago';
+    }
 
     sb.channel('exec-updates')
       .on('postgres_changes',{event:'*',schema:'public',table:'resolutions'},()=>loadAll())
