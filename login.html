@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en" class="h-full" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,9 +76,47 @@
       display: inline-block;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Theme system (matches dashboards) ─── */
+    [data-theme="dark"]  body { background:#0a0e1a; color:#fff; }
+    [data-theme="light"] body { background:#f5f3f7; color:#1a1523; }
+
+    [data-theme="dark"]  .glass-strong { background:rgba(255,255,255,0.07); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.12); }
+    [data-theme="light"] .glass-strong { background:#ffffff; border:1px solid rgba(93,23,95,0.12); box-shadow:0 8px 30px rgba(93,23,95,0.08); backdrop-filter:none; }
+
+    [data-theme="dark"]  .glow-border { box-shadow:0 0 20px rgba(93,23,95,0.25), inset 0 0 20px rgba(93,23,95,0.1); border:1px solid rgba(93,23,95,0.4); }
+    [data-theme="light"] .glow-border { box-shadow:0 8px 30px rgba(93,23,95,0.1); border:1px solid rgba(93,23,95,0.2); }
+
+    [data-theme="dark"]  .input-field { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#e2e8f0; }
+    [data-theme="light"] .input-field { background:#ffffff; border:1px solid rgba(93,23,95,0.2); color:#1a1523; }
+    [data-theme="dark"]  .input-field::placeholder { color:#4b5563; }
+    [data-theme="light"] .input-field::placeholder { color:#9ca3af; }
+
+    [data-theme="dark"]  .surface { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); }
+    [data-theme="light"] .surface { background:rgba(255,255,255,0.7); border:1px solid rgba(93,23,95,0.12); }
+
+    [data-theme="light"] .bg-grid { background-image:linear-gradient(rgba(93,23,95,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.04) 1px,transparent 1px); }
+    [data-theme="light"] .animate-pulse-glow { opacity:0.5; }
+
+    [data-theme="light"] .error-box { background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); color:#b91c1c; }
+
+    /* light-theme overrides for Tailwind text utilities used in the markup */
+    [data-theme="light"] .text-white   { color:#1a1523 !important; }
+    [data-theme="light"] .text-gray-400 { color:#6b7280 !important; }
+    [data-theme="light"] .text-gray-500 { color:#6b7280 !important; }
+    [data-theme="light"] .text-gray-600 { color:#9ca3af !important; }
+
+    /* logo: purple-tinted in dark, natural black in light */
+    [data-theme="light"] #brand-logo { filter:none !important; }
   </style>
 </head>
-<body class="h-full overflow-hidden bg-[#0a0e1a] text-white bg-grid flex items-center justify-center">
+<body class="h-full overflow-hidden bg-grid flex items-center justify-center">
+
+  <!-- Theme toggle (top-right, matches dashboards) -->
+  <button onclick="toggleTheme()" id="theme-btn" class="fixed top-4 right-4 z-20 p-2.5 rounded-lg surface hover:opacity-80 transition" title="Toggle theme">
+    <i data-lucide="sun" style="width:18px;height:18px" id="theme-icon"></i>
+  </button>
+
 
   <!-- Ambient orbs -->
   <div class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0">
@@ -91,7 +129,7 @@
 
     <!-- Logo + header -->
     <div class="text-center mb-8">
-      <img src="https://i.ibb.co/pBH9L8Sk/jmun26logoblack-e.png" alt="Koç JMUN" class="h-12 w-auto mx-auto mb-5" style="filter: brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(250deg) brightness(1.4);">
+      <img id="brand-logo" src="https://i.ibb.co/pBH9L8Sk/jmun26logoblack-e.png" alt="Koç JMUN" class="h-12 w-auto mx-auto mb-5" style="filter: brightness(0) invert(1) sepia(1) saturate(2) hue-rotate(250deg) brightness(1.4);">
       <h1 class="text-2xl font-semibold text-white mb-1">Delegate Portal</h1>
       <p class="text-sm text-gray-500">Sign in to access your conference dashboard</p>
     </div>
@@ -174,6 +212,21 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // ─── Theme (persisted, shared key with dashboards) ───────────────
+    (function initTheme(){
+      let saved = 'dark';
+      try { saved = localStorage.getItem('jmun_theme') || 'dark'; } catch(e){}
+      document.documentElement.setAttribute('data-theme', saved);
+    })();
+    function toggleTheme(){
+      const html = document.documentElement;
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('jmun_theme', next); } catch(e){}
+      document.getElementById('theme-icon').setAttribute('data-lucide', next === 'dark' ? 'sun' : 'moon');
+      lucide.createIcons();
+    }
+
     // ─── If already logged in, go straight to dashboard ─────────────
     (async () => {
       const { data: { session } } = await sb.auth.getSession();
@@ -181,6 +234,8 @@
     })();
 
     // ─── Icons ───────────────────────────────────────────────────────
+    lucide.createIcons();
+    document.getElementById('theme-icon').setAttribute('data-lucide', document.documentElement.getAttribute('data-theme') === 'dark' ? 'sun' : 'moon');
     lucide.createIcons();
 
     // ─── Password toggle ─────────────────────────────────────────────
