@@ -44,12 +44,16 @@
     .skeleton{background:linear-gradient(90deg,rgba(128,128,128,0.1) 25%,rgba(128,128,128,0.2) 50%,rgba(128,128,128,0.1) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px}
     .status-pending{background:rgba(234,179,8,0.15);color:#a16207;border:1px solid rgba(234,179,8,0.3)}
     .status-received{background:rgba(59,130,246,0.15);color:#1d4ed8;border:1px solid rgba(59,130,246,0.3)}
+    .status-under_review{background:rgba(99,102,241,0.15);color:#4338ca;border:1px solid rgba(99,102,241,0.3)}
+    .status-sent_to_panel{background:rgba(124,58,237,0.15);color:#6d28d9;border:1px solid rgba(124,58,237,0.3)}
     .status-published{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
     .status-withdrawn{background:rgba(107,114,128,0.15);color:#6b7280;border:1px solid rgba(107,114,128,0.3)}
     .status-approved{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
     .status-rejected{background:rgba(239,68,68,0.15);color:#b91c1c;border:1px solid rgba(239,68,68,0.3)}
     [data-theme="dark"] .status-pending{color:#fde047}
     [data-theme="dark"] .status-received{color:#93c5fd}
+    [data-theme="dark"] .status-under_review{color:#a5b4fc}
+    [data-theme="dark"] .status-sent_to_panel{color:#c4b5fd}
     [data-theme="dark"] .status-published{color:#86efac}
     [data-theme="dark"] .status-withdrawn{color:#9ca3af}
     [data-theme="dark"] .status-approved{color:#86efac}
@@ -204,21 +208,13 @@
     </div>
   </div>
 
-  <!-- PDF Modal -->
-  <div id="pdf-modal" class="modal-overlay hidden">
-    <div class="surface-strong rounded-2xl w-full max-w-4xl glow-border overflow-hidden" style="height:85vh">
-      <div class="flex items-center justify-between p-4 border-b" style="border-color:rgba(128,128,128,0.1)">
-        <h3 class="text-sm font-semibold" id="pdf-modal-title">Resolution</h3>
-        <button onclick="closePdfModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
-      </div>
-      <iframe id="pdf-frame" src="" class="w-full" style="height:calc(85vh - 57px);border:none;background:#fff"></iframe>
-    </div>
-  </div>
-
   <script>
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const BUILD = '2026-06-16';
+    console.log('%cKoç JMUN · chair.html · build '+BUILD,'color:#7c3aed;font-weight:700;font-size:13px');
+    document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#7c3aed;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
     let currentProfile = null;
     let currentTab = 'resolutions';
@@ -295,33 +291,36 @@
 
     function renderResolutions(items) {
       const c = document.getElementById('content-list');
-      if (!items.length) { c.innerHTML = emptyState('file-text','No resolutions yet','Click "Submit Resolution" to start.'); return; }
+      if (!items.length) { c.innerHTML = emptyState('file-text','No resolutions yet','Delegate submissions and your own resolutions appear here.'); return; }
+      const statusLabel = {pending:'Pending review',received:'With exec',published:'Published',withdrawn:'Withdrawn'};
       c.innerHTML = items.map(r => {
-        const statusLabel = {pending:'Pending Review',received:'With Exec',published:'Published',withdrawn:'Withdrawn'}[r.status];
         const isMine = r.submitted_by === currentProfile.id;
+        const heading = r.title || r.summary || 'Untitled resolution';
         const submitterLine = r.submitter_role === 'delegate' && r.submitter_country
-          ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">📍 ' + escHtml(r.submitter_country) + '</span>' : '';
+          ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(93,23,95,0.15);color:#a855f7">📍 ' + escHtml(r.submitter_country) + '</span>'
+          : '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.1)">You</span>';
         return '<div class="item-card rounded-xl p-4 hover:opacity-95 transition">'+
           '<div class="flex items-start justify-between gap-4">'+
             '<div class="flex-1 min-w-0">'+
               '<div class="flex items-center gap-2 mb-1 flex-wrap">'+
-                '<span class="text-xs font-mono font-semibold text-purple-400">'+escHtml(r.code||'—')+'</span>'+
-                '<span class="text-[10px] px-2 py-0.5 rounded-full status-'+r.status+'">'+statusLabel+'</span>'+
+                (r.code ? '<span class="text-xs font-mono font-semibold text-purple-400">'+escHtml(r.code)+'</span>' : '')+
+                '<span class="text-[10px] px-2 py-0.5 rounded-full status-'+r.status+'">'+statusLabel[r.status]+'</span>'+
                 (r.agenda_item ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.1)">'+escHtml(r.agenda_item)+'</span>' : '')+
                 submitterLine+
               '</div>'+
-              '<p class="text-sm font-medium mb-1 truncate">'+escHtml(r.title)+'</p>'+
+              '<p class="text-sm font-medium mb-1">'+escHtml(heading)+'</p>'+
+              (r.summary && r.title ? '<p class="text-xs muted mb-1">'+escHtml(r.summary)+'</p>' : '')+
               '<p class="text-[10px] muted">'+timeAgo(r.created_at)+'</p>'+
               (r.exec_note ? '<p class="text-xs text-amber-500 mt-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5">📝 '+escHtml(r.exec_note)+'</p>' : '')+
             '</div>'+
             '<div class="flex gap-2 flex-shrink-0 flex-wrap justify-end">'+
-              (r.chair_doc_url ? '<a href="'+escHtml(r.chair_doc_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg surface hover:opacity-80 transition flex items-center gap-1"><i data-lucide="external-link" style="width:12px;height:12px"></i> Doc</a>' : '')+
-              (r.status==='published'&&r.pdf_url ? '<button onclick="openPdf(\''+escHtml(r.pdf_url)+'\',\''+escAttr(r.title)+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500/15 text-green-400 hover:bg-green-500/25 transition border border-green-500/30">View PDF</button>' : '')+
+              (r.chair_doc_url ? '<a href="'+escHtml(r.chair_doc_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Google Docs</a>' : '')+
               (isMine && r.status==='pending' ? '<button onclick="withdrawResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition border border-amber-500/20">Withdraw</button>' : '')+
               (isMine ? '<button onclick="deleteResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Delete</button>' : '')+
             '</div>'+
           '</div></div>';
       }).join('');
+      lucide.createIcons();
     }
 
     async function renderAmendments() {
@@ -504,9 +503,6 @@
       if(error){ console.error(error); alert('Could not delete (you can only delete your own posts).'); return; }
       renderFeed();
     }
-
-    function openPdf(url,title){ document.getElementById('pdf-modal-title').textContent=title; document.getElementById('pdf-frame').src=url; document.getElementById('pdf-modal').classList.remove('hidden'); }
-    function closePdfModal(){ document.getElementById('pdf-modal').classList.add('hidden'); document.getElementById('pdf-frame').src=''; }
 
     async function handleSignOut(){ await sb.auth.signOut(); window.location.href='login.html'; }
 
