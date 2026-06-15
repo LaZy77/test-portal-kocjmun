@@ -220,6 +220,12 @@
         window.location.href = 'login.html';
         return;
       }
+
+      // Role guard — send chairs/exec to their own dashboards
+      const { data: roleCheck } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
+      if (roleCheck?.role === 'chair') { window.location.href = 'chair.html'; return; }
+      if (roleCheck?.role === 'exec')  { window.location.href = 'exec.html'; return; }
+
       await loadDashboard(session.user.id);
     }
 
