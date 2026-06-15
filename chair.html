@@ -21,6 +21,7 @@
     [data-theme="dark"] .label-text{color:#9ca3af}
     [data-theme="dark"] .stat-card{background:rgba(255,255,255,0.04)}
     [data-theme="dark"] .item-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)}
+    [data-theme="dark"] .subbox{background:rgba(0,0,0,0.25)}
     [data-theme="light"] body{background:#f5f3f7;color:#1a1523}
     [data-theme="light"] .surface{background:rgba(255,255,255,0.7);backdrop-filter:blur(16px);border:1px solid rgba(93,23,95,0.1)}
     [data-theme="light"] .surface-strong{background:#ffffff;border:1px solid rgba(93,23,95,0.12);box-shadow:0 4px 20px rgba(93,23,95,0.06)}
@@ -32,6 +33,7 @@
     [data-theme="light"] .label-text{color:#6b7280}
     [data-theme="light"] .stat-card{background:#faf9fb;border:1px solid rgba(93,23,95,0.08)}
     [data-theme="light"] .item-card{background:#faf9fb;border:1px solid rgba(93,23,95,0.1)}
+    [data-theme="light"] .subbox{background:#f1eef5}
     .input-field{transition:border-color .2s,box-shadow .2s}
     .input-field:focus{outline:none;border-color:rgba(93,23,95,0.7);box-shadow:0 0 0 3px rgba(93,23,95,0.15)}
     @keyframes spin{to{transform:rotate(360deg)}}
@@ -44,10 +46,14 @@
     .status-received{background:rgba(59,130,246,0.15);color:#1d4ed8;border:1px solid rgba(59,130,246,0.3)}
     .status-published{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
     .status-withdrawn{background:rgba(107,114,128,0.15);color:#6b7280;border:1px solid rgba(107,114,128,0.3)}
+    .status-approved{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
+    .status-rejected{background:rgba(239,68,68,0.15);color:#b91c1c;border:1px solid rgba(239,68,68,0.3)}
     [data-theme="dark"] .status-pending{color:#fde047}
     [data-theme="dark"] .status-received{color:#93c5fd}
     [data-theme="dark"] .status-published{color:#86efac}
     [data-theme="dark"] .status-withdrawn{color:#9ca3af}
+    [data-theme="dark"] .status-approved{color:#86efac}
+    [data-theme="dark"] .status-rejected{color:#fca5a5}
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem}
     .tab-btn{color:#9ca3af;border-bottom:2px solid transparent;transition:all .3s;padding-bottom:8px}
     .tab-btn.active{color:#a855f7;border-bottom-color:#5D175F}
@@ -107,7 +113,10 @@
 
       <div id="tab-actions" class="mb-4 hidden">
         <button onclick="openFeedModal()" id="add-feed-btn" class="hidden flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
-          <i data-lucide="plus" style="width:14px;height:14px"></i> Add Feed Item
+          <i data-lucide="plus" style="width:14px;height:14px"></i> Post to Feed
+        </button>
+        <button onclick="clearAllAmendments()" id="clear-amend-btn" class="hidden items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-400 transition surface border" style="border-color:rgba(239,68,68,0.25)">
+          <i data-lucide="eraser" style="width:14px;height:14px"></i> Clear all amendments
         </button>
       </div>
 
@@ -131,7 +140,7 @@
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Title</label>
           <input id="res-title" type="text" placeholder="e.g. Addressing Climate Action" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Code</label>
-          <input id="res-code" type="text" placeholder="e.g. UNHRC 1.1" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
+          <input id="res-code" type="text" placeholder="e.g. UNHRC 1.2  (agenda 1, resolution 2)" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Agenda Item</label>
           <select id="res-agenda" class="input-field w-full px-4 py-3 rounded-xl text-sm">
             <option value="Agenda Item 1">Agenda Item 1</option>
@@ -152,36 +161,45 @@
     </div>
   </div>
 
-  <!-- Feed Modal -->
+  <!-- Feed Modal (simple: title + description) -->
   <div id="feed-modal" class="modal-overlay hidden">
     <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
       <div class="flex items-center justify-between mb-6">
-        <h2 class="text-lg font-semibold" id="feed-modal-title">Add Feed Item</h2>
+        <h2 class="text-lg font-semibold">Post to Committee Feed</h2>
         <button onclick="closeFeedModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
       </div>
       <div class="space-y-4">
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Country</label>
-            <input id="feed-country" type="text" placeholder="e.g. Germany" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
-          <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Flag</label>
-            <input id="feed-flag" type="text" placeholder="🇩🇪" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
-        </div>
-        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Action</label>
-          <select id="feed-action" class="input-field w-full px-4 py-3 rounded-xl text-sm">
-            <option value="submitted">submitted</option><option value="raised">raised</option>
-            <option value="proposed">proposed</option><option value="requested">requested</option>
-          </select></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Title</label>
+          <input id="feed-title" type="text" placeholder="e.g. Moving to Agenda Item 2" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Description</label>
-          <input id="feed-body" type="text" placeholder="e.g. Amendment to UNHRC 1.1" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
-        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Tag</label>
-          <input id="feed-tag" type="text" placeholder="e.g. Amendment / Working Paper / Point of Order" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+          <textarea id="feed-body" rows="4" placeholder="What is happening in committee right now…" class="input-field w-full px-4 py-3 rounded-xl text-sm resize-none"></textarea></div>
+        <p class="text-[10px] muted">This will only appear on <span class="font-medium" id="feed-committee-label" style="color:inherit">your committee</span>'s feed, posted under your name.</p>
         <div id="feed-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
         <div class="flex gap-3 pt-2">
           <button onclick="closeFeedModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
-          <button onclick="saveFeedItem()" id="feed-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
-            <span id="feed-btn-text">Add Item</span><span id="feed-spinner" class="hidden"><span class="spinner"></span></span>
+          <button onclick="postFeedItem()" id="feed-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
+            <span id="feed-btn-text">Post</span><span id="feed-spinner" class="hidden"><span class="spinner"></span></span>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reject Amendment Modal -->
+  <div id="reject-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold">Reject Amendment</h2>
+        <button onclick="closeRejectModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <p class="text-sm muted mb-4">Give the delegate a reason for the rejection — they'll see this on their amendments page.</p>
+      <textarea id="reject-reason" rows="3" placeholder="e.g. This change falls outside the scope of the clause." class="input-field w-full px-4 py-3 rounded-xl text-sm resize-none"></textarea>
+      <div id="reject-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 mt-3"></div>
+      <div class="flex gap-3 pt-4">
+        <button onclick="closeRejectModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+        <button onclick="confirmReject()" id="reject-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#991b1b,#dc2626)">
+          <span id="reject-btn-text">Reject & notify</span><span id="reject-spinner" class="hidden"><span class="spinner"></span></span>
+        </button>
       </div>
     </div>
   </div>
@@ -205,7 +223,7 @@
     let currentProfile = null;
     let currentTab = 'resolutions';
     let cachedResolutions = [];
-    let editingFeedId = null;
+    let rejectingId = null;
 
     function toggleTheme() {
       const html = document.documentElement;
@@ -230,6 +248,7 @@
       document.getElementById('chair-name').textContent = profile.name;
       document.getElementById('chair-committee').textContent = profile.committee;
       document.getElementById('chair-room').textContent = profile.room || '—';
+      document.getElementById('feed-committee-label').textContent = profile.committee;
       await loadResolutions();
       await checkAmendmentCount();
     }
@@ -248,9 +267,11 @@
     }
 
     async function checkAmendmentCount() {
-      const { data } = await sb.from('amendments').select('id,status').eq('committee', currentProfile.committee).eq('status','pending');
+      const { data } = await sb.from('amendments').select('id,status,cleared_by_chair')
+        .eq('committee', currentProfile.committee).eq('status','pending');
+      const visible = (data||[]).filter(a=>!a.cleared_by_chair);
       const badge = document.getElementById('amend-badge');
-      if (data && data.length) { badge.textContent = data.length; badge.classList.remove('hidden'); }
+      if (visible.length) { badge.textContent = visible.length; badge.classList.remove('hidden'); }
       else badge.classList.add('hidden');
     }
 
@@ -258,10 +279,12 @@
       currentTab = tab;
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
       document.getElementById('tab-'+tab).classList.add('active');
-      const addFeedBtn = document.getElementById('add-feed-btn');
       const tabActions = document.getElementById('tab-actions');
-      if (tab === 'feed') { tabActions.classList.remove('hidden'); addFeedBtn.classList.remove('hidden'); }
-      else { tabActions.classList.add('hidden'); addFeedBtn.classList.add('hidden'); }
+      const addFeedBtn = document.getElementById('add-feed-btn');
+      const clearBtn = document.getElementById('clear-amend-btn');
+      addFeedBtn.classList.add('hidden'); clearBtn.classList.add('hidden'); tabActions.classList.add('hidden');
+      if (tab === 'feed') { tabActions.classList.remove('hidden'); addFeedBtn.classList.remove('hidden'); addFeedBtn.classList.add('flex'); }
+      if (tab === 'amendments') { tabActions.classList.remove('hidden'); clearBtn.classList.remove('hidden'); clearBtn.classList.add('flex'); }
 
       if (tab === 'resolutions') renderResolutions(cachedResolutions);
       else if (tab === 'amendments') renderAmendments();
@@ -275,7 +298,7 @@
       if (!items.length) { c.innerHTML = emptyState('file-text','No resolutions yet','Click "Submit Resolution" to start.'); return; }
       c.innerHTML = items.map(r => {
         const statusLabel = {pending:'Pending Review',received:'With Exec',published:'Published',withdrawn:'Withdrawn'}[r.status];
-        const canWithdraw = r.status === 'pending';
+        const isMine = r.submitted_by === currentProfile.id;
         const submitterLine = r.submitter_role === 'delegate' && r.submitter_country
           ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">📍 ' + escHtml(r.submitter_country) + '</span>' : '';
         return '<div class="item-card rounded-xl p-4 hover:opacity-95 transition">'+
@@ -294,7 +317,8 @@
             '<div class="flex gap-2 flex-shrink-0 flex-wrap justify-end">'+
               (r.chair_doc_url ? '<a href="'+escHtml(r.chair_doc_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg surface hover:opacity-80 transition flex items-center gap-1"><i data-lucide="external-link" style="width:12px;height:12px"></i> Doc</a>' : '')+
               (r.status==='published'&&r.pdf_url ? '<button onclick="openPdf(\''+escHtml(r.pdf_url)+'\',\''+escAttr(r.title)+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500/15 text-green-400 hover:bg-green-500/25 transition border border-green-500/30">View PDF</button>' : '')+
-              (canWithdraw ? '<button onclick="withdrawResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Withdraw</button>' : '')+
+              (isMine && r.status==='pending' ? '<button onclick="withdrawResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition border border-amber-500/20">Withdraw</button>' : '')+
+              (isMine ? '<button onclick="deleteResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Delete</button>' : '')+
             '</div>'+
           '</div></div>';
       }).join('');
@@ -303,63 +327,95 @@
     async function renderAmendments() {
       const c = document.getElementById('content-list');
       c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
-      const { data: amendments } = await sb.from('amendments').select('*').eq('committee', currentProfile.committee).order('created_at',{ascending:false});
-      if (!amendments || !amendments.length) { c.innerHTML = emptyState('git-pull-request','No amendments yet','Delegates can submit amendments from their dashboard.'); return; }
+      const { data: all } = await sb.from('amendments').select('*').eq('committee', currentProfile.committee).order('created_at',{ascending:false});
+      const amendments = (all||[]).filter(a => !a.cleared_by_chair);
+      if (!amendments.length) { c.innerHTML = emptyState('git-pull-request','No amendments','When a delegate submits an amendment it appears here. Cleared amendments are hidden.'); return; }
       const resMap = {}; cachedResolutions.forEach(r => resMap[r.id] = r);
       const typeLabels = {insert:'Insert',add:'Add',strike:'Strike Out',change:'Change'};
       const typeColors = {insert:'#a855f7',add:'#22c55e',strike:'#ef4444',change:'#3b82f6'};
       c.innerHTML = amendments.map(a => {
         const res = resMap[a.resolution_id];
-        const statusBadge = a.status==='pending' ? '<span class="text-[10px] px-2 py-0.5 rounded-full status-pending">Pending</span>'
-          : a.status==='approved' ? '<span class="text-[10px] px-2 py-0.5 rounded-full status-published">Approved</span>'
-          : '<span class="text-[10px] px-2 py-0.5 rounded-full status-withdrawn">Rejected</span>';
+        const resLabel = res ? ((res.code? res.code+' — ':'')+res.title) : 'Resolution';
+        const statusLabel = {pending:'Pending',approved:'Approved',rejected:'Rejected'}[a.status];
         const actions = a.status==='pending'
-          ? '<button onclick="reviewAmendment(\''+a.id+'\',\'approved\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500/15 text-green-400 hover:bg-green-500/25 transition border border-green-500/30">Approve</button>'+
-            '<button onclick="reviewAmendment(\''+a.id+'\',\'rejected\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Reject</button>'
+          ? '<button onclick="approveAmendment(\''+a.id+'\')" class="px-4 py-2 text-xs font-semibold rounded-lg bg-green-500/15 text-green-400 hover:bg-green-500/25 transition border border-green-500/30">Approve</button>'+
+            '<button onclick="openRejectModal(\''+a.id+'\')" class="px-4 py-2 text-xs font-semibold rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Reject</button>'
           : '';
-        return '<div class="item-card rounded-xl p-4">'+
-          '<div class="flex items-start justify-between gap-4">'+
-            '<div class="flex-1 min-w-0">'+
-              '<div class="flex items-center gap-2 mb-1 flex-wrap">'+
-                '<span class="text-[10px] px-2 py-0.5 rounded-full font-medium" style="background:'+typeColors[a.amendment_type]+'22;color:'+typeColors[a.amendment_type]+'">'+typeLabels[a.amendment_type]+'</span>'+
-                statusBadge+
-                (a.submitter_country ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">📍 '+escHtml(a.submitter_country)+'</span>' : '')+
-              '</div>'+
-              '<p class="text-xs muted mb-1">On: <span class="font-medium" style="color:inherit">'+escHtml(res ? (res.code||res.title) : 'Resolution')+'</span> · '+escHtml(a.target_clause)+'</p>'+
-              '<p class="text-sm mt-1.5 p-3 rounded-lg" style="background:rgba(128,128,128,0.06)">'+escHtml(a.amendment_text)+'</p>'+
-              '<p class="text-[10px] muted mt-1.5">'+timeAgo(a.created_at)+'</p>'+
+        const row = (label,val) => '<div><p class="text-[10px] label-text uppercase tracking-wider mb-0.5">'+label+'</p><p class="text-sm">'+val+'</p></div>';
+        return '<div class="item-card rounded-xl p-5 space-y-3">'+
+          '<div class="flex items-center justify-between gap-3 flex-wrap">'+
+            '<div class="flex items-center gap-2 flex-wrap">'+
+              '<span class="text-[11px] px-2.5 py-1 rounded-full font-semibold" style="background:'+typeColors[a.amendment_type]+'22;color:'+typeColors[a.amendment_type]+'">'+typeLabels[a.amendment_type]+'</span>'+
+              '<span class="text-[11px] px-2.5 py-1 rounded-full status-'+a.status+'">'+statusLabel+'</span>'+
+              (a.submitter_country ? '<span class="text-[11px] px-2.5 py-1 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">📍 '+escHtml(a.submitter_country)+'</span>' : '')+
             '</div>'+
-            '<div class="flex gap-2 flex-shrink-0 flex-col">'+actions+'</div>'+
-          '</div></div>';
+            '<button onclick="clearAmendment(\''+a.id+'\')" title="Clear from your view" class="muted hover:text-red-400 transition flex items-center gap-1 text-[11px]"><i data-lucide="eraser" style="width:13px;height:13px"></i> Clear</button>'+
+          '</div>'+
+          row('On Resolution', escHtml(resLabel))+
+          row('Part / Clause to amend', escHtml(a.target_clause||'—'))+
+          '<div><p class="text-[10px] label-text uppercase tracking-wider mb-1">Amendment</p><p class="text-sm leading-relaxed subbox rounded-lg p-3">'+escHtml(a.amendment_text)+'</p></div>'+
+          (a.status==='rejected'&&a.review_note ? '<div><p class="text-[10px] label-text uppercase tracking-wider mb-1">Rejection reason (visible to delegate)</p><p class="text-sm subbox rounded-lg p-3 text-red-400">'+escHtml(a.review_note)+'</p></div>' : '')+
+          '<p class="text-[10px] muted">Submitted '+timeAgo(a.created_at)+'</p>'+
+          (actions ? '<div class="flex gap-2 pt-1">'+actions+'</div>' : '')+
+        '</div>';
       }).join('');
     }
 
-    async function reviewAmendment(id, status) {
-      await sb.from('amendments').update({ status }).eq('id', id);
-      await renderAmendments();
-      await checkAmendmentCount();
-      lucide.createIcons();
+    async function approveAmendment(id) {
+      await sb.from('amendments').update({ status:'approved', review_note:null }).eq('id', id);
+      await renderAmendments(); await checkAmendmentCount(); lucide.createIcons();
+    }
+    function openRejectModal(id) {
+      rejectingId = id;
+      document.getElementById('reject-reason').value = '';
+      document.getElementById('reject-error').classList.add('hidden');
+      document.getElementById('reject-modal').classList.remove('hidden');
+    }
+    function closeRejectModal() { document.getElementById('reject-modal').classList.add('hidden'); rejectingId = null; }
+    async function confirmReject() {
+      const reason = document.getElementById('reject-reason').value.trim();
+      const errEl = document.getElementById('reject-error');
+      if (!reason) { errEl.textContent='Please enter a reason so the delegate understands.'; errEl.classList.remove('hidden'); return; }
+      document.getElementById('reject-btn').disabled=true;
+      document.getElementById('reject-spinner').classList.remove('hidden');
+      const { error } = await sb.from('amendments').update({ status:'rejected', review_note:reason }).eq('id', rejectingId);
+      document.getElementById('reject-btn').disabled=false;
+      document.getElementById('reject-spinner').classList.add('hidden');
+      if (error) { errEl.textContent='Could not save. Try again.'; errEl.classList.remove('hidden'); return; }
+      closeRejectModal();
+      await renderAmendments(); await checkAmendmentCount(); lucide.createIcons();
+    }
+
+    // Soft-hide from chair view only (delegate still sees it on their page)
+    async function clearAmendment(id) {
+      await sb.from('amendments').update({ cleared_by_chair:true }).eq('id', id);
+      await renderAmendments(); await checkAmendmentCount(); lucide.createIcons();
+    }
+    async function clearAllAmendments() {
+      if (!confirm('Clear all amendments from your view? Delegates will still see their own on their amendments page.')) return;
+      await sb.from('amendments').update({ cleared_by_chair:true })
+        .eq('committee', currentProfile.committee).eq('cleared_by_chair', false);
+      await renderAmendments(); await checkAmendmentCount(); lucide.createIcons();
     }
 
     async function renderFeed() {
       const c = document.getElementById('content-list');
       c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
       const { data: feed } = await sb.from('committee_feed').select('*').eq('committee', currentProfile.committee).order('created_at',{ascending:false});
-      if (!feed || !feed.length) { c.innerHTML = emptyState('rss','No feed items yet','Click "Add Feed Item" to post committee activity.'); return; }
-      c.innerHTML = feed.map(f =>
-        '<div class="item-card rounded-xl p-4">'+
-          '<div class="flex items-start gap-3">'+
-            '<div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0" style="background:linear-gradient(135deg,#7c3aed,#5D175F)">'+escHtml(f.country_flag||'🌍')+'</div>'+
-            '<div class="flex-1 min-w-0">'+
-              '<p class="text-sm font-medium mb-0.5">'+escHtml(f.country)+' <span class="text-xs muted">'+escHtml(f.action)+'</span></p>'+
-              '<p class="text-xs muted mb-1">'+escHtml(f.body)+'</p>'+
-              '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(147,51,234,0.12);color:#a855f7">'+escHtml(f.tag)+'</span>'+
+      if (!feed || !feed.length) { c.innerHTML = emptyState('rss','No feed posts yet','Click "Post to Feed" to share committee activity.'); return; }
+      c.innerHTML = feed.map(f => {
+        const author = ((f.posted_by_role||'').charAt(0).toUpperCase()+(f.posted_by_role||'').slice(1)+' '+(f.posted_by_name||'')).trim();
+        const isMine = f.posted_by === currentProfile.id;
+        return '<div class="item-card rounded-xl p-4 border-l-4" style="border-left-color:#7c3aed">'+
+          '<div class="flex items-start justify-between gap-3">'+
+            '<div class="min-w-0">'+
+              '<p class="text-sm font-semibold mb-0.5">'+escHtml(f.title)+'</p>'+
+              '<p class="text-xs muted mb-2">'+escHtml(f.body)+'</p>'+
+              '<p class="text-[10px] muted">Posted by '+escHtml(author||'Chair')+' · '+timeAgo(f.created_at)+'</p>'+
             '</div>'+
-            '<div class="flex gap-1 flex-shrink-0">'+
-              '<button onclick="editFeedItem(\''+f.id+'\')" class="muted hover:text-purple-400 transition p-1"><i data-lucide="pencil" style="width:14px;height:14px"></i></button>'+
-              '<button onclick="deleteFeedItem(\''+f.id+'\')" class="muted hover:text-red-400 transition p-1"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>'+
-            '</div>'+
-          '</div></div>').join('');
+            (isMine ? '<button onclick="deleteFeedItem(\''+f.id+'\')" class="muted hover:text-red-400 transition p-1 flex-shrink-0"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>' : '')+
+          '</div></div>';
+      }).join('');
       lucide.createIcons();
     }
 
@@ -414,51 +470,38 @@
       await sb.from('resolutions').update({status:'withdrawn'}).eq('id',id);
       await loadResolutions();
     }
-
-    // Feed CRUD
-    function openFeedModal(){ editingFeedId=null; document.getElementById('feed-modal-title').textContent='Add Feed Item';
-      document.getElementById('feed-btn-text').textContent='Add Item'; clearFeedForm(); document.getElementById('feed-modal').classList.remove('hidden'); }
-    function closeFeedModal(){ document.getElementById('feed-modal').classList.add('hidden'); }
-    function clearFeedForm(){ ['feed-country','feed-flag','feed-body','feed-tag'].forEach(id=>document.getElementById(id).value=''); }
-    async function editFeedItem(id) {
-      const { data } = await sb.from('committee_feed').select('*').eq('id',id).single();
-      if(!data) return;
-      editingFeedId=id;
-      document.getElementById('feed-modal-title').textContent='Edit Feed Item';
-      document.getElementById('feed-btn-text').textContent='Save Changes';
-      document.getElementById('feed-country').value=data.country||'';
-      document.getElementById('feed-flag').value=data.country_flag||'';
-      document.getElementById('feed-action').value=data.action||'submitted';
-      document.getElementById('feed-body').value=data.body||'';
-      document.getElementById('feed-tag').value=data.tag||'';
-      document.getElementById('feed-modal').classList.remove('hidden');
+    async function deleteResolution(id) {
+      if(!confirm('Permanently delete this resolution? This cannot be undone.')) return;
+      const { error } = await sb.from('resolutions').delete().eq('id',id);
+      if(error){ console.error(error); alert('Could not delete (you can only delete resolutions you submitted).'); return; }
+      await loadResolutions();
     }
-    async function saveFeedItem() {
-      const country=document.getElementById('feed-country').value.trim();
-      const flag=document.getElementById('feed-flag').value.trim()||'🌍';
-      const action=document.getElementById('feed-action').value;
+
+    // Feed
+    function openFeedModal(){ document.getElementById('feed-title').value=''; document.getElementById('feed-body').value=''; document.getElementById('feed-error').classList.add('hidden'); document.getElementById('feed-modal').classList.remove('hidden'); }
+    function closeFeedModal(){ document.getElementById('feed-modal').classList.add('hidden'); }
+    async function postFeedItem() {
+      const title=document.getElementById('feed-title').value.trim();
       const body=document.getElementById('feed-body').value.trim();
-      const tag=document.getElementById('feed-tag').value.trim();
       const errEl=document.getElementById('feed-error');
       errEl.classList.add('hidden');
-      if(!country||!body||!tag){ errEl.textContent='Country, description and tag are required.'; errEl.classList.remove('hidden'); return; }
+      if(!title||!body){ errEl.textContent='Title and description are required.'; errEl.classList.remove('hidden'); return; }
       document.getElementById('feed-btn').disabled=true;
       document.getElementById('feed-spinner').classList.remove('hidden');
-      let error;
-      if(editingFeedId){
-        ({ error } = await sb.from('committee_feed').update({country,country_flag:flag,action,body,tag}).eq('id',editingFeedId));
-      } else {
-        ({ error } = await sb.from('committee_feed').insert({committee:currentProfile.committee,country,country_flag:flag,action,body,tag}));
-      }
+      const { error } = await sb.from('committee_feed').insert({
+        committee: currentProfile.committee, title, body,
+        posted_by: currentProfile.id, posted_by_name: currentProfile.name, posted_by_role: 'chair'
+      });
       document.getElementById('feed-btn').disabled=false;
       document.getElementById('feed-spinner').classList.add('hidden');
-      if(error){ console.error(error); errEl.textContent='Failed to save.'; errEl.classList.remove('hidden'); return; }
+      if(error){ console.error(error); errEl.textContent='Failed to post.'; errEl.classList.remove('hidden'); return; }
       closeFeedModal();
       renderFeed();
     }
     async function deleteFeedItem(id) {
-      if(!confirm('Delete this feed item?')) return;
-      await sb.from('committee_feed').delete().eq('id',id);
+      if(!confirm('Delete this feed post?')) return;
+      const { error } = await sb.from('committee_feed').delete().eq('id',id);
+      if(error){ console.error(error); alert('Could not delete (you can only delete your own posts).'); return; }
       renderFeed();
     }
 
@@ -470,11 +513,23 @@
     function emptyState(icon,title,sub){ return '<div class="text-center py-12 muted"><i data-lucide="'+icon+'" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">'+title+'</p><p class="text-xs mt-1">'+sub+'</p></div>'; }
     function escHtml(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function escAttr(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/'/g,'\\\'').replace(/"/g,'&quot;'); }
-    function timeAgo(iso){ if(!iso)return''; const d=Math.round((Date.now()-new Date(iso))/60000); if(d<1)return'just now'; if(d<60)return d+'m ago'; if(d<1440)return Math.floor(d/60)+'h ago'; return Math.floor(d/1440)+'d ago'; }
+    function timeAgo(iso){
+      if(!iso) return '';
+      let s = String(iso).trim();
+      if(!/[zZ]$|[+\-]\d\d:?\d\d$/.test(s)){ s = s.replace(' ','T') + 'Z'; }
+      const then = new Date(s).getTime();
+      if(isNaN(then)) return '';
+      const d = Math.round((Date.now()-then)/60000);
+      if(d<1) return 'just now';
+      if(d<60) return d+'m ago';
+      if(d<1440) return Math.floor(d/60)+'h ago';
+      return Math.floor(d/1440)+'d ago';
+    }
 
     sb.channel('chair-updates')
       .on('postgres_changes',{event:'*',schema:'public',table:'resolutions'},()=>loadResolutions())
       .on('postgres_changes',{event:'*',schema:'public',table:'amendments'},()=>{checkAmendmentCount(); if(currentTab==='amendments')renderAmendments();})
+      .on('postgres_changes',{event:'*',schema:'public',table:'committee_feed'},()=>{ if(currentTab==='feed')renderFeed(); })
       .subscribe();
 
     init();
