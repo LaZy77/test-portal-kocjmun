@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chair Dashboard — Koç JMUN</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html,body{height:100%;margin:0;font-family:'Outfit',sans-serif}
+    .glass{background:rgba(255,255,255,0.04);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
+    .glass-strong{background:rgba(255,255,255,0.07);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.12)}
+    .glow-border{box-shadow:0 0 20px rgba(93,23,95,0.25),inset 0 0 20px rgba(93,23,95,0.1);border:1px solid rgba(93,23,95,0.4)}
+    .bg-grid{background-image:linear-gradient(rgba(93,23,95,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.05) 1px,transparent 1px);background-size:60px 60px}
+    @keyframes pulse-glow{0%,100%{opacity:.4}50%{opacity:.8}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .animate-pulse-glow{animation:pulse-glow 3s ease-in-out infinite}
+    .animate-fadein{animation:fadeIn 0.4s ease-out forwards}
+    .input-field{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;transition:border-color .2s,box-shadow .2s}
+    .input-field:focus{outline:none;border-color:rgba(93,23,95,0.7);box-shadow:0 0 0 3px rgba(93,23,95,0.15)}
+    .input-field::placeholder{color:#4b5563}
+    .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
+    .status-pending{background:rgba(234,179,8,0.15);color:#fde047;border:1px solid rgba(234,179,8,0.3)}
+    .status-received{background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.3)}
+    .status-published{background:rgba(34,197,94,0.15);color:#86efac;border:1px solid rgba(34,197,94,0.3)}
+    .status-withdrawn{background:rgba(107,114,128,0.15);color:#9ca3af;border:1px solid rgba(107,114,128,0.3)}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem}
+    .skeleton{background:linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.04) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px}
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+  </style>
+</head>
+<body class="h-full overflow-auto bg-[#0a0e1a] text-white bg-grid">
+  <div class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0">
+    <div class="absolute top-[10%] left-[15%] w-96 h-96 rounded-full bg-purple-900/10 blur-3xl animate-pulse-glow"></div>
+    <div class="absolute bottom-[20%] right-[10%] w-80 h-80 rounded-full bg-purple-800/8 blur-3xl animate-pulse-glow" style="animation-delay:1.5s"></div>
+  </div>
+
+  <div class="relative z-10 w-full">
+    <!-- Nav -->
+    <nav class="w-full px-4 sm:px-8 py-4 border-b border-white/5">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="https://i.ibb.co/pBH9L8Sk/jmun26logoblack-e.png" alt="Koç JMUN" style="height:40px;width:auto">
+          <div class="h-5 w-px bg-white/10"></div>
+          <span class="text-xs font-medium text-amber-400 uppercase tracking-wider">Chair Portal</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-gray-400">Signed in as <span class="text-white font-medium" id="nav-name">—</span></span>
+          <button onclick="handleSignOut()" class="px-3 py-1.5 rounded-lg text-xs text-purple-200 hover:bg-purple-500/10 transition" style="border:1px solid rgba(93,23,95,0.4)">Sign Out</button>
+        </div>
+      </div>
+    </nav>
+
+    <section class="max-w-7xl mx-auto px-4 sm:px-8 pt-8 pb-16 animate-fadein">
+
+      <!-- Header -->
+      <div class="glass-strong rounded-2xl p-6 glow-border mb-8">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-xs text-gray-500 mb-1">Chair Dashboard</p>
+            <h1 class="text-xl font-semibold">Welcome, <span class="text-amber-400" id="chair-name">—</span></h1>
+            <p class="text-sm text-gray-400 mt-1">Committee: <span class="text-white font-medium" id="chair-committee">—</span> · Room <span class="text-white font-medium" id="chair-room">—</span></p>
+          </div>
+          <button onclick="openSubmitModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
+            <i data-lucide="plus" style="width:16px;height:16px"></i>
+            Submit Resolution
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <div class="glass rounded-xl p-4">
+          <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Total Submitted</p>
+          <p class="text-2xl font-bold text-white" id="stat-total">—</p>
+        </div>
+        <div class="glass rounded-xl p-4">
+          <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Pending Review</p>
+          <p class="text-2xl font-bold text-amber-400" id="stat-pending">—</p>
+        </div>
+        <div class="glass rounded-xl p-4">
+          <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">With Exec</p>
+          <p class="text-2xl font-bold text-blue-400" id="stat-received">—</p>
+        </div>
+        <div class="glass rounded-xl p-4">
+          <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Published</p>
+          <p class="text-2xl font-bold text-green-400" id="stat-published">—</p>
+        </div>
+      </div>
+
+      <!-- Resolutions list -->
+      <div>
+        <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Your Resolutions</h2>
+        <div class="glass-strong rounded-2xl p-5 sm:p-6 glow-border">
+          <div id="resolutions-list" class="space-y-3">
+            <div class="glass rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>
+            <div class="glass rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-56"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Submit Modal -->
+  <div id="submit-modal" class="modal-overlay hidden">
+    <div class="glass-strong rounded-2xl p-6 w-full max-w-lg glow-border">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold">Submit Resolution</h2>
+        <button onclick="closeSubmitModal()" class="text-gray-500 hover:text-white transition">
+          <i data-lucide="x" style="width:20px;height:20px"></i>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Resolution Title</label>
+          <input id="res-title" type="text" placeholder="e.g. Addressing Climate Action in Developing Nations" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Resolution Code</label>
+          <input id="res-code" type="text" placeholder="e.g. UNHRC 1.1" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Google Docs Link</label>
+          <input id="res-doc-url" type="url" placeholder="https://docs.google.com/document/d/..." class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono">
+          <p class="text-[10px] text-gray-500 mt-1.5">Make sure sharing is set to "Anyone with the link can view"</p>
+        </div>
+        <div id="submit-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+        <div class="flex gap-3 pt-2">
+          <button onclick="closeSubmitModal()" class="flex-1 py-3 rounded-xl text-sm font-medium text-gray-400 hover:text-white transition glass">Cancel</button>
+          <button onclick="submitResolution()" id="submit-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
+            <span id="submit-btn-text">Submit to Exec</span>
+            <span id="submit-spinner" class="hidden"><span class="spinner"></span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF Viewer Modal -->
+  <div id="pdf-modal" class="modal-overlay hidden">
+    <div class="glass-strong rounded-2xl w-full max-w-4xl glow-border overflow-hidden" style="height:85vh">
+      <div class="flex items-center justify-between p-4 border-b border-white/5">
+        <h3 class="text-sm font-semibold" id="pdf-modal-title">Resolution</h3>
+        <button onclick="closePdfModal()" class="text-gray-500 hover:text-white transition">
+          <i data-lucide="x" style="width:20px;height:20px"></i>
+        </button>
+      </div>
+      <iframe id="pdf-frame" src="" class="w-full" style="height:calc(85vh - 57px);border:none;background:#fff"></iframe>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentProfile = null;
+
+    lucide.createIcons();
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'login.html'; return; }
+
+      const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+      if (!profile || profile.role !== 'chair') { window.location.href = 'login.html'; return; }
+
+      currentProfile = profile;
+      document.getElementById('nav-name').textContent = profile.name;
+      document.getElementById('chair-name').textContent = profile.name;
+      document.getElementById('chair-committee').textContent = profile.committee;
+      document.getElementById('chair-room').textContent = profile.room || '—';
+
+      await loadResolutions();
+    }
+
+    async function loadResolutions() {
+      const { data, error } = await sb
+        .from('resolutions')
+        .select('*')
+        .eq('committee', currentProfile.committee)
+        .order('created_at', { ascending: false });
+
+      if (error) { console.error(error); return; }
+
+      // Stats
+      const total     = data.length;
+      const pending   = data.filter(r => r.status === 'pending').length;
+      const received  = data.filter(r => r.status === 'received').length;
+      const published = data.filter(r => r.status === 'published').length;
+
+      document.getElementById('stat-total').textContent     = total;
+      document.getElementById('stat-pending').textContent   = pending;
+      document.getElementById('stat-received').textContent  = received;
+      document.getElementById('stat-published').textContent = published;
+
+      renderResolutions(data);
+      lucide.createIcons();
+    }
+
+    function renderResolutions(items) {
+      const container = document.getElementById('resolutions-list');
+      if (!items.length) {
+        container.innerHTML = `<div class="text-center py-12 text-gray-500">
+          <i data-lucide="file-text" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i>
+          <p class="text-sm">No resolutions submitted yet.</p>
+          <p class="text-xs mt-1">Click "Submit Resolution" to get started.</p>
+        </div>`;
+        return;
+      }
+
+      container.innerHTML = items.map(r => {
+        const statusClass = `status-${r.status}`;
+        const statusLabel = { pending: 'Pending Review', received: 'With Exec', published: 'Published', withdrawn: 'Withdrawn' }[r.status] || r.status;
+        const canWithdraw = r.status === 'pending';
+        const hasPublishedPdf = r.status === 'published' && r.pdf_url;
+        const execDocReady = r.status === 'received' && r.exec_doc_url;
+
+        return `<div class="glass rounded-xl p-4 border border-white/5 hover:border-purple-500/20 transition">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1 flex-wrap">
+                <span class="text-xs font-mono font-semibold text-purple-300">${escHtml(r.code || '—')}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full ${statusClass}">${statusLabel}</span>
+              </div>
+              <p class="text-sm font-medium text-white mb-1 truncate">${escHtml(r.title)}</p>
+              <p class="text-[10px] text-gray-500">${timeAgo(r.created_at)}</p>
+              ${r.exec_note ? `<p class="text-xs text-amber-400 mt-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5">📝 Exec note: ${escHtml(r.exec_note)}</p>` : ''}
+            </div>
+            <div class="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+              ${r.chair_doc_url ? `<a href="${escHtml(r.chair_doc_url)}" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 transition border border-white/10 flex items-center gap-1"><i data-lucide="external-link" style="width:12px;height:12px"></i> Doc</a>` : ''}
+              ${execDocReady ? `<a href="${escHtml(r.exec_doc_url)}" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500/15 text-blue-300 hover:bg-blue-500/25 transition border border-blue-500/30 flex items-center gap-1"><i data-lucide="external-link" style="width:12px;height:12px"></i> Exec Draft</a>` : ''}
+              ${hasPublishedPdf ? `<button onclick="openPdf('${escHtml(r.pdf_url)}','${escHtml(r.title)}')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500/15 text-green-300 hover:bg-green-500/25 transition border border-green-500/30">View PDF</button>` : ''}
+              ${canWithdraw ? `<button onclick="withdrawResolution('${r.id}')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Withdraw</button>` : ''}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    async function submitResolution() {
+      const title   = document.getElementById('res-title').value.trim();
+      const code    = document.getElementById('res-code').value.trim();
+      const docUrl  = document.getElementById('res-doc-url').value.trim();
+      const errEl   = document.getElementById('submit-error');
+
+      errEl.classList.add('hidden');
+
+      if (!title || !code || !docUrl) {
+        errEl.textContent = 'Please fill in all fields.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (!docUrl.includes('docs.google.com')) {
+        errEl.textContent = 'Please enter a valid Google Docs link.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      setSubmitLoading(true);
+
+      const { data: { session } } = await sb.auth.getSession();
+      const { error } = await sb.from('resolutions').insert({
+        title,
+        code,
+        committee: currentProfile.committee,
+        submitted_by: session.user.id,
+        chair_doc_url: docUrl,
+        status: 'pending'
+      });
+
+      if (error) {
+        errEl.textContent = 'Submission failed. Please try again.';
+        errEl.classList.remove('hidden');
+        setSubmitLoading(false);
+        return;
+      }
+
+      closeSubmitModal();
+      document.getElementById('res-title').value = '';
+      document.getElementById('res-code').value = '';
+      document.getElementById('res-doc-url').value = '';
+      await loadResolutions();
+      lucide.createIcons();
+    }
+
+    async function withdrawResolution(id) {
+      if (!confirm('Withdraw this resolution? It will be removed from exec review.')) return;
+      await sb.from('resolutions').update({ status: 'withdrawn' }).eq('id', id);
+      await loadResolutions();
+      lucide.createIcons();
+    }
+
+    function openSubmitModal()  { document.getElementById('submit-modal').classList.remove('hidden'); }
+    function closeSubmitModal() { document.getElementById('submit-modal').classList.add('hidden'); }
+    function openPdf(url, title) {
+      document.getElementById('pdf-modal-title').textContent = title;
+      document.getElementById('pdf-frame').src = url;
+      document.getElementById('pdf-modal').classList.remove('hidden');
+    }
+    function closePdfModal() {
+      document.getElementById('pdf-modal').classList.add('hidden');
+      document.getElementById('pdf-frame').src = '';
+    }
+
+    function setSubmitLoading(loading) {
+      document.getElementById('submit-btn').disabled = loading;
+      document.getElementById('submit-btn-text').textContent = loading ? 'Submitting…' : 'Submit to Exec';
+      document.getElementById('submit-spinner').classList.toggle('hidden', !loading);
+    }
+
+    async function handleSignOut() {
+      await sb.auth.signOut();
+      window.location.href = 'login.html';
+    }
+
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function timeAgo(iso) {
+      if (!iso) return '';
+      const diff = Math.round((Date.now() - new Date(iso)) / 60000);
+      if (diff < 1) return 'just now';
+      if (diff < 60) return `${diff}m ago`;
+      if (diff < 1440) return `${Math.floor(diff/60)}h ago`;
+      return `${Math.floor(diff/1440)}d ago`;
+    }
+
+    // Realtime updates
+    sb.channel('chair-resolutions')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'resolutions' }, () => {
+        loadResolutions().then(() => lucide.createIcons());
+      })
+      .subscribe();
+
+    init();
+  </script>
+</body>
+</html>
