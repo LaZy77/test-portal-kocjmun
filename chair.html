@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chair Dashboard — Koç JMUN</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html,body{height:100%;margin:0;font-family:'Outfit',sans-serif}
+    [data-theme="dark"] body{background:#0a0e1a;color:#fff}
+    [data-theme="dark"] .surface{background:rgba(255,255,255,0.04);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
+    [data-theme="dark"] .surface-strong{background:rgba(255,255,255,0.07);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.12)}
+    [data-theme="dark"] .glow-border{box-shadow:0 0 20px rgba(93,23,95,0.25),inset 0 0 20px rgba(93,23,95,0.1);border:1px solid rgba(93,23,95,0.4)}
+    [data-theme="dark"] .bg-grid{background-image:linear-gradient(rgba(93,23,95,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.05) 1px,transparent 1px);background-size:60px 60px}
+    [data-theme="dark"] .input-field{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0}
+    [data-theme="dark"] .input-field::placeholder{color:#4b5563}
+    [data-theme="dark"] .muted{color:#9ca3af}
+    [data-theme="dark"] .label-text{color:#9ca3af}
+    [data-theme="dark"] .stat-card{background:rgba(255,255,255,0.04)}
+    [data-theme="dark"] .item-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)}
+    [data-theme="dark"] .subbox{background:rgba(0,0,0,0.25)}
+    [data-theme="light"] body{background:#f5f3f7;color:#1a1523}
+    [data-theme="light"] .surface{background:rgba(255,255,255,0.7);backdrop-filter:blur(16px);border:1px solid rgba(93,23,95,0.1)}
+    [data-theme="light"] .surface-strong{background:#ffffff;border:1px solid rgba(93,23,95,0.12);box-shadow:0 4px 20px rgba(93,23,95,0.06)}
+    [data-theme="light"] .glow-border{box-shadow:0 4px 24px rgba(93,23,95,0.1);border:1px solid rgba(93,23,95,0.2)}
+    [data-theme="light"] .bg-grid{background-image:linear-gradient(rgba(93,23,95,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.03) 1px,transparent 1px);background-size:60px 60px}
+    [data-theme="light"] .input-field{background:#ffffff;border:1px solid rgba(93,23,95,0.2);color:#1a1523}
+    [data-theme="light"] .input-field::placeholder{color:#9ca3af}
+    [data-theme="light"] .muted{color:#6b7280}
+    [data-theme="light"] .label-text{color:#6b7280}
+    [data-theme="light"] .stat-card{background:#faf9fb;border:1px solid rgba(93,23,95,0.08)}
+    [data-theme="light"] .item-card{background:#faf9fb;border:1px solid rgba(93,23,95,0.1)}
+    [data-theme="light"] .subbox{background:#f1eef5}
+    .input-field{transition:border-color .2s,box-shadow .2s}
+    .input-field:focus{outline:none;border-color:rgba(93,23,95,0.7);box-shadow:0 0 0 3px rgba(93,23,95,0.15)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    .animate-fadein{animation:fadeIn 0.4s ease-out forwards}
+    .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
+    .skeleton{background:linear-gradient(90deg,rgba(128,128,128,0.1) 25%,rgba(128,128,128,0.2) 50%,rgba(128,128,128,0.1) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px}
+    .status-pending{background:rgba(234,179,8,0.15);color:#a16207;border:1px solid rgba(234,179,8,0.3)}
+    .status-received{background:rgba(59,130,246,0.15);color:#1d4ed8;border:1px solid rgba(59,130,246,0.3)}
+    .status-under_review{background:rgba(99,102,241,0.15);color:#4338ca;border:1px solid rgba(99,102,241,0.3)}
+    .status-sent_to_panel{background:rgba(124,58,237,0.15);color:#6d28d9;border:1px solid rgba(124,58,237,0.3)}
+    .status-published{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
+    .status-withdrawn{background:rgba(107,114,128,0.15);color:#6b7280;border:1px solid rgba(107,114,128,0.3)}
+    .status-approved{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
+    .status-rejected{background:rgba(239,68,68,0.15);color:#b91c1c;border:1px solid rgba(239,68,68,0.3)}
+    [data-theme="dark"] .status-pending{color:#fde047}
+    [data-theme="dark"] .status-received{color:#93c5fd}
+    [data-theme="dark"] .status-under_review{color:#a5b4fc}
+    [data-theme="dark"] .status-sent_to_panel{color:#c4b5fd}
+    [data-theme="dark"] .status-published{color:#86efac}
+    [data-theme="dark"] .status-withdrawn{color:#9ca3af}
+    [data-theme="dark"] .status-approved{color:#86efac}
+    [data-theme="dark"] .status-rejected{color:#fca5a5}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem}
+    .tab-btn{color:#9ca3af;border-bottom:2px solid transparent;transition:all .3s;padding-bottom:8px}
+    .tab-btn.active{color:#a855f7;border-bottom-color:#5D175F}
+    [data-theme="light"] .tab-btn{color:#6b7280}
+    [data-theme="light"] .tab-btn.active{color:#5D175F}
+    .badge-new{background:rgba(239,68,68,0.2);color:#dc2626;border:1px solid rgba(239,68,68,0.3);font-size:10px;padding:1px 6px;border-radius:99px}
+    [data-theme="dark"] .badge-new{color:#fca5a5}
+  </style>
+</head>
+<body class="h-full overflow-auto bg-grid">
+  <div class="relative z-10 w-full">
+    <nav class="w-full px-4 sm:px-8 py-4 border-b" style="border-color:rgba(128,128,128,0.1)">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="https://i.ibb.co/pBH9L8Sk/jmun26logoblack-e.png" alt="Koç JMUN" style="height:40px;width:auto">
+          <div class="h-5 w-px" style="background:rgba(128,128,128,0.2)"></div>
+          <span class="text-xs font-medium text-amber-400 uppercase tracking-wider">Chair Portal</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="toggleTheme()" class="p-2 rounded-lg surface hover:opacity-80 transition" title="Toggle theme">
+            <i data-lucide="sun" style="width:18px;height:18px" id="theme-icon"></i>
+          </button>
+          <span class="text-sm muted hidden sm:inline">Signed in as <span class="font-medium" id="nav-name" style="color:inherit">—</span></span>
+          <button onclick="handleSignOut()" class="px-3 py-1.5 rounded-lg text-xs text-purple-200 hover:bg-purple-500/10 transition" style="border:1px solid rgba(93,23,95,0.4)">Sign Out</button>
+        </div>
+      </div>
+    </nav>
+
+    <section class="max-w-7xl mx-auto px-4 sm:px-8 pt-8 pb-16 animate-fadein">
+      <div class="surface-strong rounded-2xl p-6 glow-border mb-8">
+        <div class="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <p class="text-xs label-text mb-1">Chair Dashboard</p>
+            <h1 class="text-xl font-semibold">Welcome, <span class="text-amber-400" id="chair-name">—</span></h1>
+            <p class="text-sm muted mt-1">Committee: <span class="font-medium" id="chair-committee" style="color:inherit">—</span> · Room <span class="font-medium" id="chair-room" style="color:inherit">—</span></p>
+          </div>
+          <button onclick="openSubmitModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition" style="background:#5D175F">
+            <i data-lucide="plus" style="width:16px;height:16px"></i>
+            Submit Resolution
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Total</p><p class="text-2xl font-bold" id="stat-total">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">With you</p><p class="text-2xl font-bold text-amber-400" id="stat-pending">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">At panel</p><p class="text-2xl font-bold text-blue-400" id="stat-received">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Published</p><p class="text-2xl font-bold text-green-400" id="stat-published">—</p></div>
+      </div>
+
+      <div class="flex gap-6 border-b mb-6 overflow-x-auto" style="border-color:rgba(128,128,128,0.1)">
+        <button class="tab-btn active text-sm font-medium whitespace-nowrap" onclick="switchTab('resolutions')" id="tab-resolutions">Resolutions</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('amendments')" id="tab-amendments">Amendments <span id="amend-badge" class="badge-new ml-1 hidden">0</span></button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('feed')" id="tab-feed">Committee Feed</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('announcements')" id="tab-announcements">Announcements</button>
+      </div>
+
+      <div id="tab-actions" class="mb-4 hidden">
+        <button onclick="openFeedModal()" id="add-feed-btn" class="hidden flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:#5D175F">
+          <i data-lucide="plus" style="width:14px;height:14px"></i> Post to Feed
+        </button>
+        <button onclick="clearAllAmendments()" id="clear-amend-btn" class="hidden items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-400 transition surface border" style="border-color:rgba(239,68,68,0.25)">
+          <i data-lucide="eraser" style="width:14px;height:14px"></i> Clear all amendments
+        </button>
+      </div>
+
+      <div class="surface-strong rounded-2xl p-5 sm:p-6 glow-border">
+        <div id="content-list" class="space-y-3">
+          <div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>
+          <div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-56"></div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Submit Resolution Modal -->
+  <div id="submit-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold">Submit Resolution</h2>
+        <button onclick="closeSubmitModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <div class="space-y-4">
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Agenda Item</label>
+          <select id="res-agenda" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+            <option value="Agenda Item 1">Agenda Item 1</option>
+            <option value="Agenda Item 2">Agenda Item 2</option>
+            <option value="Agenda Item 3">Agenda Item 3</option>
+          </select></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Google Docs Link</label>
+          <input id="res-doc-url" type="url" placeholder="https://docs.google.com/document/d/..." class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono">
+          <p class="text-[10px] muted mt-1.5">Set sharing to "Anyone with the link can view". The code is assigned when it's sent to the approval panel.</p></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Short Explanation</label>
+          <textarea id="res-summary" rows="3" placeholder="In a sentence or two, what does this resolution propose?" class="input-field w-full px-4 py-3 rounded-xl text-sm resize-none"></textarea></div>
+        <div id="submit-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+        <div class="flex gap-3 pt-2">
+          <button onclick="closeSubmitModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+          <button onclick="submitResolution()" id="submit-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#5D175F">
+            <span id="submit-btn-text">Submit</span><span id="submit-spinner" class="hidden"><span class="spinner"></span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feed Modal (simple: title + description) -->
+  <div id="feed-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold">Post to Committee Feed</h2>
+        <button onclick="closeFeedModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <div class="space-y-4">
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Title</label>
+          <input id="feed-title" type="text" placeholder="e.g. Moving to Agenda Item 2" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Description</label>
+          <textarea id="feed-body" rows="4" placeholder="What is happening in committee right now…" class="input-field w-full px-4 py-3 rounded-xl text-sm resize-none"></textarea></div>
+        <p class="text-[10px] muted">This will only appear on <span class="font-medium" id="feed-committee-label" style="color:inherit">your committee</span>'s feed, posted under your name.</p>
+        <div id="feed-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+        <div class="flex gap-3 pt-2">
+          <button onclick="closeFeedModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+          <button onclick="postFeedItem()" id="feed-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#5D175F">
+            <span id="feed-btn-text">Post</span><span id="feed-spinner" class="hidden"><span class="spinner"></span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reject Amendment Modal -->
+  <div id="reject-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold">Reject Amendment</h2>
+        <button onclick="closeRejectModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <p class="text-sm muted mb-4">Give the delegate a reason for the rejection — they'll see this on their amendments page.</p>
+      <textarea id="reject-reason" rows="3" placeholder="e.g. This change falls outside the scope of the clause." class="input-field w-full px-4 py-3 rounded-xl text-sm resize-none"></textarea>
+      <div id="reject-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 mt-3"></div>
+      <div class="flex gap-3 pt-4">
+        <button onclick="closeRejectModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+        <button onclick="confirmReject()" id="reject-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#dc2626">
+          <span id="reject-btn-text">Reject & notify</span><span id="reject-spinner" class="hidden"><span class="spinner"></span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send to Approval Panel Modal -->
+  <div id="panel-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold">Send to Approval Panel</h2>
+        <button onclick="closePanelModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <p class="text-sm muted mb-4">Assign the official resolution code, then forward it to the exec approval panel.</p>
+      <div class="item-card rounded-xl p-3 mb-4">
+        <p class="text-[10px] label-text uppercase tracking-wider mb-0.5">Explanation from submitter</p>
+        <p class="text-sm" id="panel-summary">—</p>
+      </div>
+      <div class="space-y-4">
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Resolution Code</label>
+          <input id="panel-code" type="text" placeholder="e.g. UNHRC 1.2  (agenda 1, resolution 2)" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Title <span class="normal-case label-text">(optional)</span></label>
+          <input id="panel-title" type="text" placeholder="Defaults to the submitter's explanation" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+        <div id="panel-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+        <div class="flex gap-3 pt-2">
+          <button onclick="closePanelModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+          <button onclick="confirmSendToPanel()" id="panel-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#5D175F">
+            <span id="panel-btn-text">Send to panel</span><span id="panel-spinner" class="hidden"><span class="spinner"></span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const BUILD = '2026-06-16.2';
+    console.log('%cKoç JMUN · chair.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
+    document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
+
+    let currentProfile = null;
+    let currentTab = 'resolutions';
+    let cachedResolutions = [];
+    let rejectingId = null;
+    let forwardingId = null;
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('jmun_theme', next); } catch(e){}
+      document.getElementById('theme-icon').setAttribute('data-lucide', next === 'dark' ? 'sun' : 'moon');
+      lucide.createIcons();
+    }
+    (function(){ let s='dark'; try{s=localStorage.getItem('jmun_theme')||'dark';}catch(e){} document.documentElement.setAttribute('data-theme',s); })();
+    lucide.createIcons();
+    document.getElementById('theme-icon').setAttribute('data-lucide', document.documentElement.getAttribute('data-theme')==='dark'?'sun':'moon');
+    lucide.createIcons();
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'login.html'; return; }
+      const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+      if (!profile || profile.role !== 'chair') { window.location.href = 'login.html'; return; }
+      currentProfile = profile;
+      document.getElementById('nav-name').textContent = profile.name;
+      document.getElementById('chair-name').textContent = profile.name;
+      document.getElementById('chair-committee').textContent = profile.committee;
+      document.getElementById('chair-room').textContent = profile.room || '—';
+      document.getElementById('feed-committee-label').textContent = profile.committee;
+      await loadResolutions();
+      await checkAmendmentCount();
+    }
+
+    async function loadResolutions() {
+      const { data, error } = await sb.from('resolutions').select('*')
+        .eq('committee', currentProfile.committee).order('created_at', { ascending: false });
+      if (error) { console.error(error); return; }
+      cachedResolutions = data || [];
+      document.getElementById('stat-total').textContent = data.length;
+      document.getElementById('stat-pending').textContent = data.filter(r=>r.status==='pending'||r.status==='under_review').length;
+      document.getElementById('stat-received').textContent = data.filter(r=>r.status==='sent_to_panel').length;
+      document.getElementById('stat-published').textContent = data.filter(r=>r.status==='published').length;
+      if (currentTab === 'resolutions') renderResolutions(data);
+      lucide.createIcons();
+    }
+
+    async function checkAmendmentCount() {
+      const { data } = await sb.from('amendments').select('id,status,cleared_by_chair')
+        .eq('committee', currentProfile.committee).eq('status','pending');
+      const visible = (data||[]).filter(a=>!a.cleared_by_chair);
+      const badge = document.getElementById('amend-badge');
+      if (visible.length) { badge.textContent = visible.length; badge.classList.remove('hidden'); }
+      else badge.classList.add('hidden');
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.getElementById('tab-'+tab).classList.add('active');
+      const tabActions = document.getElementById('tab-actions');
+      const addFeedBtn = document.getElementById('add-feed-btn');
+      const clearBtn = document.getElementById('clear-amend-btn');
+      addFeedBtn.classList.add('hidden'); clearBtn.classList.add('hidden'); tabActions.classList.add('hidden');
+      if (tab === 'feed') { tabActions.classList.remove('hidden'); addFeedBtn.classList.remove('hidden'); addFeedBtn.classList.add('flex'); }
+      if (tab === 'amendments') { tabActions.classList.remove('hidden'); clearBtn.classList.remove('hidden'); clearBtn.classList.add('flex'); }
+
+      if (tab === 'resolutions') renderResolutions(cachedResolutions);
+      else if (tab === 'amendments') renderAmendments();
+      else if (tab === 'feed') renderFeed();
+      else if (tab === 'announcements') renderAnnouncements();
+      lucide.createIcons();
+    }
+
+    function renderResolutions(items) {
+      const c = document.getElementById('content-list');
+      if (!items.length) { c.innerHTML = emptyState('file-text','No resolutions yet','Delegate submissions and your own resolutions appear here.'); return; }
+      const statusLabel = {pending:'New — awaiting you',under_review:'Under review by chairboard',sent_to_panel:'Sent to approval panel',published:'Projected on all panels',withdrawn:'Withdrawn'};
+      c.innerHTML = items.map(r => {
+        const isMine = r.submitted_by === currentProfile.id;
+        const heading = r.title || r.summary || 'Untitled resolution';
+        const submitterLine = r.submitter_role === 'delegate' && r.submitter_country
+          ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(93,23,95,0.15);color:#a855f7">📍 ' + escHtml(r.submitter_country) + '</span>'
+          : '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.1)">You</span>';
+        return '<div class="item-card rounded-xl p-4 hover:opacity-95 transition">'+
+          '<div class="flex items-start justify-between gap-4">'+
+            '<div class="flex-1 min-w-0">'+
+              '<div class="flex items-center gap-2 mb-1 flex-wrap">'+
+                (r.code ? '<span class="text-xs font-mono font-semibold text-purple-400">'+escHtml(r.code)+'</span>' : '')+
+                '<span class="text-[10px] px-2 py-0.5 rounded-full status-'+r.status+'">'+statusLabel[r.status]+'</span>'+
+                (r.agenda_item ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.1)">'+escHtml(r.agenda_item)+'</span>' : '')+
+                submitterLine+
+              '</div>'+
+              '<p class="text-sm font-medium mb-1">'+escHtml(heading)+'</p>'+
+              (r.summary && r.title ? '<p class="text-xs muted mb-1">'+escHtml(r.summary)+'</p>' : '')+
+              '<p class="text-[10px] muted">'+timeAgo(r.created_at)+'</p>'+
+              (r.exec_note ? '<p class="text-xs text-amber-500 mt-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5">📝 '+escHtml(r.exec_note)+'</p>' : '')+
+            '</div>'+
+            '<div class="flex gap-2 flex-shrink-0 flex-wrap justify-end">'+
+              ((r.exec_doc_url||r.chair_doc_url) ? '<a href="'+escHtml(r.exec_doc_url||r.chair_doc_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Google Docs</a>' : '')+
+              (r.status==='pending' ? '<button onclick="markUnderReview(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition border border-blue-500/20">Mark under review</button>' : '')+
+              (r.status==='under_review' ? '<button onclick="openPanelModal(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Send to approval panel</button>' : '')+
+              (isMine && (r.status==='pending'||r.status==='under_review'||r.status==='sent_to_panel') ? '<button onclick="withdrawResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition border border-amber-500/20">Withdraw</button>' : '')+
+              (isMine ? '<button onclick="deleteResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Delete</button>' : '')+
+            '</div>'+
+          '</div></div>';
+      }).join('');
+      lucide.createIcons();
+    }
+
+    async function renderAmendments() {
+      const c = document.getElementById('content-list');
+      c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
+      const { data: all } = await sb.from('amendments').select('*').eq('committee', currentProfile.committee).order('created_at',{ascending:false});
+      const amendments = (all||[]).filter(a => !a.cleared_by_chair);
+      if (!amendments.length) { c.innerHTML = emptyState('git-pull-request','No amendments','When a delegate submits an amendment it appears here. Cleared amendments are hidden.'); return; }
+      const resMap = {}; cachedResolutions.forEach(r => resMap[r.id] = r);
+      const typeLabels = {insert:'Insert',add:'Add',strike:'Strike Out',change:'Change'};
+      const typeColors = {insert:'#a855f7',add:'#22c55e',strike:'#ef4444',change:'#3b82f6'};
+      c.innerHTML = amendments.map(a => {
+        const res = resMap[a.resolution_id];
+        const resLabel = res ? ((res.code? res.code+' — ':'')+res.title) : 'Resolution';
+        const statusLabel = {pending:'Pending',approved:'Approved',rejected:'Rejected'}[a.status];
+        const actions = a.status==='pending'
+          ? '<button onclick="approveAmendment(\''+a.id+'\')" class="px-4 py-2 text-xs font-semibold rounded-lg bg-green-500/15 text-green-400 hover:bg-green-500/25 transition border border-green-500/30">Approve</button>'+
+            '<button onclick="openRejectModal(\''+a.id+'\')" class="px-4 py-2 text-xs font-semibold rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Reject</button>'
+          : '';
+        const row = (label,val) => '<div><p class="text-[10px] label-text uppercase tracking-wider mb-0.5">'+label+'</p><p class="text-sm">'+val+'</p></div>';
+        return '<div class="item-card rounded-xl p-5 space-y-3">'+
+          '<div class="flex items-center justify-between gap-3 flex-wrap">'+
+            '<div class="flex items-center gap-2 flex-wrap">'+
+              '<span class="text-[11px] px-2.5 py-1 rounded-full font-semibold" style="background:'+typeColors[a.amendment_type]+'22;color:'+typeColors[a.amendment_type]+'">'+typeLabels[a.amendment_type]+'</span>'+
+              '<span class="text-[11px] px-2.5 py-1 rounded-full status-'+a.status+'">'+statusLabel+'</span>'+
+              (a.submitter_country ? '<span class="text-[11px] px-2.5 py-1 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">📍 '+escHtml(a.submitter_country)+'</span>' : '')+
+            '</div>'+
+            '<button onclick="clearAmendment(\''+a.id+'\')" title="Clear from your view" class="muted hover:text-red-400 transition flex items-center gap-1 text-[11px]"><i data-lucide="eraser" style="width:13px;height:13px"></i> Clear</button>'+
+          '</div>'+
+          row('On Resolution', escHtml(resLabel))+
+          row('Part / Clause to amend', escHtml(a.target_clause||'—'))+
+          '<div><p class="text-[10px] label-text uppercase tracking-wider mb-1">Amendment</p><p class="text-sm leading-relaxed subbox rounded-lg p-3">'+escHtml(a.amendment_text)+'</p></div>'+
+          (a.status==='rejected'&&a.review_note ? '<div><p class="text-[10px] label-text uppercase tracking-wider mb-1">Rejection reason (visible to delegate)</p><p class="text-sm subbox rounded-lg p-3 text-red-400">'+escHtml(a.review_note)+'</p></div>' : '')+
+          '<p class="text-[10px] muted">Submitted '+timeAgo(a.created_at)+'</p>'+
+          (actions ? '<div class="flex gap-2 pt-1">'+actions+'</div>' : '')+
+        '</div>';
+      }).join('');
+    }
+
+    async function approveAmendment(id) {
+      await sb.from('amendments').update({ status:'approved', review_note:null }).eq('id', id);
+      await renderAmendments(); await checkAmendmentCount(); lucide.createIcons();
+    }
+    function openRejectModal(id) {
+      rejectingId = id;
+      document.getElementById('reject-reason').value = '';
+      document.getElementById('reject-error').classList.add('hidden');
+      document.getElementById('reject-modal').classList.remove('hidden');
+    }
+    function closeRejectModal() { document.getElementById('reject-modal').classList.add('hidden'); rejectingId = null; }
+    async function confirmReject() {
+      const reason = document.getElementById('reject-reason').value.trim();
+      const errEl = document.getElementById('reject-error');
+      if (!reason) { errEl.textContent='Please enter a reason so the delegate understands.'; errEl.classList.remove('hidden'); return; }
+      document.getElementById('reject-btn').disabled=true;
+      document.getElementById('reject-spinner').classList.remove('hidden');
+      const { error } = await sb.from('amendments').update({ status:'rejected', review_note:reason }).eq('id', rejectingId);
+      document.getElementById('reject-btn').disabled=false;
+      document.getElementById('reject-spinner').classList.add('hidden');
+      if (error) { errEl.textContent='Could not save. Try again.'; errEl.classList.remove('hidden'); return; }
+      closeRejectModal();
+      await renderAmendments(); await checkAmendmentCount(); lucide.createIcons();
+    }
+
+    // Soft-hide from chair view only (delegate still sees it on their page)
+    async function clearAmendment(id) {
+      await sb.from('amendments').update({ cleared_by_chair:true }).eq('id', id);
+      await renderAmendments(); await checkAmendmentCount(); lucide.createIcons();
+    }
+    async function clearAllAmendments() {
+      if (!confirm('Clear all amendments from your view? Delegates will still see their own on their amendments page.')) return;
+      await sb.from('amendments').update({ cleared_by_chair:true })
+        .eq('committee', currentProfile.committee).eq('cleared_by_chair', false);
+      await renderAmendments(); await checkAmendmentCount(); lucide.createIcons();
+    }
+
+    async function renderFeed() {
+      const c = document.getElementById('content-list');
+      c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
+      const { data: feed } = await sb.from('committee_feed').select('*').eq('committee', currentProfile.committee).order('created_at',{ascending:false});
+      if (!feed || !feed.length) { c.innerHTML = emptyState('rss','No feed posts yet','Click "Post to Feed" to share committee activity.'); return; }
+      c.innerHTML = feed.map(f => {
+        const author = ((f.posted_by_role||'').charAt(0).toUpperCase()+(f.posted_by_role||'').slice(1)+' '+(f.posted_by_name||'')).trim();
+        const isMine = f.posted_by === currentProfile.id;
+        return '<div class="item-card rounded-xl p-4 border-l-4" style="border-left-color:#5D175F">'+
+          '<div class="flex items-start justify-between gap-3">'+
+            '<div class="min-w-0">'+
+              '<p class="text-sm font-semibold mb-0.5">'+escHtml(f.title)+'</p>'+
+              '<p class="text-xs muted mb-2">'+escHtml(f.body)+'</p>'+
+              '<p class="text-[10px] muted">Posted by '+escHtml(author||'Chair')+' · '+timeAgo(f.created_at)+'</p>'+
+            '</div>'+
+            (isMine ? '<button onclick="deleteFeedItem(\''+f.id+'\')" class="muted hover:text-red-400 transition p-1 flex-shrink-0"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>' : '')+
+          '</div></div>';
+      }).join('');
+      lucide.createIcons();
+    }
+
+    async function renderAnnouncements() {
+      const c = document.getElementById('content-list');
+      c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-3 w-full mb-2"></div><div class="skeleton h-3 w-4/5"></div></div>';
+      const { data } = await sb.from('announcements').select('*')
+        .or('committee.is.null,committee.eq.'+currentProfile.committee).order('created_at',{ascending:false});
+      if (!data || !data.length) { c.innerHTML = emptyState('megaphone','No announcements','Announcements from the exec team appear here.'); return; }
+      const colors = {info:'#a855f7',urgent:'#ef4444',warning:'#f97316',success:'#22c55e'};
+      c.innerHTML = data.map(a =>
+        '<div class="item-card rounded-xl p-4 border-l-4" style="border-left-color:'+(colors[a.type]||'#a855f7')+'">'+
+          '<div class="flex items-center gap-2 mb-1">'+
+            '<span class="text-xs font-medium uppercase" style="color:'+(colors[a.type]||'#a855f7')+'">'+a.type+'</span>'+
+            (a.committee ? '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(128,128,128,0.1)">'+escHtml(a.committee)+'</span>' : '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(128,128,128,0.1)">All</span>')+
+          '</div>'+
+          '<p class="text-sm font-semibold mb-0.5">'+escHtml(a.title)+'</p>'+
+          '<p class="text-xs muted">'+escHtml(a.body)+'</p>'+
+          '<p class="text-[10px] muted mt-1">'+timeAgo(a.created_at)+'</p>'+
+        '</div>').join('');
+    }
+
+    // Resolution submit
+    function openSubmitModal(){ document.getElementById('submit-modal').classList.remove('hidden'); }
+    function closeSubmitModal(){ document.getElementById('submit-modal').classList.add('hidden'); }
+    async function submitResolution() {
+      const agenda=document.getElementById('res-agenda').value;
+      const docUrl=document.getElementById('res-doc-url').value.trim();
+      const summary=document.getElementById('res-summary').value.trim();
+      const errEl=document.getElementById('submit-error');
+      errEl.classList.add('hidden');
+      if(!docUrl||!summary){ errEl.textContent='Please add the Google Docs link and a short explanation.'; errEl.classList.remove('hidden'); return; }
+      if(!docUrl.includes('docs.google.com')){ errEl.textContent='Please enter a valid Google Docs link.'; errEl.classList.remove('hidden'); return; }
+      document.getElementById('submit-btn').disabled=true;
+      document.getElementById('submit-btn-text').textContent='Submitting…';
+      document.getElementById('submit-spinner').classList.remove('hidden');
+      const { error } = await sb.from('resolutions').insert({
+        agenda_item: agenda, committee: currentProfile.committee,
+        submitted_by: currentProfile.id, submitter_role: 'chair', chair_doc_url: docUrl, summary, status: 'pending'
+      });
+      document.getElementById('submit-btn').disabled=false;
+      document.getElementById('submit-btn-text').textContent='Submit';
+      document.getElementById('submit-spinner').classList.add('hidden');
+      if(error){ console.error(error); errEl.textContent='Submission failed.'; errEl.classList.remove('hidden'); return; }
+      closeSubmitModal();
+      document.getElementById('res-doc-url').value=''; document.getElementById('res-summary').value='';
+      await loadResolutions();
+    }
+    async function withdrawResolution(id) {
+      if(!confirm('Withdraw this resolution?')) return;
+      await sb.from('resolutions').update({status:'withdrawn'}).eq('id',id);
+      await loadResolutions();
+    }
+    async function deleteResolution(id) {
+      if(!confirm('Permanently delete this resolution? This cannot be undone.')) return;
+      const { error } = await sb.from('resolutions').delete().eq('id',id);
+      if(error){ console.error(error); alert('Could not delete (you can only delete resolutions you submitted).'); return; }
+      await loadResolutions();
+    }
+
+    // Lifecycle: pending -> under_review -> sent_to_panel (exec then publishes)
+    async function markUnderReview(id) {
+      await sb.from('resolutions').update({ status:'under_review' }).eq('id', id);
+      await loadResolutions();
+    }
+    function openPanelModal(id) {
+      const r = cachedResolutions.find(x=>x.id===id);
+      forwardingId = id;
+      document.getElementById('panel-code').value = (r && r.code) || '';
+      document.getElementById('panel-title').value = (r && r.title) || '';
+      document.getElementById('panel-summary').textContent = (r && (r.summary||r.title)) || '—';
+      document.getElementById('panel-error').classList.add('hidden');
+      document.getElementById('panel-modal').classList.remove('hidden');
+    }
+    function closePanelModal(){ document.getElementById('panel-modal').classList.add('hidden'); forwardingId=null; }
+    async function confirmSendToPanel() {
+      const code = document.getElementById('panel-code').value.trim();
+      const title = document.getElementById('panel-title').value.trim();
+      const errEl = document.getElementById('panel-error');
+      errEl.classList.add('hidden');
+      if (!code) { errEl.textContent='Please assign a code (e.g. UNHRC 1.2) before forwarding.'; errEl.classList.remove('hidden'); return; }
+      const r = cachedResolutions.find(x=>x.id===forwardingId);
+      const finalTitle = title || (r && r.title) || (r && r.summary) || null;
+      document.getElementById('panel-btn').disabled=true;
+      document.getElementById('panel-spinner').classList.remove('hidden');
+      const { error } = await sb.from('resolutions').update({
+        code, title: finalTitle, status:'sent_to_panel'
+      }).eq('id', forwardingId);
+      document.getElementById('panel-btn').disabled=false;
+      document.getElementById('panel-spinner').classList.add('hidden');
+      if (error) { console.error(error); errEl.textContent='Could not forward. Try again.'; errEl.classList.remove('hidden'); return; }
+      closePanelModal();
+      await loadResolutions();
+    }
+
+    // Feed
+    function openFeedModal(){ document.getElementById('feed-title').value=''; document.getElementById('feed-body').value=''; document.getElementById('feed-error').classList.add('hidden'); document.getElementById('feed-modal').classList.remove('hidden'); }
+    function closeFeedModal(){ document.getElementById('feed-modal').classList.add('hidden'); }
+    async function postFeedItem() {
+      const title=document.getElementById('feed-title').value.trim();
+      const body=document.getElementById('feed-body').value.trim();
+      const errEl=document.getElementById('feed-error');
+      errEl.classList.add('hidden');
+      if(!title||!body){ errEl.textContent='Title and description are required.'; errEl.classList.remove('hidden'); return; }
+      document.getElementById('feed-btn').disabled=true;
+      document.getElementById('feed-spinner').classList.remove('hidden');
+      const { error } = await sb.from('committee_feed').insert({
+        committee: currentProfile.committee, title, body,
+        posted_by: currentProfile.id, posted_by_name: currentProfile.name, posted_by_role: 'chair'
+      });
+      document.getElementById('feed-btn').disabled=false;
+      document.getElementById('feed-spinner').classList.add('hidden');
+      if(error){ console.error(error); errEl.textContent='Failed to post.'; errEl.classList.remove('hidden'); return; }
+      closeFeedModal();
+      renderFeed();
+    }
+    async function deleteFeedItem(id) {
+      if(!confirm('Delete this feed post?')) return;
+      const { error } = await sb.from('committee_feed').delete().eq('id',id);
+      if(error){ console.error(error); alert('Could not delete (you can only delete your own posts).'); return; }
+      renderFeed();
+    }
+
+    async function handleSignOut(){ await sb.auth.signOut(); window.location.href='login.html'; }
+
+    function emptyState(icon,title,sub){ return '<div class="text-center py-12 muted"><i data-lucide="'+icon+'" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">'+title+'</p><p class="text-xs mt-1">'+sub+'</p></div>'; }
+    function escHtml(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function escAttr(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/'/g,'\\\'').replace(/"/g,'&quot;'); }
+    function timeAgo(iso){
+      if(!iso) return '';
+      let s = String(iso).trim();
+      if(!/[zZ]$|[+\-]\d\d:?\d\d$/.test(s)){ s = s.replace(' ','T') + 'Z'; }
+      const then = new Date(s).getTime();
+      if(isNaN(then)) return '';
+      const d = Math.round((Date.now()-then)/60000);
+      if(d<1) return 'just now';
+      if(d<60) return d+'m ago';
+      if(d<1440) return Math.floor(d/60)+'h ago';
+      return Math.floor(d/1440)+'d ago';
+    }
+
+    sb.channel('chair-updates')
+      .on('postgres_changes',{event:'*',schema:'public',table:'resolutions'},()=>loadResolutions())
+      .on('postgres_changes',{event:'*',schema:'public',table:'amendments'},()=>{checkAmendmentCount(); if(currentTab==='amendments')renderAmendments();})
+      .on('postgres_changes',{event:'*',schema:'public',table:'committee_feed'},()=>{ if(currentTab==='feed')renderFeed(); })
+      .subscribe();
+
+    init();
+  </script>
+</body>
+</html>
