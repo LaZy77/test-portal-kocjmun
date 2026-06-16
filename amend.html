@@ -113,7 +113,7 @@
 
         <div class="flex gap-3 pt-2">
           <a href="dashboard.html" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface text-center">Cancel</a>
-          <button onclick="submitAmendment()" id="submit-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
+          <button onclick="submitAmendment()" id="submit-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#5D175F">
             <span id="submit-text">Submit Amendment</span>
             <span id="submit-spinner" class="hidden"><span class="spinner"></span></span>
           </button>
@@ -126,9 +126,9 @@
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD = '2026-06-16';
-    console.log('%cKoç JMUN · amend.html · build '+BUILD,'color:#7c3aed;font-weight:700;font-size:13px');
-    document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#7c3aed;pointer-events:none;z-index:9999';document.body.appendChild(b);});
+    const BUILD = '2026-06-16.2';
+    console.log('%cKoç JMUN · amend.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
+    document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
     let currentProfile = null;
     let selectedType = null;
@@ -167,7 +167,7 @@
 
       const { data: resolutions } = await sb
         .from('resolutions')
-        .select('id, code, title, status')
+        .select('id, code, title, summary, status')
         .eq('committee', profile.committee)
         .order('created_at', { ascending: false });
 
@@ -176,7 +176,7 @@
         select.innerHTML = '<option value="">No resolutions available yet</option>';
       } else {
         select.innerHTML = '<option value="">Select a resolution…</option>' +
-          resolutions.map(r => '<option value="' + r.id + '">' + escAttr(r.code || '') + ' — ' + escAttr(r.title) + (r.status !== 'published' ? ' (draft)' : '') + '</option>').join('');
+          resolutions.map(r => '<option value="' + r.id + '">' + escAttr((r.code ? r.code + ' — ' : '') + (r.title || r.summary || 'Resolution')) + (r.status !== 'published' ? ' (draft)' : '') + '</option>').join('');
       }
 
       const params = new URLSearchParams(window.location.search);
