@@ -60,7 +60,7 @@
     .tab-btn{color:#9ca3af;border-bottom:2px solid transparent;transition:all .3s;padding-bottom:8px}
     .tab-btn.active{color:#a855f7;border-bottom-color:#5D175F}
     [data-theme="light"] .tab-btn{color:#6b7280}
-    [data-theme="light"] .tab-btn.active{color:#7c3aed}
+    [data-theme="light"] .tab-btn.active{color:#5D175F}
     .badge-new{background:rgba(239,68,68,0.2);color:#dc2626;border:1px solid rgba(239,68,68,0.3);font-size:10px;padding:1px 6px;border-radius:99px}
     [data-theme="dark"] .badge-new{color:#fca5a5}
   </style>
@@ -97,22 +97,21 @@
             <h1 class="text-xl font-semibold">Welcome, <span class="text-yellow-500" id="exec-name">—</span></h1>
             <p class="text-sm muted mt-1">Full access across all committees</p>
           </div>
-          <button onclick="openAnnouncementModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition" style="background:linear-gradient(135deg,#92400e,#d97706)">
+          <button onclick="openAnnouncementModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition" style="background:#b45309">
             <i data-lucide="megaphone" style="width:16px;height:16px"></i> Post Announcement
           </button>
         </div>
       </div>
 
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Incoming</p><p class="text-2xl font-bold text-amber-400" id="stat-pending">—</p></div>
-        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">In Review</p><p class="text-2xl font-bold text-blue-400" id="stat-received">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Awaiting you</p><p class="text-2xl font-bold text-amber-400" id="stat-pending">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">With chairs</p><p class="text-2xl font-bold text-blue-400" id="stat-received">—</p></div>
         <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Published</p><p class="text-2xl font-bold text-green-400" id="stat-published">—</p></div>
         <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Total</p><p class="text-2xl font-bold" id="stat-total">—</p></div>
       </div>
 
       <div class="flex gap-6 border-b mb-6 overflow-x-auto" style="border-color:rgba(128,128,128,0.1)">
-        <button class="tab-btn active text-sm font-medium whitespace-nowrap" onclick="switchTab('inbox')" id="tab-inbox">Inbox <span id="inbox-badge" class="badge-new ml-1 hidden">0</span></button>
-        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('review')" id="tab-review">In Review</button>
+        <button class="tab-btn active text-sm font-medium whitespace-nowrap" onclick="switchTab('inbox')" id="tab-inbox">Awaiting Approval <span id="inbox-badge" class="badge-new ml-1 hidden">0</span></button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('published')" id="tab-published">Published</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('all')" id="tab-all">All Resolutions</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('announcements')" id="tab-announcements">Announcements</button>
@@ -169,21 +168,19 @@
           <i data-lucide="external-link" style="width:16px;height:16px"></i> Open Submitted Google Doc
         </a>
         <div class="border-t pt-4" style="border-color:rgba(128,128,128,0.1)">
-          <p class="text-xs font-medium label-text uppercase tracking-wider mb-3">Send Formatted Version Back</p>
+          <p class="text-xs font-medium label-text uppercase tracking-wider mb-3">Approve &amp; Project on All Panels</p>
           <div class="space-y-3">
-            <div><label class="block text-xs muted mb-1.5">Formatted Google Doc Link</label>
+            <div><label class="block text-xs muted mb-1.5">Google Docs link shown on all panels <span class="label-text">(leave blank to use the submitted doc)</span></label>
               <input id="exec-doc-url" type="url" placeholder="https://docs.google.com/..." class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
-            <div><label class="block text-xs muted mb-1.5">PDF Link for delegates <span class="label-text">(Drive share link)</span></label>
-              <input id="exec-pdf-url" type="url" placeholder="https://drive.google.com/file/d/.../view" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
             <div><label class="block text-xs muted mb-1.5">Note to Chair (optional)</label>
               <input id="exec-note" type="text" placeholder="e.g. Formatting applied to clauses 3 & 4" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
           </div>
         </div>
         <div id="review-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
         <div class="flex gap-3 pt-2">
-          <button onclick="markReceived()" class="flex-1 py-3 rounded-xl text-sm font-medium text-blue-400 hover:bg-blue-500/10 transition surface border border-blue-500/20">Mark as Received</button>
-          <button onclick="publishResolution()" id="btn-publish" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#14532d,#16a34a)">
-            <span id="publish-btn-text">Publish</span><span id="publish-spinner" class="hidden"><span class="spinner"></span></span>
+          <button onclick="closeReviewModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+          <button onclick="publishResolution()" id="btn-publish" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#16a34a">
+            <span id="publish-btn-text">Approve &amp; Project</span><span id="publish-spinner" class="hidden"><span class="spinner"></span></span>
           </button>
         </div>
       </div>
@@ -217,7 +214,7 @@
         <div id="ann-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
         <div class="flex gap-3 pt-2">
           <button onclick="closeAnnouncementModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
-          <button onclick="postAnnouncement()" id="ann-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#92400e,#d97706)">
+          <button onclick="postAnnouncement()" id="ann-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#b45309">
             <span id="ann-btn-text">Post</span><span id="ann-spinner" class="hidden"><span class="spinner"></span></span>
           </button>
         </div>
@@ -240,9 +237,9 @@
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD = '2026-06-16';
-    console.log('%cKoç JMUN · exec.html · build '+BUILD,'color:#7c3aed;font-weight:700;font-size:13px');
-    document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#7c3aed;pointer-events:none;z-index:9999';document.body.appendChild(b);});
+    const BUILD = '2026-06-16.2';
+    console.log('%cKoç JMUN · exec.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
+    document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
     let currentTab = 'inbox';
     let allResolutions = [];
@@ -281,11 +278,11 @@
     }
 
     function updateStats() {
-      document.getElementById('stat-pending').textContent = allResolutions.filter(r=>r.status==='pending').length;
-      document.getElementById('stat-received').textContent = allResolutions.filter(r=>r.status==='received').length;
+      document.getElementById('stat-pending').textContent = allResolutions.filter(r=>r.status==='sent_to_panel').length;
+      document.getElementById('stat-received').textContent = allResolutions.filter(r=>r.status==='pending'||r.status==='under_review').length;
       document.getElementById('stat-published').textContent = allResolutions.filter(r=>r.status==='published').length;
       document.getElementById('stat-total').textContent = allResolutions.length;
-      const pending = allResolutions.filter(r=>r.status==='pending').length;
+      const pending = allResolutions.filter(r=>r.status==='sent_to_panel').length;
       const badge = document.getElementById('inbox-badge');
       if (pending>0){ badge.textContent=pending; badge.classList.remove('hidden'); } else badge.classList.add('hidden');
     }
@@ -327,8 +324,7 @@
 
     function renderTab(tab) {
       const c = document.getElementById('content-list');
-      if (tab === 'inbox') renderResList(getFiltered('pending'), c, 'inbox');
-      else if (tab === 'review') renderResList(getFiltered('received'), c, 'review');
+      if (tab === 'inbox') renderResList(getFiltered('sent_to_panel'), c, 'inbox');
       else if (tab === 'published') renderResList(getFiltered('published'), c, 'published');
       else if (tab === 'all') renderResList(getFiltered(null), c, 'all');
       else if (tab === 'announcements') renderAnnouncementsTab(c);
@@ -337,13 +333,13 @@
     function renderResList(items, c, mode) {
       if (!items.length) { c.innerHTML = '<div class="text-center py-12 muted"><i data-lucide="inbox" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">Nothing here.</p></div>'; return; }
       c.innerHTML = items.map(r => {
-        const statusLabel = {pending:'Pending',received:'In Review',published:'Published',withdrawn:'Withdrawn'}[r.status];
+        const statusLabel = {pending:'With chair',under_review:'Under review',sent_to_panel:'Awaiting approval',published:'Published',withdrawn:'Withdrawn'}[r.status];
         const submitterTag = r.submitter_role==='delegate' && r.submitter_country
           ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">📍 '+escHtml(r.submitter_country)+'</span>' : '';
-        const actions = (mode==='inbox'||mode==='review')
-          ? '<button onclick="openReviewModal(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/15 text-purple-400 hover:bg-purple-500/25 transition border border-purple-500/30">'+(mode==='inbox'?'Review':'Continue')+'</button>'
-          : (r.pdf_url ? '<button onclick="openPdf(\''+escHtml(r.pdf_url)+'\',\''+escAttr(r.title)+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500/15 text-green-400 hover:bg-green-500/25 transition border border-green-500/30">View PDF</button>'
-             : (r.chair_doc_url ? '<a href="'+escHtml(r.chair_doc_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg surface hover:opacity-80 transition">Doc</a>' : ''));
+        const docUrl = r.exec_doc_url || r.chair_doc_url;
+        const actions = (mode==='inbox')
+          ? '<button onclick="openReviewModal(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Review &amp; approve</button>'
+          : (docUrl ? '<a href="'+escHtml(docUrl)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Google Docs</a>' : '');
         return '<div class="item-card rounded-xl p-4 hover:opacity-95 transition">'+
           '<div class="flex items-start justify-between gap-4">'+
             '<div class="flex-1 min-w-0">'+
@@ -354,7 +350,7 @@
                 '<span class="text-[10px] px-2 py-0.5 rounded-full status-'+r.status+'">'+statusLabel+'</span>'+
                 submitterTag+
               '</div>'+
-              '<p class="text-sm font-medium mb-1 truncate">'+escHtml(r.title)+'</p>'+
+              '<p class="text-sm font-medium mb-1 truncate">'+escHtml(r.title||r.summary||'Resolution')+'</p>'+
               '<p class="text-[10px] muted">'+timeAgo(r.created_at)+'</p>'+
             '</div>'+
             '<div class="flex gap-2 flex-shrink-0">'+actions+'</div>'+
@@ -387,13 +383,12 @@
       const r = allResolutions.find(x=>x.id===id);
       if (!r) return;
       currentReviewId = id;
-      document.getElementById('review-title').textContent = r.title;
+      document.getElementById('review-title').textContent = r.title || r.summary || 'Resolution';
       document.getElementById('review-committee').textContent = r.committee + ' · ' + (r.code||'') + (r.agenda_item ? ' · '+r.agenda_item : '');
       document.getElementById('review-submitter').innerHTML = r.submitter_role==='delegate' && r.submitter_country
         ? '<span style="color:#a855f7">Submitted by delegation: '+escHtml(r.submitter_country)+'</span>' : '<span class="muted">Submitted by chair</span>';
       document.getElementById('review-chair-doc').href = r.chair_doc_url || '#';
       document.getElementById('exec-doc-url').value = r.exec_doc_url || '';
-      document.getElementById('exec-pdf-url').value = r.pdf_url || '';
       document.getElementById('exec-note').value = r.exec_note || '';
       document.getElementById('review-error').classList.add('hidden');
       document.getElementById('review-modal').classList.remove('hidden');
@@ -401,26 +396,18 @@
     }
     function closeReviewModal() { document.getElementById('review-modal').classList.add('hidden'); currentReviewId=null; }
 
-    async function markReceived() {
-      if (!currentReviewId) return;
-      await sb.from('resolutions').update({status:'received',updated_at:new Date().toISOString()}).eq('id',currentReviewId);
-      closeReviewModal(); await loadAll(); lucide.createIcons();
-    }
-
     async function publishResolution() {
       const execDocUrl=document.getElementById('exec-doc-url').value.trim();
-      const pdfUrl=document.getElementById('exec-pdf-url').value.trim();
       const note=document.getElementById('exec-note').value.trim();
       const errEl=document.getElementById('review-error');
       errEl.classList.add('hidden');
-      if(!pdfUrl){ errEl.textContent='A PDF link is required to publish.'; errEl.classList.remove('hidden'); return; }
-      document.getElementById('publish-btn-text').textContent='Publishing…';
+      document.getElementById('publish-btn-text').textContent='Projecting…';
       document.getElementById('publish-spinner').classList.remove('hidden');
       const { error } = await sb.from('resolutions').update({
-        exec_doc_url: execDocUrl||null, pdf_url: pdfUrl, exec_note: note||null,
+        exec_doc_url: execDocUrl||null, exec_note: note||null,
         status:'published', updated_at:new Date().toISOString()
       }).eq('id',currentReviewId);
-      document.getElementById('publish-btn-text').textContent='Publish';
+      document.getElementById('publish-btn-text').textContent='Approve & Project';
       document.getElementById('publish-spinner').classList.add('hidden');
       if(error){ errEl.textContent='Failed to publish.'; errEl.classList.remove('hidden'); return; }
       closeReviewModal(); await loadAll(); lucide.createIcons();
