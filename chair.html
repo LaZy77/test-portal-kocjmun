@@ -62,7 +62,7 @@
     .tab-btn{color:#9ca3af;border-bottom:2px solid transparent;transition:all .3s;padding-bottom:8px}
     .tab-btn.active{color:#a855f7;border-bottom-color:#5D175F}
     [data-theme="light"] .tab-btn{color:#6b7280}
-    [data-theme="light"] .tab-btn.active{color:#7c3aed}
+    [data-theme="light"] .tab-btn.active{color:#5D175F}
     .badge-new{background:rgba(239,68,68,0.2);color:#dc2626;border:1px solid rgba(239,68,68,0.3);font-size:10px;padding:1px 6px;border-radius:99px}
     [data-theme="dark"] .badge-new{color:#fca5a5}
   </style>
@@ -94,7 +94,7 @@
             <h1 class="text-xl font-semibold">Welcome, <span class="text-amber-400" id="chair-name">—</span></h1>
             <p class="text-sm muted mt-1">Committee: <span class="font-medium" id="chair-committee" style="color:inherit">—</span> · Room <span class="font-medium" id="chair-room" style="color:inherit">—</span></p>
           </div>
-          <button onclick="openSubmitModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
+          <button onclick="openSubmitModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition" style="background:#5D175F">
             <i data-lucide="plus" style="width:16px;height:16px"></i>
             Submit Resolution
           </button>
@@ -103,8 +103,8 @@
 
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
         <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Total</p><p class="text-2xl font-bold" id="stat-total">—</p></div>
-        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Pending</p><p class="text-2xl font-bold text-amber-400" id="stat-pending">—</p></div>
-        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">With Exec</p><p class="text-2xl font-bold text-blue-400" id="stat-received">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">With you</p><p class="text-2xl font-bold text-amber-400" id="stat-pending">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">At panel</p><p class="text-2xl font-bold text-blue-400" id="stat-received">—</p></div>
         <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Published</p><p class="text-2xl font-bold text-green-400" id="stat-published">—</p></div>
       </div>
 
@@ -116,7 +116,7 @@
       </div>
 
       <div id="tab-actions" class="mb-4 hidden">
-        <button onclick="openFeedModal()" id="add-feed-btn" class="hidden flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
+        <button onclick="openFeedModal()" id="add-feed-btn" class="hidden flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:#5D175F">
           <i data-lucide="plus" style="width:14px;height:14px"></i> Post to Feed
         </button>
         <button onclick="clearAllAmendments()" id="clear-amend-btn" class="hidden items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-400 transition surface border" style="border-color:rgba(239,68,68,0.25)">
@@ -141,10 +141,6 @@
         <button onclick="closeSubmitModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
       </div>
       <div class="space-y-4">
-        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Title</label>
-          <input id="res-title" type="text" placeholder="e.g. Addressing Climate Action" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
-        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Code</label>
-          <input id="res-code" type="text" placeholder="e.g. UNHRC 1.2  (agenda 1, resolution 2)" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Agenda Item</label>
           <select id="res-agenda" class="input-field w-full px-4 py-3 rounded-xl text-sm">
             <option value="Agenda Item 1">Agenda Item 1</option>
@@ -153,12 +149,14 @@
           </select></div>
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Google Docs Link</label>
           <input id="res-doc-url" type="url" placeholder="https://docs.google.com/document/d/..." class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono">
-          <p class="text-[10px] muted mt-1.5">Set sharing to "Anyone with the link can view"</p></div>
+          <p class="text-[10px] muted mt-1.5">Set sharing to "Anyone with the link can view". The code is assigned when it's sent to the approval panel.</p></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Short Explanation</label>
+          <textarea id="res-summary" rows="3" placeholder="In a sentence or two, what does this resolution propose?" class="input-field w-full px-4 py-3 rounded-xl text-sm resize-none"></textarea></div>
         <div id="submit-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
         <div class="flex gap-3 pt-2">
           <button onclick="closeSubmitModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
-          <button onclick="submitResolution()" id="submit-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
-            <span id="submit-btn-text">Submit to Exec</span><span id="submit-spinner" class="hidden"><span class="spinner"></span></span>
+          <button onclick="submitResolution()" id="submit-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#5D175F">
+            <span id="submit-btn-text">Submit</span><span id="submit-spinner" class="hidden"><span class="spinner"></span></span>
           </button>
         </div>
       </div>
@@ -181,7 +179,7 @@
         <div id="feed-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
         <div class="flex gap-3 pt-2">
           <button onclick="closeFeedModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
-          <button onclick="postFeedItem()" id="feed-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#5D175F,#7c3aed)">
+          <button onclick="postFeedItem()" id="feed-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#5D175F">
             <span id="feed-btn-text">Post</span><span id="feed-spinner" class="hidden"><span class="spinner"></span></span>
           </button>
         </div>
@@ -201,9 +199,37 @@
       <div id="reject-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 mt-3"></div>
       <div class="flex gap-3 pt-4">
         <button onclick="closeRejectModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
-        <button onclick="confirmReject()" id="reject-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:linear-gradient(135deg,#991b1b,#dc2626)">
+        <button onclick="confirmReject()" id="reject-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#dc2626">
           <span id="reject-btn-text">Reject & notify</span><span id="reject-spinner" class="hidden"><span class="spinner"></span></span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send to Approval Panel Modal -->
+  <div id="panel-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold">Send to Approval Panel</h2>
+        <button onclick="closePanelModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <p class="text-sm muted mb-4">Assign the official resolution code, then forward it to the exec approval panel.</p>
+      <div class="item-card rounded-xl p-3 mb-4">
+        <p class="text-[10px] label-text uppercase tracking-wider mb-0.5">Explanation from submitter</p>
+        <p class="text-sm" id="panel-summary">—</p>
+      </div>
+      <div class="space-y-4">
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Resolution Code</label>
+          <input id="panel-code" type="text" placeholder="e.g. UNHRC 1.2  (agenda 1, resolution 2)" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Title <span class="normal-case label-text">(optional)</span></label>
+          <input id="panel-title" type="text" placeholder="Defaults to the submitter's explanation" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+        <div id="panel-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+        <div class="flex gap-3 pt-2">
+          <button onclick="closePanelModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+          <button onclick="confirmSendToPanel()" id="panel-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#5D175F">
+            <span id="panel-btn-text">Send to panel</span><span id="panel-spinner" class="hidden"><span class="spinner"></span></span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -212,14 +238,15 @@
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD = '2026-06-16';
-    console.log('%cKoç JMUN · chair.html · build '+BUILD,'color:#7c3aed;font-weight:700;font-size:13px');
-    document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#7c3aed;pointer-events:none;z-index:9999';document.body.appendChild(b);});
+    const BUILD = '2026-06-16.2';
+    console.log('%cKoç JMUN · chair.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
+    document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
     let currentProfile = null;
     let currentTab = 'resolutions';
     let cachedResolutions = [];
     let rejectingId = null;
+    let forwardingId = null;
 
     function toggleTheme() {
       const html = document.documentElement;
@@ -255,8 +282,8 @@
       if (error) { console.error(error); return; }
       cachedResolutions = data || [];
       document.getElementById('stat-total').textContent = data.length;
-      document.getElementById('stat-pending').textContent = data.filter(r=>r.status==='pending').length;
-      document.getElementById('stat-received').textContent = data.filter(r=>r.status==='received').length;
+      document.getElementById('stat-pending').textContent = data.filter(r=>r.status==='pending'||r.status==='under_review').length;
+      document.getElementById('stat-received').textContent = data.filter(r=>r.status==='sent_to_panel').length;
       document.getElementById('stat-published').textContent = data.filter(r=>r.status==='published').length;
       if (currentTab === 'resolutions') renderResolutions(data);
       lucide.createIcons();
@@ -292,7 +319,7 @@
     function renderResolutions(items) {
       const c = document.getElementById('content-list');
       if (!items.length) { c.innerHTML = emptyState('file-text','No resolutions yet','Delegate submissions and your own resolutions appear here.'); return; }
-      const statusLabel = {pending:'Pending review',received:'With exec',published:'Published',withdrawn:'Withdrawn'};
+      const statusLabel = {pending:'New — awaiting you',under_review:'Under review by chairboard',sent_to_panel:'Sent to approval panel',published:'Projected on all panels',withdrawn:'Withdrawn'};
       c.innerHTML = items.map(r => {
         const isMine = r.submitted_by === currentProfile.id;
         const heading = r.title || r.summary || 'Untitled resolution';
@@ -314,8 +341,10 @@
               (r.exec_note ? '<p class="text-xs text-amber-500 mt-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5">📝 '+escHtml(r.exec_note)+'</p>' : '')+
             '</div>'+
             '<div class="flex gap-2 flex-shrink-0 flex-wrap justify-end">'+
-              (r.chair_doc_url ? '<a href="'+escHtml(r.chair_doc_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Google Docs</a>' : '')+
-              (isMine && r.status==='pending' ? '<button onclick="withdrawResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition border border-amber-500/20">Withdraw</button>' : '')+
+              ((r.exec_doc_url||r.chair_doc_url) ? '<a href="'+escHtml(r.exec_doc_url||r.chair_doc_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Google Docs</a>' : '')+
+              (r.status==='pending' ? '<button onclick="markUnderReview(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition border border-blue-500/20">Mark under review</button>' : '')+
+              (r.status==='under_review' ? '<button onclick="openPanelModal(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Send to approval panel</button>' : '')+
+              (isMine && (r.status==='pending'||r.status==='under_review'||r.status==='sent_to_panel') ? '<button onclick="withdrawResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition border border-amber-500/20">Withdraw</button>' : '')+
               (isMine ? '<button onclick="deleteResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Delete</button>' : '')+
             '</div>'+
           '</div></div>';
@@ -405,7 +434,7 @@
       c.innerHTML = feed.map(f => {
         const author = ((f.posted_by_role||'').charAt(0).toUpperCase()+(f.posted_by_role||'').slice(1)+' '+(f.posted_by_name||'')).trim();
         const isMine = f.posted_by === currentProfile.id;
-        return '<div class="item-card rounded-xl p-4 border-l-4" style="border-left-color:#7c3aed">'+
+        return '<div class="item-card rounded-xl p-4 border-l-4" style="border-left-color:#5D175F">'+
           '<div class="flex items-start justify-between gap-3">'+
             '<div class="min-w-0">'+
               '<p class="text-sm font-semibold mb-0.5">'+escHtml(f.title)+'</p>'+
@@ -441,27 +470,26 @@
     function openSubmitModal(){ document.getElementById('submit-modal').classList.remove('hidden'); }
     function closeSubmitModal(){ document.getElementById('submit-modal').classList.add('hidden'); }
     async function submitResolution() {
-      const title=document.getElementById('res-title').value.trim();
-      const code=document.getElementById('res-code').value.trim();
       const agenda=document.getElementById('res-agenda').value;
       const docUrl=document.getElementById('res-doc-url').value.trim();
+      const summary=document.getElementById('res-summary').value.trim();
       const errEl=document.getElementById('submit-error');
       errEl.classList.add('hidden');
-      if(!title||!code||!docUrl){ errEl.textContent='Please fill in all fields.'; errEl.classList.remove('hidden'); return; }
+      if(!docUrl||!summary){ errEl.textContent='Please add the Google Docs link and a short explanation.'; errEl.classList.remove('hidden'); return; }
       if(!docUrl.includes('docs.google.com')){ errEl.textContent='Please enter a valid Google Docs link.'; errEl.classList.remove('hidden'); return; }
       document.getElementById('submit-btn').disabled=true;
       document.getElementById('submit-btn-text').textContent='Submitting…';
       document.getElementById('submit-spinner').classList.remove('hidden');
       const { error } = await sb.from('resolutions').insert({
-        title, code, agenda_item: agenda, committee: currentProfile.committee,
-        submitted_by: currentProfile.id, submitter_role: 'chair', chair_doc_url: docUrl, status: 'pending'
+        agenda_item: agenda, committee: currentProfile.committee,
+        submitted_by: currentProfile.id, submitter_role: 'chair', chair_doc_url: docUrl, summary, status: 'pending'
       });
       document.getElementById('submit-btn').disabled=false;
-      document.getElementById('submit-btn-text').textContent='Submit to Exec';
+      document.getElementById('submit-btn-text').textContent='Submit';
       document.getElementById('submit-spinner').classList.add('hidden');
-      if(error){ errEl.textContent='Submission failed.'; errEl.classList.remove('hidden'); return; }
+      if(error){ console.error(error); errEl.textContent='Submission failed.'; errEl.classList.remove('hidden'); return; }
       closeSubmitModal();
-      document.getElementById('res-title').value=''; document.getElementById('res-code').value=''; document.getElementById('res-doc-url').value='';
+      document.getElementById('res-doc-url').value=''; document.getElementById('res-summary').value='';
       await loadResolutions();
     }
     async function withdrawResolution(id) {
@@ -473,6 +501,41 @@
       if(!confirm('Permanently delete this resolution? This cannot be undone.')) return;
       const { error } = await sb.from('resolutions').delete().eq('id',id);
       if(error){ console.error(error); alert('Could not delete (you can only delete resolutions you submitted).'); return; }
+      await loadResolutions();
+    }
+
+    // Lifecycle: pending -> under_review -> sent_to_panel (exec then publishes)
+    async function markUnderReview(id) {
+      await sb.from('resolutions').update({ status:'under_review' }).eq('id', id);
+      await loadResolutions();
+    }
+    function openPanelModal(id) {
+      const r = cachedResolutions.find(x=>x.id===id);
+      forwardingId = id;
+      document.getElementById('panel-code').value = (r && r.code) || '';
+      document.getElementById('panel-title').value = (r && r.title) || '';
+      document.getElementById('panel-summary').textContent = (r && (r.summary||r.title)) || '—';
+      document.getElementById('panel-error').classList.add('hidden');
+      document.getElementById('panel-modal').classList.remove('hidden');
+    }
+    function closePanelModal(){ document.getElementById('panel-modal').classList.add('hidden'); forwardingId=null; }
+    async function confirmSendToPanel() {
+      const code = document.getElementById('panel-code').value.trim();
+      const title = document.getElementById('panel-title').value.trim();
+      const errEl = document.getElementById('panel-error');
+      errEl.classList.add('hidden');
+      if (!code) { errEl.textContent='Please assign a code (e.g. UNHRC 1.2) before forwarding.'; errEl.classList.remove('hidden'); return; }
+      const r = cachedResolutions.find(x=>x.id===forwardingId);
+      const finalTitle = title || (r && r.title) || (r && r.summary) || null;
+      document.getElementById('panel-btn').disabled=true;
+      document.getElementById('panel-spinner').classList.remove('hidden');
+      const { error } = await sb.from('resolutions').update({
+        code, title: finalTitle, status:'sent_to_panel'
+      }).eq('id', forwardingId);
+      document.getElementById('panel-btn').disabled=false;
+      document.getElementById('panel-spinner').classList.add('hidden');
+      if (error) { console.error(error); errEl.textContent='Could not forward. Try again.'; errEl.classList.remove('hidden'); return; }
+      closePanelModal();
       await loadResolutions();
     }
 
