@@ -98,9 +98,6 @@
           <button onclick="toggleTheme()" class="p-2 rounded-lg surface hover:opacity-80 transition" title="Toggle theme">
             <i data-lucide="sun" style="width:18px;height:18px" id="theme-icon"></i>
           </button>
-          <button onclick="openTutorial()" class="p-2 rounded-lg surface hover:opacity-80 transition" title="How this portal works">
-            <i data-lucide="help-circle" style="width:18px;height:18px"></i>
-          </button>
           <span class="text-sm muted hidden sm:inline">Signed in as <span class="font-medium" id="nav-name" style="color:inherit">—</span></span>
           <button onclick="handleSignOut()" class="px-4 py-2 rounded-lg text-purple-200 font-medium hover:bg-purple-500/10 transition text-sm" style="border:1px solid rgba(93,23,95,0.4)">Sign Out</button>
         </div>
@@ -165,39 +162,6 @@
     </section>
   </div>
 
-  <!-- Tutorial Modal -->
-  <div id="tutorial-modal" class="modal-overlay hidden">
-    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border" style="max-height:85vh;overflow-y:auto">
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-semibold">How this portal works</h2>
-        <button onclick="closeTutorial()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
-      </div>
-      <div class="space-y-4">
-        <div class="flex gap-3">
-          <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(93,23,95,0.12)"><i data-lucide="file-text" style="width:16px;height:16px;color:#5D175F"></i></div>
-          <div><p class="text-sm font-medium mb-0.5">Submit a resolution</p><p class="text-xs muted">Add an agenda item and a Google Docs link. Your chair assigns the official code later, once they forward it to the approval panel — you don't need to know it in advance.</p></div>
-        </div>
-        <div class="flex gap-3">
-          <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(93,23,95,0.12)"><i data-lucide="refresh-cw" style="width:16px;height:16px;color:#5D175F"></i></div>
-          <div><p class="text-sm font-medium mb-0.5">Track its progress</p><p class="text-xs muted">Submitted → Under review → Sent to approval panel → Published. Your Resolutions tab updates live as your chair and exec move it through each stage.</p></div>
-        </div>
-        <div class="flex gap-3">
-          <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(93,23,95,0.12)"><i data-lucide="edit-3" style="width:16px;height:16px;color:#5D175F"></i></div>
-          <div><p class="text-sm font-medium mb-0.5">Propose amendments</p><p class="text-xs muted">Suggest a change to a published resolution. Check My Amendments to see whether your chair approved it — rejections come with a short reason.</p></div>
-        </div>
-        <div class="flex gap-3">
-          <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(93,23,95,0.12)"><i data-lucide="calendar" style="width:16px;height:16px;color:#5D175F"></i></div>
-          <div><p class="text-sm font-medium mb-0.5">Check the schedule</p><p class="text-xs muted">The "Next Session" card always shows what's coming up. The Schedule tab has the full day-by-day timetable.</p></div>
-        </div>
-        <div class="flex gap-3">
-          <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(93,23,95,0.12)"><i data-lucide="bell" style="width:16px;height:16px;color:#5D175F"></i></div>
-          <div><p class="text-sm font-medium mb-0.5">Stay updated automatically</p><p class="text-xs muted">You'll get a small notification in the corner whenever something about your own submissions changes — no need to keep refreshing.</p></div>
-        </div>
-      </div>
-      <button onclick="closeTutorial()" class="w-full mt-6 py-3 rounded-xl text-sm font-semibold text-white transition" style="background:#5D175F">Got it</button>
-    </div>
-  </div>
-
   <!-- Submit Resolution Modal -->
   <div id="submit-modal" class="modal-overlay hidden">
     <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
@@ -230,7 +194,7 @@
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD = '2026-06-18.2';
+    const BUILD = '2026-06-18.3';
     console.log('%cKoç JMUN · dashboard.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
     document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
@@ -320,9 +284,6 @@
       c.innerHTML = html;
     }
 
-    function openTutorial(){ document.getElementById('tutorial-modal').classList.remove('hidden'); lucide.createIcons(); }
-    function closeTutorial(){ document.getElementById('tutorial-modal').classList.add('hidden'); localStorage.setItem('jmun_tutorial_seen_delegate','1'); }
-
     function toggleTheme() {
       const html = document.documentElement;
       const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -366,7 +327,6 @@
         showUrgentBanner(cachedAnnouncements);
         renderTab('resolutions');
         lucide.createIcons();
-        if (!localStorage.getItem('jmun_tutorial_seen_delegate')) openTutorial();
       } catch (err) { console.error('Dashboard load error:', err); }
     }
 
