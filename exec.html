@@ -63,6 +63,17 @@
     [data-theme="light"] .tab-btn.active{color:#5D175F}
     .badge-new{background:rgba(239,68,68,0.2);color:#dc2626;border:1px solid rgba(239,68,68,0.3);font-size:10px;padding:1px 6px;border-radius:99px}
     [data-theme="dark"] .badge-new{color:#fca5a5}
+    [data-theme="light"] .text-purple-400{color:#5D175F}
+    [data-theme="light"] .text-purple-200{color:#5D175F}
+    .btn-success{background:rgba(34,197,94,0.14);color:#16a34a;border:1px solid rgba(34,197,94,0.3)}
+    .btn-danger{background:rgba(239,68,68,0.12);color:#dc2626;border:1px solid rgba(239,68,68,0.28)}
+    .btn-info{background:rgba(59,130,246,0.12);color:#1d4ed8;border:1px solid rgba(59,130,246,0.28)}
+    .btn-warn{background:rgba(245,158,11,0.12);color:#b45309;border:1px solid rgba(245,158,11,0.28)}
+    .btn-success:hover,.btn-danger:hover,.btn-info:hover,.btn-warn:hover{opacity:.85}
+    [data-theme="dark"] .btn-success{color:#4ade80}
+    [data-theme="dark"] .btn-danger{color:#f87171}
+    [data-theme="dark"] .btn-info{color:#60a5fa}
+    [data-theme="dark"] .btn-warn{color:#fbbf24}
   </style>
 </head>
 <body class="h-full overflow-auto bg-grid">
@@ -164,7 +175,7 @@
         <p class="text-xs mt-1" id="review-submitter"></p>
       </div>
       <div class="space-y-4">
-        <a id="review-chair-doc" href="#" target="_blank" class="flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-blue-400 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition">
+        <a id="review-chair-doc" href="#" target="_blank" class="flex items-center gap-2 px-4 py-3 rounded-xl text-sm btn-info transition">
           <i data-lucide="external-link" style="width:16px;height:16px"></i> Open Submitted Google Doc
         </a>
         <div class="border-t pt-4" style="border-color:rgba(128,128,128,0.1)">
@@ -222,22 +233,11 @@
     </div>
   </div>
 
-  <!-- PDF Modal -->
-  <div id="pdf-modal" class="modal-overlay hidden">
-    <div class="surface-strong rounded-2xl w-full max-w-4xl glow-border overflow-hidden" style="height:85vh">
-      <div class="flex items-center justify-between p-4 border-b" style="border-color:rgba(128,128,128,0.1)">
-        <h3 class="text-sm font-semibold" id="pdf-title">—</h3>
-        <button onclick="closePdfModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
-      </div>
-      <iframe id="pdf-frame" src="" class="w-full" style="height:calc(85vh - 57px);border:none;background:#fff"></iframe>
-    </div>
-  </div>
-
   <script>
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD = '2026-06-16.2';
+    const BUILD = '2026-06-17';
     console.log('%cKoç JMUN · exec.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
     document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
@@ -336,7 +336,7 @@
         const statusLabel = {pending:'With chair',under_review:'Under review',sent_to_panel:'Awaiting approval',published:'Published',withdrawn:'Withdrawn'}[r.status];
         const submitterTag = r.submitter_role==='delegate' && r.submitter_country
           ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">📍 '+escHtml(r.submitter_country)+'</span>' : '';
-        const docUrl = r.exec_doc_url || r.chair_doc_url;
+        const docUrl = r.exec_doc_url || r.panel_doc_url || r.chair_doc_url;
         const actions = (mode==='inbox')
           ? '<button onclick="openReviewModal(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Review &amp; approve</button>'
           : (docUrl ? '<a href="'+escHtml(docUrl)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Google Docs</a>' : '');
@@ -387,7 +387,7 @@
       document.getElementById('review-committee').textContent = r.committee + ' · ' + (r.code||'') + (r.agenda_item ? ' · '+r.agenda_item : '');
       document.getElementById('review-submitter').innerHTML = r.submitter_role==='delegate' && r.submitter_country
         ? '<span style="color:#a855f7">Submitted by delegation: '+escHtml(r.submitter_country)+'</span>' : '<span class="muted">Submitted by chair</span>';
-      document.getElementById('review-chair-doc').href = r.chair_doc_url || '#';
+      document.getElementById('review-chair-doc').href = r.panel_doc_url || r.chair_doc_url || '#';
       document.getElementById('exec-doc-url').value = r.exec_doc_url || '';
       document.getElementById('exec-note').value = r.exec_note || '';
       document.getElementById('review-error').classList.add('hidden');
@@ -441,9 +441,6 @@
       await sb.from('announcements').delete().eq('id',id);
       renderAnnouncementsTab(document.getElementById('content-list')); lucide.createIcons();
     }
-
-    function openPdf(url,title){ document.getElementById('pdf-title').textContent=title; document.getElementById('pdf-frame').src=url; document.getElementById('pdf-modal').classList.remove('hidden'); }
-    function closePdfModal(){ document.getElementById('pdf-modal').classList.add('hidden'); document.getElementById('pdf-frame').src=''; }
 
     async function handleSignOut(){ await sb.auth.signOut(); window.location.href='login.html'; }
 
