@@ -94,6 +94,7 @@
           <button onclick="toggleTheme()" class="p-2 rounded-lg surface hover:opacity-80 transition" title="Toggle theme">
             <i data-lucide="sun" style="width:18px;height:18px" id="theme-icon"></i>
           </button>
+          <span class="text-sm muted hidden sm:inline">Signed in as <span class="font-medium" id="nav-name" style="color:inherit">—</span></span>
           <button onclick="handleSignOut()" class="px-4 py-2 rounded-lg text-purple-200 font-medium hover:bg-purple-500/10 transition text-sm" style="border:1px solid rgba(93,23,95,0.4)">Sign Out</button>
         </div>
       </div>
@@ -104,7 +105,7 @@
         <div class="flex items-center justify-between mb-6 pb-4 border-b" style="border-color:rgba(128,128,128,0.1)">
           <div>
             <p class="text-xs label-text">Delegate Portal</p>
-            <h3 class="text-lg font-semibold">Welcome, <span class="text-purple-400" id="delegate-name"><span class="skeleton inline-block w-28 h-5 align-middle"></span></span> 👋</h3>
+            <h3 class="text-lg font-semibold">Welcome, <span class="text-purple-400" id="delegate-name"><span class="skeleton inline-block w-28 h-5 align-middle"></span></span></h3>
           </div>
           <div></div>
         </div>
@@ -189,7 +190,7 @@
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD = '2026-06-17';
+    const BUILD = '2026-06-17.2';
     console.log('%cKoç JMUN · dashboard.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
     document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
@@ -245,26 +246,36 @@
       return null;
     }
     function fmtTime(d) { return d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+    function defaultScheduleDayIndex(now) {
+      for (let i=0;i<PLACEHOLDER_DATES.length;i++){
+        const dayEnd = new Date(PLACEHOLDER_DATES[i]+'T23:59:59');
+        if (now <= dayEnd) return i;
+      }
+      return PLACEHOLDER_DATES.length-1;
+    }
+    let scheduleSelectedDay = null;
+    function selectScheduleDay(i) { scheduleSelectedDay = i; renderSchedule(); }
 
     function renderSchedule() {
       const c = document.getElementById('content-list');
       const now = new Date();
+      if (scheduleSelectedDay === null) scheduleSelectedDay = defaultScheduleDayIndex(now);
       const next = getCurrentOrNextScheduleItem(now);
-      let html = '<p class="text-[10px] muted mb-4">Placeholder schedule — will be updated once the final timetable is confirmed.</p>';
-      PLACEHOLDER_SCHEDULE.forEach((day,i) => {
-        const dateStr = PLACEHOLDER_DATES[i];
-        html += '<p class="text-xs label-text uppercase tracking-wider mt-5 mb-2">'+escHtml(day.label)+'</p>';
-        day.items.forEach(it => {
-          const start = new Date(dateStr+'T'+it.start+':00');
-          const end = new Date(dateStr+'T'+it.end+':00');
-          const isNow = now>=start && now<end;
-          const isNext = !isNow && next && next.title===it.title && next.start.getTime()===start.getTime();
-          const isPast = now>=end;
-          html += '<div class="item-card rounded-xl p-3 mb-2 flex items-center justify-between'+(isPast?' opacity-50':'')+'">'+
-            '<div><p class="text-sm font-medium">'+escHtml(it.title)+'</p><p class="text-xs muted">'+fmtTime(start)+'–'+fmtTime(end)+'</p></div>'+
-            (isNow ? '<span class="text-[10px] px-2 py-0.5 rounded-full status-published">Now</span>' : (isNext ? '<span class="text-[10px] px-2 py-0.5 rounded-full status-pending">Next</span>' : ''))+
-          '</div>';
-        });
+      let html = '<div class="flex gap-6 border-b mb-5 overflow-x-auto" style="border-color:rgba(128,128,128,0.1)">'+
+        PLACEHOLDER_SCHEDULE.map((day,i) => '<button onclick="selectScheduleDay('+i+')" class="tab-btn text-sm font-medium whitespace-nowrap'+(i===scheduleSelectedDay?' active':'')+'">'+escHtml(day.label)+'</button>').join('')+
+      '</div>';
+      html += '<p class="text-[10px] muted mb-4">Placeholder schedule — will be updated once the final timetable is confirmed.</p>';
+      const dateStr = PLACEHOLDER_DATES[scheduleSelectedDay];
+      PLACEHOLDER_SCHEDULE[scheduleSelectedDay].items.forEach(it => {
+        const start = new Date(dateStr+'T'+it.start+':00');
+        const end = new Date(dateStr+'T'+it.end+':00');
+        const isNow = now>=start && now<end;
+        const isNext = !isNow && next && next.title===it.title && next.start.getTime()===start.getTime();
+        const isPast = now>=end;
+        html += '<div class="item-card rounded-xl p-3 mb-2 flex items-center justify-between'+(isPast?' opacity-50':'')+'">'+
+          '<div><p class="text-sm font-medium">'+escHtml(it.title)+'</p><p class="text-xs muted">'+fmtTime(start)+'–'+fmtTime(end)+'</p></div>'+
+          (isNow ? '<span class="text-[10px] px-2 py-0.5 rounded-full status-published">Now</span>' : (isNext ? '<span class="text-[10px] px-2 py-0.5 rounded-full status-pending">Next</span>' : ''))+
+        '</div>';
       });
       c.innerHTML = html;
     }
@@ -298,6 +309,7 @@
         const { data: delegate, error: delegateErr } = await sb.from('profiles').select('*').eq('id', userId).single();
         if (delegateErr || !delegate) { console.error('Could not load profile:', delegateErr); return; }
         currentProfile = delegate;
+        document.getElementById('nav-name').textContent = delegate.name;
         document.getElementById('delegate-name').textContent = delegate.name;
         document.getElementById('committee-text').textContent = delegate.committee;
         document.getElementById('country-text').textContent = delegate.country;
@@ -340,7 +352,7 @@
       // Show published committee resolutions + my own submissions (any status)
       const items = cachedResolutions.filter(r => r.status==='published' || r.submitted_by===currentProfile.id);
       if (!items.length) { c.innerHTML = emptyState('file-text','No resolutions yet','Published resolutions for '+currentProfile.committee+' appear here.'); return; }
-      const statusLabel = {pending:'Submitted — with your chair',under_review:'Under review by chairboard',sent_to_panel:'Sent to approval panel',published:'Projected on all panels',withdrawn:'Withdrawn'};
+      const statusLabel = {pending:'Submitted — with your chair',under_review:'Under review by chairboard',sent_to_panel:'Sent to approval panel',published:'Published',withdrawn:'Withdrawn'};
       c.innerHTML = items.map(r => {
         const isMine = r.submitted_by===currentProfile.id;
         const heading = r.title || r.summary || 'Resolution';
@@ -395,7 +407,7 @@
           row('Part / Clause', escHtml(a.target_clause||'—'))+
           '<div><p class="text-[10px] label-text uppercase tracking-wider mb-1">Your amendment</p><p class="text-sm leading-relaxed subbox rounded-lg p-3">'+escHtml(a.amendment_text)+'</p></div>'+
           (a.status==='rejected'&&a.review_note ? '<div><p class="text-[10px] label-text uppercase tracking-wider mb-1">Chair\'s reason</p><p class="text-sm subbox rounded-lg p-3 text-red-400">'+escHtml(a.review_note)+'</p></div>' : '')+
-          (a.status==='approved' ? '<p class="text-xs text-green-400">✓ Your chair approved this amendment.</p>' : '')+
+          (a.status==='approved' ? '<p class="text-xs text-green-400">Your chair approved this amendment.</p>' : '')+
           '<p class="text-[10px] muted">Submitted '+timeAgo(a.created_at)+'</p>'+
         '</div>';
       }).join('');
