@@ -76,6 +76,10 @@
     [data-theme="dark"] .btn-danger{color:#f87171}
     [data-theme="dark"] .btn-info{color:#60a5fa}
     [data-theme="dark"] .btn-warn{color:#fbbf24}
+    .toast{padding:12px 14px;border-radius:12px;font-size:13px;display:flex;align-items:flex-start;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,0.22);animation:toast-in .25s ease-out;pointer-events:auto;cursor:pointer}
+    .toast.leaving{animation:toast-out .2s ease-in forwards}
+    @keyframes toast-in{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes toast-out{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(24px)}}
   </style>
 </head>
 <body class="h-full overflow-auto bg-grid">
@@ -93,6 +97,9 @@
         <div class="flex items-center gap-3">
           <button onclick="toggleTheme()" class="p-2 rounded-lg surface hover:opacity-80 transition" title="Toggle theme">
             <i data-lucide="sun" style="width:18px;height:18px" id="theme-icon"></i>
+          </button>
+          <button onclick="openTutorial()" class="p-2 rounded-lg surface hover:opacity-80 transition" title="How this portal works">
+            <i data-lucide="help-circle" style="width:18px;height:18px"></i>
           </button>
           <span class="text-sm muted hidden sm:inline">Signed in as <span class="font-medium" id="nav-name" style="color:inherit">—</span></span>
           <button onclick="handleSignOut()" class="px-4 py-2 rounded-lg text-purple-200 font-medium hover:bg-purple-500/10 transition text-sm" style="border:1px solid rgba(93,23,95,0.4)">Sign Out</button>
@@ -158,6 +165,39 @@
     </section>
   </div>
 
+  <!-- Tutorial Modal -->
+  <div id="tutorial-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border" style="max-height:85vh;overflow-y:auto">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold">How this portal works</h2>
+        <button onclick="closeTutorial()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <div class="space-y-4">
+        <div class="flex gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(93,23,95,0.12)"><i data-lucide="file-text" style="width:16px;height:16px;color:#5D175F"></i></div>
+          <div><p class="text-sm font-medium mb-0.5">Submit a resolution</p><p class="text-xs muted">Add an agenda item and a Google Docs link. Your chair assigns the official code later, once they forward it to the approval panel — you don't need to know it in advance.</p></div>
+        </div>
+        <div class="flex gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(93,23,95,0.12)"><i data-lucide="refresh-cw" style="width:16px;height:16px;color:#5D175F"></i></div>
+          <div><p class="text-sm font-medium mb-0.5">Track its progress</p><p class="text-xs muted">Submitted → Under review → Sent to approval panel → Published. Your Resolutions tab updates live as your chair and exec move it through each stage.</p></div>
+        </div>
+        <div class="flex gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(93,23,95,0.12)"><i data-lucide="edit-3" style="width:16px;height:16px;color:#5D175F"></i></div>
+          <div><p class="text-sm font-medium mb-0.5">Propose amendments</p><p class="text-xs muted">Suggest a change to a published resolution. Check My Amendments to see whether your chair approved it — rejections come with a short reason.</p></div>
+        </div>
+        <div class="flex gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(93,23,95,0.12)"><i data-lucide="calendar" style="width:16px;height:16px;color:#5D175F"></i></div>
+          <div><p class="text-sm font-medium mb-0.5">Check the schedule</p><p class="text-xs muted">The "Next Session" card always shows what's coming up. The Schedule tab has the full day-by-day timetable.</p></div>
+        </div>
+        <div class="flex gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(93,23,95,0.12)"><i data-lucide="bell" style="width:16px;height:16px;color:#5D175F"></i></div>
+          <div><p class="text-sm font-medium mb-0.5">Stay updated automatically</p><p class="text-xs muted">You'll get a small notification in the corner whenever something about your own submissions changes — no need to keep refreshing.</p></div>
+        </div>
+      </div>
+      <button onclick="closeTutorial()" class="w-full mt-6 py-3 rounded-xl text-sm font-semibold text-white transition" style="background:#5D175F">Got it</button>
+    </div>
+  </div>
+
   <!-- Submit Resolution Modal -->
   <div id="submit-modal" class="modal-overlay hidden">
     <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
@@ -190,7 +230,7 @@
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD = '2026-06-17.2';
+    const BUILD = '2026-06-18.2';
     console.log('%cKoç JMUN · dashboard.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
     document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
@@ -235,7 +275,7 @@
         const dateStr = PLACEHOLDER_DATES[i];
         if (!dateStr) return;
         day.items.forEach(it => {
-          events.push({ title: it.title, start: new Date(dateStr+'T'+it.start+':00'), end: new Date(dateStr+'T'+it.end+':00') });
+          events.push({ title: it.title, start: new Date(dateStr+'T'+it.start+':00+03:00'), end: new Date(dateStr+'T'+it.end+':00+03:00') });
         });
       });
       return events.sort((a,b) => a.start - b.start);
@@ -245,10 +285,10 @@
       for (const ev of events) { if (now < ev.end) return ev; }
       return null;
     }
-    function fmtTime(d) { return d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+    function fmtTime(d) { return d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Istanbul'}); }
     function defaultScheduleDayIndex(now) {
       for (let i=0;i<PLACEHOLDER_DATES.length;i++){
-        const dayEnd = new Date(PLACEHOLDER_DATES[i]+'T23:59:59');
+        const dayEnd = new Date(PLACEHOLDER_DATES[i]+'T23:59:59+03:00');
         if (now <= dayEnd) return i;
       }
       return PLACEHOLDER_DATES.length-1;
@@ -267,8 +307,8 @@
       html += '<p class="text-[10px] muted mb-4">Placeholder schedule — will be updated once the final timetable is confirmed.</p>';
       const dateStr = PLACEHOLDER_DATES[scheduleSelectedDay];
       PLACEHOLDER_SCHEDULE[scheduleSelectedDay].items.forEach(it => {
-        const start = new Date(dateStr+'T'+it.start+':00');
-        const end = new Date(dateStr+'T'+it.end+':00');
+        const start = new Date(dateStr+'T'+it.start+':00+03:00');
+        const end = new Date(dateStr+'T'+it.end+':00+03:00');
         const isNow = now>=start && now<end;
         const isNext = !isNow && next && next.title===it.title && next.start.getTime()===start.getTime();
         const isPast = now>=end;
@@ -279,6 +319,9 @@
       });
       c.innerHTML = html;
     }
+
+    function openTutorial(){ document.getElementById('tutorial-modal').classList.remove('hidden'); lucide.createIcons(); }
+    function closeTutorial(){ document.getElementById('tutorial-modal').classList.add('hidden'); localStorage.setItem('jmun_tutorial_seen_delegate','1'); }
 
     function toggleTheme() {
       const html = document.documentElement;
@@ -323,6 +366,7 @@
         showUrgentBanner(cachedAnnouncements);
         renderTab('resolutions');
         lucide.createIcons();
+        if (!localStorage.getItem('jmun_tutorial_seen_delegate')) openTutorial();
       } catch (err) { console.error('Dashboard load error:', err); }
     }
 
@@ -507,6 +551,19 @@
     }
 
     function emptyState(icon,title,sub){ return '<div class="text-center py-12 muted"><i data-lucide="'+icon+'" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">'+title+'</p><p class="text-xs mt-1">'+sub+'</p></div>'; }
+    function showToast(message, type) {
+      type = type || 'info';
+      const colors = { info:'#5D175F', success:'#16a34a', warning:'#b45309' };
+      const icons = { info:'bell', success:'check-circle-2', warning:'alert-circle' };
+      const el = document.createElement('div');
+      el.className = 'toast surface-strong';
+      el.style.borderLeft = '3px solid '+colors[type];
+      el.innerHTML = '<i data-lucide="'+icons[type]+'" style="width:16px;height:16px;flex-shrink:0;margin-top:1px;color:'+colors[type]+'"></i><span>'+escHtml(message)+'</span>';
+      el.onclick = function(){ el.classList.add('leaving'); setTimeout(function(){ el.remove(); }, 200); };
+      document.getElementById('toast-container').appendChild(el);
+      lucide.createIcons();
+      setTimeout(function(){ if(el.parentNode){ el.classList.add('leaving'); setTimeout(function(){ el.remove(); }, 200); } }, 5000);
+    }
     function escHtml(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function escAttr(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/'/g,'\\\'').replace(/"/g,'&quot;'); }
     function timeAgo(iso){
@@ -523,13 +580,31 @@
     }
 
     sb.channel('delegate-updates')
-      .on('postgres_changes',{event:'*',schema:'public',table:'resolutions'},()=>{ if(currentTab==='resolutions')renderResolutions(); })
-      .on('postgres_changes',{event:'*',schema:'public',table:'amendments'},()=>{ if(currentTab==='amendments')renderMyAmendments(); })
-      .on('postgres_changes',{event:'*',schema:'public',table:'committee_feed'},()=>{ if(currentTab==='feed')renderFeed(); })
-      .on('postgres_changes',{event:'*',schema:'public',table:'announcements'},()=>{ if(currentProfile) loadDashboard(currentProfile.id); })
+      .on('postgres_changes',{event:'*',schema:'public',table:'resolutions'},(payload)=>{
+        if (currentTab==='resolutions') renderResolutions();
+        if (payload.new && payload.new.submitted_by===currentProfile.id && payload.old && payload.old.status!==payload.new.status) {
+          const labels = {pending:'Submitted',under_review:'Under review by chairboard',sent_to_panel:'Sent to approval panel',published:'Published',withdrawn:'Withdrawn'};
+          showToast('Your resolution status changed: '+(labels[payload.new.status]||payload.new.status), payload.new.status==='published'?'success':'info');
+        }
+      })
+      .on('postgres_changes',{event:'*',schema:'public',table:'amendments'},(payload)=>{
+        if (currentTab==='amendments') renderMyAmendments();
+        if (payload.new && payload.new.submitted_by===currentProfile.id && payload.old && payload.old.status!==payload.new.status && payload.new.status!=='pending') {
+          showToast('Your amendment was '+payload.new.status, payload.new.status==='approved'?'success':'warning');
+        }
+      })
+      .on('postgres_changes',{event:'*',schema:'public',table:'committee_feed'},(payload)=>{
+        if (currentTab==='feed') renderFeed();
+        if (payload.eventType==='INSERT') showToast('New committee feed post', 'info');
+      })
+      .on('postgres_changes',{event:'*',schema:'public',table:'announcements'},(payload)=>{
+        if (currentProfile) loadDashboard(currentProfile.id);
+        if (payload.eventType==='INSERT' && payload.new) showToast('New announcement: '+payload.new.title, 'info');
+      })
       .subscribe();
 
     init();
   </script>
+  <div id="toast-container" style="position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:340px;pointer-events:none"></div>
 </body>
 </html>
