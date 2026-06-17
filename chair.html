@@ -70,7 +70,8 @@
     .tally-table th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:10px 12px;text-align:center;white-space:nowrap;background:rgba(93,23,95,0.1);color:#5D175F}
     .tally-table th:first-child{text-align:left}
     [data-theme="dark"] .tally-table th{background:rgba(93,23,95,0.22);color:#e9d5ff}
-    .tally-table td{padding:8px 12px;border-bottom:1px solid rgba(128,128,128,0.08);vertical-align:middle}
+    .tally-table td{padding:8px 12px;border-bottom:1px solid rgba(128,128,128,0.08);vertical-align:middle;text-align:center}
+    .tally-table td:first-child{text-align:left}
     .tally-table tr:last-child td{border-bottom:none}
     .tally-table tfoot td{border-top:2px solid rgba(128,128,128,0.15);border-bottom:none;padding-top:10px}
     .stepper{display:inline-flex;align-items:center;gap:7px;justify-content:center}
@@ -283,7 +284,7 @@
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD = '2026-06-17.4';
+    const BUILD = '2026-06-17.5';
     console.log('%cKoç JMUN · chair.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
     document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
