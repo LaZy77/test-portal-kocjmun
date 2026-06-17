@@ -74,6 +74,13 @@
     .tally-table tfoot td{border-top:2px solid rgba(128,128,128,0.15);border-bottom:none;padding-top:10px}
     .priority-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:6px 8px;border-radius:8px}
     .priority-row:nth-child(odd){background:rgba(128,128,128,0.05)}
+    .school-group{background:rgba(93,23,95,0.035)}
+    [data-theme="dark"] .school-group{background:rgba(93,23,95,0.09)}
+    .attendance-pill{display:inline-block;padding:5px 16px;border-radius:99px;font-size:12px;font-weight:600;user-select:none}
+    .attendance-pill.present{background:rgba(34,197,94,0.14);color:#16a34a;border:1px solid rgba(34,197,94,0.3)}
+    .attendance-pill.absent{background:rgba(239,68,68,0.12);color:#dc2626;border:1px solid rgba(239,68,68,0.28)}
+    [data-theme="dark"] .attendance-pill.present{color:#4ade80}
+    [data-theme="dark"] .attendance-pill.absent{color:#f87171}
     [data-theme="light"] .text-purple-400{color:#5D175F}
     [data-theme="light"] .text-purple-200{color:#5D175F}
     .btn-success{background:rgba(34,197,94,0.14);color:#16a34a;border:1px solid rgba(34,197,94,0.3)}
@@ -145,6 +152,7 @@
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('announcements')" id="tab-announcements">Announcements</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('schedule')" id="tab-schedule">Schedule</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('tally')" id="tab-tally">Tally</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('attendance')" id="tab-attendance">Attendance</button>
       </div>
 
       <!-- Filters -->
@@ -173,6 +181,12 @@
 
       <div id="tally-actions" class="hidden mb-4">
         <button onclick="exportTallyToExcel()" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:#5D175F">
+          <i data-lucide="download" style="width:14px;height:14px"></i> Export to Excel
+        </button>
+      </div>
+
+      <div id="attendance-actions" class="hidden mb-4">
+        <button onclick="exportAttendanceToExcel()" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:#5D175F">
           <i data-lucide="download" style="width:14px;height:14px"></i> Export to Excel
         </button>
       </div>
@@ -262,12 +276,13 @@
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD = '2026-06-17.5';
+    const BUILD = '2026-06-18';
     console.log('%cKoç JMUN · exec.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
     document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
     let currentTab = 'inbox';
     let tallyByCommittee = {};
+    let attendanceSessionKey = null;
     let allResolutions = [];
     let currentReviewId = null;
 
@@ -413,8 +428,9 @@
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
       document.getElementById('tab-'+tab).classList.add('active');
       document.getElementById('filter-bar').style.display = (tab === 'announcements' || tab === 'schedule') ? 'none' : 'flex';
-      document.getElementById('filter-agenda-wrap').style.display = (tab === 'tally') ? 'none' : 'block';
+      document.getElementById('filter-agenda-wrap').style.display = (tab === 'tally' || tab === 'attendance') ? 'none' : 'block';
       document.getElementById('tally-actions').classList.toggle('hidden', tab !== 'tally');
+      document.getElementById('attendance-actions').classList.toggle('hidden', tab !== 'attendance');
       renderTab(tab);
       lucide.createIcons();
     }
@@ -452,6 +468,7 @@
       else if (tab === 'announcements') renderAnnouncementsTab(c);
       else if (tab === 'schedule') renderSchedule();
       else if (tab === 'tally') ensureTallyLoaded().then(renderTallyView);
+      else if (tab === 'attendance') openAttendanceTab();
     }
 
     function renderResList(items, c, mode) {
@@ -575,9 +592,10 @@
 
     // ── TALLY (read-only, all committees) ───────────────────────────────────
     function tallyTotal(t){ return t.poi*1 + t.speech*2 + t.amendment*3; }
+    function schoolGroupKey(e){ return (e.school||'zzz_no_school') + '|' + e.country; }
 
     async function loadAllTally() {
-      const { data: delegates } = await sb.from('profiles').select('id,name,country,committee')
+      const { data: delegates } = await sb.from('profiles').select('id,name,country,school,committee')
         .eq('role','delegate').order('committee',{ascending:true}).order('country',{ascending:true});
       const { data: rows } = await sb.from('tally').select('*');
       const rowMap = {}; (rows||[]).forEach(r => rowMap[r.delegate_id] = r);
@@ -585,7 +603,7 @@
       (delegates||[]).forEach(d => {
         if (!byCommittee[d.committee]) byCommittee[d.committee] = {};
         const r = rowMap[d.id] || {};
-        byCommittee[d.committee][d.id] = { name: d.name, country: d.country||'—', poi:r.poi_count||0, speech:r.speech_count||0, amendment:r.amendment_count||0 };
+        byCommittee[d.committee][d.id] = { name: d.name, country: d.country||'—', school: d.school||'', poi:r.poi_count||0, speech:r.speech_count||0, amendment:r.amendment_count||0 };
       });
       tallyByCommittee = byCommittee;
     }
@@ -597,15 +615,19 @@
     function renderCommitteeTallyBlock(committee, map) {
       const entries = Object.entries(map).map(([id,t]) => ({ id, ...t, total: tallyTotal(t) }));
       const priority = [...entries].sort((a,b) => a.total-b.total || a.country.localeCompare(b.country));
-      const rows = [...entries].sort((a,b) => a.country.localeCompare(b.country));
+      const rows = [...entries].sort((a,b) => schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
       const totals = entries.reduce((acc,e)=>({poi:acc.poi+e.poi,speech:acc.speech+e.speech,amendment:acc.amendment+e.amendment,total:acc.total+e.total}),{poi:0,speech:0,amendment:0,total:0});
 
       const priorityHtml = entries.length
         ? priority.map((e,i) => '<div class="priority-row"><span class="flex items-center gap-2"><span class="label-text" style="width:16px;display:inline-block;font-weight:600">'+(i+1)+'</span>'+escHtml(e.country)+'</span><span class="font-semibold text-purple-400">'+e.total+'</span></div>').join('')
         : '<p class="text-xs muted px-2 py-1">No delegates yet.</p>';
 
+      let lastSchool = null, groupToggle = false;
       const rowsHtml = entries.length
-        ? rows.map(e => '<tr><td><p class="font-medium text-sm">'+escHtml(e.country)+'</p><p class="text-[11px] muted">'+escHtml(e.name)+'</p></td><td class="text-center">'+e.poi+'</td><td class="text-center">'+e.speech+'</td><td class="text-center">'+e.amendment+'</td><td class="text-center font-semibold text-purple-400">'+e.total+'</td></tr>').join('')
+        ? rows.map(e => {
+            if (e.school !== lastSchool) { groupToggle = !groupToggle; lastSchool = e.school; }
+            return '<tr class="'+(groupToggle?'school-group':'')+'"><td><p class="font-medium text-sm">'+escHtml(e.country)+'</p><p class="text-[11px] muted">'+escHtml(e.name)+'</p>'+(e.school?'<p class="text-[10px] label-text">'+escHtml(e.school)+'</p>':'')+'</td><td class="text-center">'+e.poi+'</td><td class="text-center">'+e.speech+'</td><td class="text-center">'+e.amendment+'</td><td class="text-center font-semibold text-purple-400">'+e.total+'</td></tr>';
+          }).join('')
         : '<tr><td colspan="5" class="text-center muted py-6">No delegates in this committee yet.</td></tr>';
 
       return '<div class="mb-7">'+
@@ -642,16 +664,147 @@
       if (!committees.length) return;
       const wb = XLSX.utils.book_new();
       committees.forEach(committee => {
-        const entries = Object.values(tallyByCommittee[committee]).map(t => ({ ...t, total: tallyTotal(t) })).sort((a,b)=>a.country.localeCompare(b.country));
+        const entries = Object.values(tallyByCommittee[committee]).map(t => ({ ...t, total: tallyTotal(t) })).sort((a,b)=>schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
         const priority = [...entries].sort((a,b)=> a.total-b.total || a.country.localeCompare(b.country));
-        const tallySheet = [['Delegation','Delegate','POIs (1pt)','Speeches (2pt)','Amendments (3pt)','Total Points']]
-          .concat(entries.map(e => [e.country, e.name, e.poi, e.speech, e.amendment, e.total]));
+        const tallySheet = [['Delegation','Delegate','School','POIs (1pt)','Speeches (2pt)','Amendments (3pt)','Total Points']]
+          .concat(entries.map(e => [e.country, e.name, e.school, e.poi, e.speech, e.amendment, e.total]));
         const prioritySheet = [['Rank','Delegation','Total Points']]
           .concat(priority.map((e,i) => [i+1, e.country, e.total]));
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tallySheet), (committee+' Tally').slice(0,31));
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(prioritySheet), (committee+' Priority').slice(0,31));
       });
       XLSX.writeFile(wb, (selected || 'All Committees') + ' Tally.xlsx');
+    }
+
+    // ── ATTENDANCE (read-only, all committees, per session) ─────────────────
+    function getAttendanceSessions() {
+      const list = [];
+      PLACEHOLDER_SCHEDULE.forEach((day,i) => {
+        const dateStr = PLACEHOLDER_DATES[i];
+        day.items.forEach(it => {
+          if (/^session/i.test(it.title)) {
+            list.push({ key: i+'|'+it.title, label: it.title, dayLabel: day.label,
+              start: new Date(dateStr+'T'+it.start+':00'), end: new Date(dateStr+'T'+it.end+':00') });
+          }
+        });
+      });
+      return list;
+    }
+    function defaultAttendanceSessionKey(sessions, now) {
+      if (!sessions.length) return null;
+      for (const s of sessions) { if (now < s.end) return s.key; }
+      return sessions[sessions.length-1].key;
+    }
+
+    let attendanceByCommittee = {};
+    async function loadAttendanceForSession(sessionKey) {
+      const { data: delegates } = await sb.from('profiles').select('id,name,country,school,committee')
+        .eq('role','delegate').order('committee',{ascending:true}).order('country',{ascending:true});
+      const { data: rows } = await sb.from('attendance').select('*').eq('session_key', sessionKey);
+      const rowMap = {}; (rows||[]).forEach(r => rowMap[r.delegate_id] = r.status);
+      const byCommittee = {};
+      (delegates||[]).forEach(d => {
+        if (!byCommittee[d.committee]) byCommittee[d.committee] = {};
+        byCommittee[d.committee][d.id] = { name: d.name, country: d.country||'—', school: d.school||'', status: rowMap[d.id] || 'present' };
+      });
+      attendanceByCommittee = byCommittee;
+    }
+
+    async function openAttendanceTab() {
+      const c = document.getElementById('content-list');
+      c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
+      const sessions = getAttendanceSessions();
+      if (!sessions.length) { c.innerHTML = '<div class="text-center py-12 muted"><i data-lucide="calendar-x" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">No sessions defined yet.</p></div>'; lucide.createIcons(); return; }
+      if (!attendanceSessionKey || !sessions.find(s=>s.key===attendanceSessionKey)) {
+        attendanceSessionKey = defaultAttendanceSessionKey(sessions, new Date());
+      }
+      await loadAttendanceForSession(attendanceSessionKey);
+      renderAttendanceView();
+    }
+
+    async function selectAttendanceSession(key) {
+      attendanceSessionKey = key;
+      await loadAttendanceForSession(key);
+      renderAttendanceView();
+    }
+
+    function renderCommitteeAttendanceBlock(committee, map) {
+      const entries = Object.entries(map).map(([id,t]) => ({ id, ...t }));
+      const present = entries.filter(e=>e.status==='present').length;
+      const absent = entries.length - present;
+      const rate = entries.length ? Math.round((present/entries.length)*1000)/10 : 0;
+      const rows = [...entries].sort((a,b) => schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
+
+      let lastSchool = null, groupToggle = false;
+      const rowsHtml = entries.length
+        ? rows.map(e => {
+            if (e.school !== lastSchool) { groupToggle = !groupToggle; lastSchool = e.school; }
+            return '<tr class="'+(groupToggle?'school-group':'')+'"><td><p class="font-medium text-sm">'+escHtml(e.country)+'</p><p class="text-[11px] muted">'+escHtml(e.name)+'</p>'+(e.school?'<p class="text-[10px] label-text">'+escHtml(e.school)+'</p>':'')+'</td><td class="text-center"><span class="attendance-pill '+e.status+'">'+(e.status==='present'?'Present':'Absent')+'</span></td></tr>';
+          }).join('')
+        : '<tr><td colspan="2" class="text-center muted py-6">No delegates in this committee yet.</td></tr>';
+
+      return '<div class="mb-7">'+
+        '<div class="flex items-center justify-between mb-3 flex-wrap gap-2">'+
+          '<p class="text-sm font-semibold">'+escHtml(committee)+'</p>'+
+          '<p class="text-xs muted">'+present+' present · '+absent+' absent · '+rate+'%</p>'+
+        '</div>'+
+        '<div class="surface-strong rounded-xl overflow-x-auto">'+
+          '<table class="tally-table">'+
+            '<thead><tr><th>Delegation</th><th>Attendance</th></tr></thead>'+
+            '<tbody>'+rowsHtml+'</tbody>'+
+          '</table>'+
+        '</div>'+
+      '</div>';
+    }
+
+    function renderAttendanceView() {
+      const c = document.getElementById('content-list');
+      const sessions = getAttendanceSessions();
+      const selected = document.getElementById('filter-committee').value;
+      const committees = Object.keys(attendanceByCommittee).sort();
+      const list = selected ? committees.filter(x => x === selected) : committees;
+
+      const pillsHtml = sessions.map(s =>
+        '<button onclick="selectAttendanceSession(\''+s.key+'\')" class="tab-btn text-sm font-medium whitespace-nowrap'+(s.key===attendanceSessionKey?' active':'')+'">'+escHtml(s.dayLabel)+' · '+escHtml(s.label)+'</button>'
+      ).join('');
+
+      const body = list.length
+        ? list.map(committee => renderCommitteeAttendanceBlock(committee, attendanceByCommittee[committee])).join('')
+        : '<div class="text-center py-12 muted"><i data-lucide="users" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">No delegates found.</p></div>';
+
+      c.innerHTML =
+        '<div class="flex gap-6 border-b mb-5 overflow-x-auto" style="border-color:rgba(128,128,128,0.1)">'+pillsHtml+'</div>'+
+        '<p class="text-[10px] muted mb-4">Placeholder schedule — sessions will match the final timetable once confirmed.</p>'+
+        body;
+      lucide.createIcons();
+    }
+
+    async function exportAttendanceToExcel() {
+      const sessions = getAttendanceSessions();
+      if (!sessions.length) return;
+      const selected = document.getElementById('filter-committee').value;
+      const { data: delegates } = await sb.from('profiles').select('id,name,country,school,committee').eq('role','delegate');
+      const { data: rows } = await sb.from('attendance').select('*');
+      const statusMap = {}; (rows||[]).forEach(r => { if(!statusMap[r.delegate_id]) statusMap[r.delegate_id]={}; statusMap[r.delegate_id][r.session_key] = r.status; });
+      const committees = [...new Set((delegates||[]).map(d=>d.committee))].sort().filter(c => !selected || c === selected);
+      const wb = XLSX.utils.book_new();
+      committees.forEach(committee => {
+        const entries = (delegates||[]).filter(d=>d.committee===committee).map(d => ({ id:d.id, name:d.name, country:d.country||'—', school:d.school||'' })).sort((a,b)=>schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
+        const header = ['Delegation','Delegate','School'].concat(sessions.map(s=>s.dayLabel+' '+s.label));
+        const body = entries.map(e => [e.country, e.name, e.school].concat(sessions.map(s => {
+          const st = (statusMap[e.id]||{})[s.key] || 'present';
+          return st === 'present' ? 'Present' : 'Absent';
+        })));
+        const presentRow = ['Present','',''].concat(sessions.map(s => entries.filter(e => ((statusMap[e.id]||{})[s.key]||'present')==='present').length));
+        const absentRow = ['Absent','',''].concat(sessions.map(s => entries.filter(e => ((statusMap[e.id]||{})[s.key]||'present')==='absent').length));
+        const rateRow = ['Attendance Rate','',''].concat(sessions.map(s => {
+          const p = entries.filter(e => ((statusMap[e.id]||{})[s.key]||'present')==='present').length;
+          return entries.length ? Math.round((p/entries.length)*1000)/10+'%' : '—';
+        }));
+        const sheet = [header].concat(body).concat([[],presentRow,absentRow,rateRow]);
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheet), (committee+' Attendance').slice(0,31));
+      });
+      XLSX.writeFile(wb, (selected || 'All Committees') + ' Attendance.xlsx');
     }
 
     async function handleSignOut(){ await sb.auth.signOut(); window.location.href='login.html'; }
@@ -674,6 +827,7 @@
     sb.channel('exec-updates')
       .on('postgres_changes',{event:'*',schema:'public',table:'resolutions'},()=>loadAll())
       .on('postgres_changes',{event:'*',schema:'public',table:'tally'},()=>{ if(currentTab==='tally') ensureTallyLoaded().then(renderTallyView); })
+      .on('postgres_changes',{event:'*',schema:'public',table:'attendance'},()=>{ if(currentTab==='attendance') loadAttendanceForSession(attendanceSessionKey).then(renderAttendanceView); })
       .subscribe();
 
     init();
