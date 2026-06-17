@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Exec Dashboard — Koç JMUN</title>
+  <title>Chair Dashboard — Koç JMUN</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -15,33 +15,31 @@
     [data-theme="dark"] .surface{background:rgba(255,255,255,0.04);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
     [data-theme="dark"] .surface-strong{background:rgba(255,255,255,0.07);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.12)}
     [data-theme="dark"] .glow-border{box-shadow:0 0 20px rgba(93,23,95,0.25),inset 0 0 20px rgba(93,23,95,0.1);border:1px solid rgba(93,23,95,0.4)}
-    [data-theme="dark"] .glow-border-gold{box-shadow:0 0 20px rgba(212,168,83,0.15);border:1px solid rgba(212,168,83,0.3)}
     [data-theme="dark"] .bg-grid{background-image:linear-gradient(rgba(93,23,95,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.05) 1px,transparent 1px);background-size:60px 60px}
     [data-theme="dark"] .input-field{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0}
     [data-theme="dark"] .input-field::placeholder{color:#4b5563}
     [data-theme="dark"] .muted{color:#9ca3af}
-    [data-theme="dark"] .label-text{color:#6b7280}
+    [data-theme="dark"] .label-text{color:#9ca3af}
     [data-theme="dark"] .stat-card{background:rgba(255,255,255,0.04)}
     [data-theme="dark"] .item-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)}
+    [data-theme="dark"] .subbox{background:rgba(0,0,0,0.25)}
     [data-theme="light"] body{background:#f5f3f7;color:#1a1523}
     [data-theme="light"] .surface{background:rgba(255,255,255,0.7);backdrop-filter:blur(16px);border:1px solid rgba(93,23,95,0.1)}
     [data-theme="light"] .surface-strong{background:#ffffff;border:1px solid rgba(93,23,95,0.12);box-shadow:0 4px 20px rgba(93,23,95,0.06)}
     [data-theme="light"] .glow-border{box-shadow:0 4px 24px rgba(93,23,95,0.1);border:1px solid rgba(93,23,95,0.2)}
-    [data-theme="light"] .glow-border-gold{box-shadow:0 4px 24px rgba(212,168,83,0.12);border:1px solid rgba(212,168,83,0.3)}
     [data-theme="light"] .bg-grid{background-image:linear-gradient(rgba(93,23,95,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.03) 1px,transparent 1px);background-size:60px 60px}
     [data-theme="light"] .input-field{background:#ffffff;border:1px solid rgba(93,23,95,0.2);color:#1a1523}
     [data-theme="light"] .input-field::placeholder{color:#9ca3af}
     [data-theme="light"] .muted{color:#6b7280}
-    [data-theme="light"] .label-text{color:#9ca3af}
+    [data-theme="light"] .label-text{color:#6b7280}
     [data-theme="light"] .stat-card{background:#faf9fb;border:1px solid rgba(93,23,95,0.08)}
     [data-theme="light"] .item-card{background:#faf9fb;border:1px solid rgba(93,23,95,0.1)}
+    [data-theme="light"] .subbox{background:#f1eef5}
     .input-field{transition:border-color .2s,box-shadow .2s}
     .input-field:focus{outline:none;border-color:rgba(93,23,95,0.7);box-shadow:0 0 0 3px rgba(93,23,95,0.15)}
-    @keyframes pulse-glow{0%,100%{opacity:.4}50%{opacity:.8}}
+    @keyframes spin{to{transform:rotate(360deg)}}
     @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .animate-pulse-glow{animation:pulse-glow 3s ease-in-out infinite}
     .animate-fadein{animation:fadeIn 0.4s ease-out forwards}
     .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
     .skeleton{background:linear-gradient(90deg,rgba(128,128,128,0.1) 25%,rgba(128,128,128,0.2) 50%,rgba(128,128,128,0.1) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px}
@@ -51,13 +49,17 @@
     .status-sent_to_panel{background:rgba(124,58,237,0.15);color:#6d28d9;border:1px solid rgba(124,58,237,0.3)}
     .status-published{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
     .status-withdrawn{background:rgba(107,114,128,0.15);color:#6b7280;border:1px solid rgba(107,114,128,0.3)}
+    .status-approved{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
+    .status-rejected{background:rgba(239,68,68,0.15);color:#b91c1c;border:1px solid rgba(239,68,68,0.3)}
     [data-theme="dark"] .status-pending{color:#fde047}
     [data-theme="dark"] .status-received{color:#93c5fd}
     [data-theme="dark"] .status-under_review{color:#a5b4fc}
     [data-theme="dark"] .status-sent_to_panel{color:#c4b5fd}
     [data-theme="dark"] .status-published{color:#86efac}
     [data-theme="dark"] .status-withdrawn{color:#9ca3af}
-    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem}
+    [data-theme="dark"] .status-approved{color:#86efac}
+    [data-theme="dark"] .status-rejected{color:#fca5a5}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem}
     .tab-btn{color:#9ca3af;border-bottom:2px solid transparent;transition:all .3s;padding-bottom:8px}
     .tab-btn.active{color:#a855f7;border-bottom-color:#5D175F}
     [data-theme="light"] .tab-btn{color:#6b7280}
@@ -72,11 +74,16 @@
     .tally-table td:first-child{text-align:left}
     .tally-table tr:last-child td{border-bottom:none}
     .tally-table tfoot td{border-top:2px solid rgba(128,128,128,0.15);border-bottom:none;padding-top:10px}
+    .stepper{display:inline-flex;align-items:center;gap:7px;justify-content:center}
+    .stepper-btn{width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;background:rgba(128,128,128,0.12);cursor:pointer;transition:opacity .15s;flex-shrink:0}
+    .stepper-btn:hover{opacity:.6}
+    .stepper-val{min-width:20px;text-align:center;font-weight:600;font-family:'JetBrains Mono',monospace;font-size:13px}
     .priority-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:6px 8px;border-radius:8px}
     .priority-row:nth-child(odd){background:rgba(128,128,128,0.05)}
     .school-group{background:rgba(93,23,95,0.035)}
     [data-theme="dark"] .school-group{background:rgba(93,23,95,0.09)}
-    .attendance-pill{display:inline-block;padding:5px 16px;border-radius:99px;font-size:12px;font-weight:600;user-select:none}
+    .attendance-pill{display:inline-block;padding:5px 16px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s;user-select:none}
+    .attendance-pill:hover{opacity:.75}
     .attendance-pill.present{background:rgba(34,197,94,0.14);color:#16a34a;border:1px solid rgba(34,197,94,0.3)}
     .attendance-pill.absent{background:rgba(239,68,68,0.12);color:#dc2626;border:1px solid rgba(239,68,68,0.28)}
     [data-theme="dark"] .attendance-pill.present{color:#4ade80}
@@ -95,18 +102,13 @@
   </style>
 </head>
 <body class="h-full overflow-auto bg-grid">
-  <div class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0">
-    <div class="absolute top-[10%] left-[15%] w-96 h-96 rounded-full bg-purple-900/10 blur-3xl animate-pulse-glow"></div>
-    <div class="absolute bottom-[20%] right-[10%] w-80 h-80 rounded-full bg-amber-900/5 blur-3xl animate-pulse-glow" style="animation-delay:1.5s"></div>
-  </div>
-
   <div class="relative z-10 w-full">
     <nav class="w-full px-4 sm:px-8 py-4 border-b" style="border-color:rgba(128,128,128,0.1)">
       <div class="max-w-7xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-3">
           <img src="https://i.ibb.co/pBH9L8Sk/jmun26logoblack-e.png" alt="Koç JMUN" style="height:40px;width:auto">
           <div class="h-5 w-px" style="background:rgba(128,128,128,0.2)"></div>
-          <span class="text-xs font-medium text-yellow-500 uppercase tracking-wider">Executive Portal</span>
+          <span class="text-xs font-medium text-amber-400 uppercase tracking-wider">Chair Portal</span>
         </div>
         <div class="flex items-center gap-3">
           <button onclick="toggleTheme()" class="p-2 rounded-lg surface hover:opacity-80 transition" title="Toggle theme">
@@ -119,74 +121,59 @@
     </nav>
 
     <section class="max-w-7xl mx-auto px-4 sm:px-8 pt-8 pb-16 animate-fadein">
-      <div class="surface-strong rounded-2xl p-6 glow-border-gold mb-8">
-        <div class="flex items-start justify-between flex-wrap gap-4 mb-5 pb-4 border-b" style="border-color:rgba(128,128,128,0.1)">
+      <div class="surface-strong rounded-2xl p-6 glow-border mb-8">
+        <div class="flex items-start justify-between flex-wrap gap-4 mb-6 pb-4 border-b" style="border-color:rgba(128,128,128,0.1)">
           <div>
-            <p class="text-xs label-text mb-1">Executive Dashboard</p>
-            <h1 class="text-xl font-semibold">Welcome, <span class="text-yellow-500" id="exec-name">—</span></h1>
-            <p class="text-sm muted mt-1">Full access across all committees</p>
+            <p class="text-xs label-text mb-1">Chair Dashboard</p>
+            <h1 class="text-xl font-semibold">Welcome, <span class="text-amber-400" id="chair-name">—</span></h1>
           </div>
-          <button onclick="openAnnouncementModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition" style="background:#b45309">
-            <i data-lucide="megaphone" style="width:16px;height:16px"></i> Post Announcement
+          <button onclick="openSubmitModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition" style="background:#5D175F">
+            <i data-lucide="plus" style="width:16px;height:16px"></i>
+            Submit Resolution
           </button>
         </div>
-        <div class="surface rounded-xl p-4" id="exec-next-session-block" style="display:none">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+          <div class="stat-card rounded-xl p-3"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Committee</p><p class="font-semibold text-sm text-purple-400" id="chair-committee">—</p></div>
+          <div class="stat-card rounded-xl p-3"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Room</p><p class="font-semibold text-sm text-purple-400" id="chair-room">—</p></div>
+          <div class="stat-card rounded-xl p-3"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Next Session</p><p class="font-semibold text-sm text-purple-400" id="chair-session-time-text">—</p></div>
+        </div>
+        <div class="surface rounded-xl p-4" id="chair-next-session-block" style="display:none">
           <p class="text-xs label-text mb-2">Upcoming</p>
           <div class="flex items-center justify-between">
-            <div><p class="text-sm font-medium" id="exec-session-title-text">—</p><p class="text-xs muted"><span id="exec-session-time-range">—</span></p></div>
-            <span id="exec-session-countdown" class="text-[10px] px-2 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20"></span>
+            <div><p class="text-sm font-medium" id="chair-session-title-text">—</p><p class="text-xs muted"><span id="chair-session-time-range">—</span></p></div>
+            <span id="chair-session-countdown" class="text-[10px] px-2 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20"></span>
           </div>
         </div>
       </div>
 
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Awaiting you</p><p class="text-2xl font-bold text-amber-400" id="stat-pending">—</p></div>
-        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">With chairs</p><p class="text-2xl font-bold text-blue-400" id="stat-received">—</p></div>
-        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Published</p><p class="text-2xl font-bold text-green-400" id="stat-published">—</p></div>
         <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Total</p><p class="text-2xl font-bold" id="stat-total">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">With you</p><p class="text-2xl font-bold text-amber-400" id="stat-pending">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">At panel</p><p class="text-2xl font-bold text-blue-400" id="stat-received">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Published</p><p class="text-2xl font-bold text-green-400" id="stat-published">—</p></div>
       </div>
 
       <div class="flex gap-6 border-b mb-6 overflow-x-auto" style="border-color:rgba(128,128,128,0.1)">
-        <button class="tab-btn active text-sm font-medium whitespace-nowrap" onclick="switchTab('inbox')" id="tab-inbox">Awaiting Approval <span id="inbox-badge" class="badge-new ml-1 hidden">0</span></button>
-        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('published')" id="tab-published">Published</button>
+        <button class="tab-btn active text-sm font-medium whitespace-nowrap" onclick="switchTab('resolutions')" id="tab-resolutions">Resolutions</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('amendments')" id="tab-amendments">Amendments <span id="amend-badge" class="badge-new ml-1 hidden">0</span></button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('announcements')" id="tab-announcements">Announcements</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('feed')" id="tab-feed">Committee Feed</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('schedule')" id="tab-schedule">Schedule</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('tally')" id="tab-tally">Tally</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('attendance')" id="tab-attendance">Attendance</button>
       </div>
 
-      <!-- Filters -->
-      <div id="filter-bar" class="flex flex-wrap gap-3 mb-6">
-        <div>
-          <label class="block text-[10px] label-text uppercase tracking-wider mb-1">Committee</label>
-          <select id="filter-committee" onchange="applyFilters()" class="input-field px-4 py-2.5 rounded-xl text-sm">
-            <option value="">All Committees</option>
-            <option value="UNHRC">UNHRC</option>
-            <option value="UNSC">UNSC</option>
-            <option value="ECOSOC">ECOSOC</option>
-            <option value="GA1">GA1</option>
-            <option value="GA3">GA3</option>
-          </select>
-        </div>
-        <div id="filter-agenda-wrap">
-          <label class="block text-[10px] label-text uppercase tracking-wider mb-1">Agenda Item</label>
-          <select id="filter-agenda" onchange="applyFilters()" class="input-field px-4 py-2.5 rounded-xl text-sm">
-            <option value="">All Agenda Items</option>
-            <option value="1">Agenda Item 1</option>
-            <option value="2">Agenda Item 2</option>
-            <option value="3">Agenda Item 3</option>
-          </select>
-        </div>
-      </div>
-
-      <div id="tally-actions" class="hidden mb-4">
-        <button onclick="exportTallyToExcel()" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:#5D175F">
+      <div id="tab-actions" class="mb-4 hidden">
+        <button onclick="openFeedModal()" id="add-feed-btn" class="hidden flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:#5D175F">
+          <i data-lucide="plus" style="width:14px;height:14px"></i> Post to Feed
+        </button>
+        <button onclick="clearAllAmendments()" id="clear-amend-btn" class="hidden items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-400 transition surface border" style="border-color:rgba(239,68,68,0.25)">
+          <i data-lucide="eraser" style="width:14px;height:14px"></i> Clear all amendments
+        </button>
+        <button onclick="exportTallyToExcel()" id="export-tally-btn" class="hidden items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:#5D175F">
           <i data-lucide="download" style="width:14px;height:14px"></i> Export to Excel
         </button>
-      </div>
-
-      <div id="attendance-actions" class="hidden mb-4">
-        <button onclick="exportAttendanceToExcel()" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:#5D175F">
+        <button onclick="exportAttendanceToExcel()" id="export-attendance-btn" class="hidden items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:#5D175F">
           <i data-lucide="download" style="width:14px;height:14px"></i> Export to Excel
         </button>
       </div>
@@ -200,72 +187,105 @@
     </section>
   </div>
 
-  <!-- Review Modal -->
-  <div id="review-modal" class="modal-overlay hidden">
-    <div class="surface-strong rounded-2xl p-6 w-full max-w-xl glow-border overflow-y-auto" style="max-height:90vh">
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-semibold">Review Resolution</h2>
-        <button onclick="closeReviewModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
-      </div>
-      <div class="item-card rounded-xl p-4 mb-5">
-        <p class="text-xs label-text mb-1">Resolution</p>
-        <p class="font-semibold" id="review-title">—</p>
-        <p class="text-xs muted mt-0.5" id="review-committee">—</p>
-        <p class="text-xs mt-1" id="review-submitter"></p>
+  <!-- Submit Resolution Modal -->
+  <div id="submit-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold">Submit Resolution</h2>
+        <button onclick="closeSubmitModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
       </div>
       <div class="space-y-4">
-        <a id="review-chair-doc" href="#" target="_blank" class="flex items-center gap-2 px-4 py-3 rounded-xl text-sm btn-info transition">
-          <i data-lucide="external-link" style="width:16px;height:16px"></i> Open Submitted Google Doc
-        </a>
-        <div class="border-t pt-4" style="border-color:rgba(128,128,128,0.1)">
-          <p class="text-xs font-medium label-text uppercase tracking-wider mb-3">Approve &amp; Project on All Panels</p>
-          <div class="space-y-3">
-            <div><label class="block text-xs muted mb-1.5">Google Docs link shown on all panels <span class="label-text">(leave blank to use the submitted doc)</span></label>
-              <input id="exec-doc-url" type="url" placeholder="https://docs.google.com/..." class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
-            <div><label class="block text-xs muted mb-1.5">Note to Chair (optional)</label>
-              <input id="exec-note" type="text" placeholder="e.g. Formatting applied to clauses 3 & 4" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
-          </div>
-        </div>
-        <div id="review-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Agenda Item</label>
+          <select id="res-agenda" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+            <option value="Agenda Item 1">Agenda Item 1</option>
+            <option value="Agenda Item 2">Agenda Item 2</option>
+            <option value="Agenda Item 3">Agenda Item 3</option>
+          </select></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Submitting Country</label>
+          <input id="res-country" type="text" placeholder="e.g. France" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+          <p class="text-[10px] muted mt-1.5">The delegation this resolution is submitted on behalf of.</p></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Google Docs Link</label>
+          <input id="res-doc-url" type="url" placeholder="https://docs.google.com/document/d/..." class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono">
+          <p class="text-[10px] muted mt-1.5">Set sharing to "Anyone with the link can view". The code is assigned when it's sent to the approval panel.</p></div>
+        <div id="submit-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
         <div class="flex gap-3 pt-2">
-          <button onclick="closeReviewModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
-          <button onclick="publishResolution()" id="btn-publish" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#16a34a">
-            <span id="publish-btn-text">Approve &amp; Project</span><span id="publish-spinner" class="hidden"><span class="spinner"></span></span>
+          <button onclick="closeSubmitModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+          <button onclick="submitResolution()" id="submit-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#5D175F">
+            <span id="submit-btn-text">Submit</span><span id="submit-spinner" class="hidden"><span class="spinner"></span></span>
           </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Announcement Modal -->
-  <div id="announcement-modal" class="modal-overlay hidden">
+  <!-- Feed Modal (simple: title + description) -->
+  <div id="feed-modal" class="modal-overlay hidden">
     <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-semibold">Post Announcement</h2>
-        <button onclick="closeAnnouncementModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold">Post to Committee Feed</h2>
+        <button onclick="closeFeedModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
       </div>
       <div class="space-y-4">
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Title</label>
-          <input id="ann-title" type="text" placeholder="e.g. Lunch break extended" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
-        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Message</label>
-          <textarea id="ann-body" rows="3" placeholder="Full announcement text..." class="input-field w-full px-4 py-3 rounded-xl text-sm resize-none"></textarea></div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Type</label>
-            <select id="ann-type" class="input-field w-full px-4 py-3 rounded-xl text-sm">
-              <option value="info">Info</option><option value="urgent">Urgent</option>
-              <option value="warning">Warning</option><option value="success">Success</option>
-            </select></div>
-          <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Committee</label>
-            <select id="ann-committee" class="input-field w-full px-4 py-3 rounded-xl text-sm">
-              <option value="">All Committees</option><option value="UNHRC">UNHRC</option><option value="UNSC">UNSC</option>
-              <option value="ECOSOC">ECOSOC</option><option value="GA1">GA1</option><option value="GA3">GA3</option>
-            </select></div>
-        </div>
-        <div id="ann-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+          <input id="feed-title" type="text" placeholder="e.g. Moving to Agenda Item 2" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Description</label>
+          <textarea id="feed-body" rows="4" placeholder="What is happening in committee right now…" class="input-field w-full px-4 py-3 rounded-xl text-sm resize-none"></textarea></div>
+        <p class="text-[10px] muted">This will only appear on <span class="font-medium" id="feed-committee-label" style="color:inherit">your committee</span>'s feed, posted under your name.</p>
+        <div id="feed-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
         <div class="flex gap-3 pt-2">
-          <button onclick="closeAnnouncementModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
-          <button onclick="postAnnouncement()" id="ann-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#b45309">
-            <span id="ann-btn-text">Post</span><span id="ann-spinner" class="hidden"><span class="spinner"></span></span>
+          <button onclick="closeFeedModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+          <button onclick="postFeedItem()" id="feed-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#5D175F">
+            <span id="feed-btn-text">Post</span><span id="feed-spinner" class="hidden"><span class="spinner"></span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reject Amendment Modal -->
+  <div id="reject-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold">Reject Amendment</h2>
+        <button onclick="closeRejectModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <p class="text-sm muted mb-4">Give the delegate a reason for the rejection — they'll see this on their amendments page.</p>
+      <textarea id="reject-reason" rows="3" placeholder="e.g. This change falls outside the scope of the clause." class="input-field w-full px-4 py-3 rounded-xl text-sm resize-none"></textarea>
+      <div id="reject-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 mt-3"></div>
+      <div class="flex gap-3 pt-4">
+        <button onclick="closeRejectModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+        <button onclick="confirmReject()" id="reject-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#dc2626">
+          <span id="reject-btn-text">Reject & notify</span><span id="reject-spinner" class="hidden"><span class="spinner"></span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send to Approval Panel Modal -->
+  <div id="panel-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold">Send to Approval Panel</h2>
+        <button onclick="closePanelModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <p class="text-sm muted mb-4">Assign the official resolution code, then forward it to the exec approval panel.</p>
+      <div class="item-card rounded-xl p-3 mb-4">
+        <p class="text-[10px] label-text uppercase tracking-wider mb-0.5">Explanation from submitter</p>
+        <p class="text-sm" id="panel-summary">—</p>
+      </div>
+      <div class="space-y-4">
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Resolution Code</label>
+          <input id="panel-code" type="text" placeholder="e.g. UNHRC 1.2  (agenda 1, resolution 2)" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Title <span class="normal-case label-text">(optional)</span></label>
+          <input id="panel-title" type="text" placeholder="Defaults to the submitter's explanation" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Google Docs Link to send to Exec</label>
+          <input id="panel-doc-url" type="url" placeholder="https://docs.google.com/document/d/..." class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono">
+          <p class="text-[10px] muted mt-1.5">Provide the link the approval panel should review — separate from the one originally submitted.</p></div>
+        <div id="panel-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+        <div class="flex gap-3 pt-2">
+          <button onclick="closePanelModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+          <button onclick="confirmSendToPanel()" id="panel-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#5D175F">
+            <span id="panel-btn-text">Send to panel</span><span id="panel-spinner" class="hidden"><span class="spinner"></span></span>
           </button>
         </div>
       </div>
@@ -277,14 +297,17 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const BUILD = '2026-06-18';
-    console.log('%cKoç JMUN · exec.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
+    console.log('%cKoç JMUN · chair.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
     document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
-    let currentTab = 'inbox';
-    let tallyByCommittee = {};
+    let currentProfile = null;
+    let currentTab = 'resolutions';
+    let cachedResolutions = [];
+    let tallyMap = {};
+    let attendanceMap = {};
     let attendanceSessionKey = null;
-    let allResolutions = [];
-    let currentReviewId = null;
+    let rejectingId = null;
+    let forwardingId = null;
 
     // ── PLACEHOLDER SCHEDULE ──────────────────────────────────────────────
     // Same schedule for every committee. Edit PLACEHOLDER_DATES (real conference
@@ -369,12 +392,14 @@
 
     function renderNextSession() {
       const item = getCurrentOrNextScheduleItem(new Date());
-      if (!item) return;
-      document.getElementById('exec-next-session-block').style.display = 'block';
-      document.getElementById('exec-session-title-text').textContent = item.title;
-      document.getElementById('exec-session-time-range').textContent = fmtTime(item.start)+'–'+fmtTime(item.end);
+      const t = document.getElementById('chair-session-time-text');
+      if (!item) { t.textContent = 'No upcoming'; return; }
+      t.textContent = fmtTime(item.start);
+      document.getElementById('chair-next-session-block').style.display = 'block';
+      document.getElementById('chair-session-title-text').textContent = item.title;
+      document.getElementById('chair-session-time-range').textContent = fmtTime(item.start)+'–'+fmtTime(item.end);
       const diffMins = Math.round((item.start - new Date())/60000);
-      const cd = document.getElementById('exec-session-countdown');
+      const cd = document.getElementById('chair-session-countdown');
       if (diffMins<0) cd.textContent='In progress';
       else if (diffMins<60) cd.textContent='In '+diffMins+' min';
       else cd.textContent='In '+Math.floor(diffMins/60)+'h';
@@ -397,244 +422,379 @@
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = 'login.html'; return; }
       const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
-      if (!profile || profile.role !== 'exec') { window.location.href = 'login.html'; return; }
+      if (!profile || profile.role !== 'chair') { window.location.href = 'login.html'; return; }
+      currentProfile = profile;
       document.getElementById('nav-name').textContent = profile.name;
-      document.getElementById('exec-name').textContent = profile.name;
+      document.getElementById('chair-name').textContent = profile.name;
+      document.getElementById('chair-committee').textContent = profile.committee;
+      document.getElementById('chair-room').textContent = profile.room || '—';
+      document.getElementById('feed-committee-label').textContent = profile.committee;
       renderNextSession();
-      await loadAll();
+      await loadResolutions();
+      await checkAmendmentCount();
     }
 
-    async function loadAll() {
-      const { data, error } = await sb.from('resolutions').select('*').order('created_at',{ascending:false});
+    async function loadResolutions() {
+      const { data, error } = await sb.from('resolutions').select('*')
+        .eq('committee', currentProfile.committee).order('created_at', { ascending: false });
       if (error) { console.error(error); return; }
-      allResolutions = data || [];
-      updateStats();
-      renderTab(currentTab);
+      cachedResolutions = data || [];
+      document.getElementById('stat-total').textContent = data.length;
+      document.getElementById('stat-pending').textContent = data.filter(r=>r.status==='pending'||r.status==='under_review').length;
+      document.getElementById('stat-received').textContent = data.filter(r=>r.status==='sent_to_panel').length;
+      document.getElementById('stat-published').textContent = data.filter(r=>r.status==='published').length;
+      if (currentTab === 'resolutions') renderResolutions(data);
       lucide.createIcons();
     }
 
-    function updateStats() {
-      document.getElementById('stat-pending').textContent = allResolutions.filter(r=>r.status==='sent_to_panel').length;
-      document.getElementById('stat-received').textContent = allResolutions.filter(r=>r.status==='pending'||r.status==='under_review').length;
-      document.getElementById('stat-published').textContent = allResolutions.filter(r=>r.status==='published').length;
-      document.getElementById('stat-total').textContent = allResolutions.length;
-      const pending = allResolutions.filter(r=>r.status==='sent_to_panel').length;
-      const badge = document.getElementById('inbox-badge');
-      if (pending>0){ badge.textContent=pending; badge.classList.remove('hidden'); } else badge.classList.add('hidden');
+    async function checkAmendmentCount() {
+      const { data } = await sb.from('amendments').select('id,status,cleared_by_chair')
+        .eq('committee', currentProfile.committee).eq('status','pending');
+      const visible = (data||[]).filter(a=>!a.cleared_by_chair);
+      const badge = document.getElementById('amend-badge');
+      if (visible.length) { badge.textContent = visible.length; badge.classList.remove('hidden'); }
+      else badge.classList.add('hidden');
     }
 
     function switchTab(tab) {
       currentTab = tab;
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
       document.getElementById('tab-'+tab).classList.add('active');
-      document.getElementById('filter-bar').style.display = (tab === 'announcements' || tab === 'schedule') ? 'none' : 'flex';
-      document.getElementById('filter-agenda-wrap').style.display = (tab === 'tally' || tab === 'attendance') ? 'none' : 'block';
-      document.getElementById('tally-actions').classList.toggle('hidden', tab !== 'tally');
-      document.getElementById('attendance-actions').classList.toggle('hidden', tab !== 'attendance');
-      renderTab(tab);
+      const tabActions = document.getElementById('tab-actions');
+      const addFeedBtn = document.getElementById('add-feed-btn');
+      const clearBtn = document.getElementById('clear-amend-btn');
+      const exportBtn = document.getElementById('export-tally-btn');
+      const exportAttBtn = document.getElementById('export-attendance-btn');
+      addFeedBtn.classList.add('hidden'); clearBtn.classList.add('hidden'); exportBtn.classList.add('hidden'); exportAttBtn.classList.add('hidden'); tabActions.classList.add('hidden');
+      if (tab === 'feed') { tabActions.classList.remove('hidden'); addFeedBtn.classList.remove('hidden'); addFeedBtn.classList.add('flex'); }
+      if (tab === 'amendments') { tabActions.classList.remove('hidden'); clearBtn.classList.remove('hidden'); clearBtn.classList.add('flex'); }
+      if (tab === 'tally') { tabActions.classList.remove('hidden'); exportBtn.classList.remove('hidden'); exportBtn.classList.add('flex'); }
+      if (tab === 'attendance') { tabActions.classList.remove('hidden'); exportAttBtn.classList.remove('hidden'); exportAttBtn.classList.add('flex'); }
+
+      if (tab === 'resolutions') renderResolutions(cachedResolutions);
+      else if (tab === 'amendments') renderAmendments();
+      else if (tab === 'feed') renderFeed();
+      else if (tab === 'schedule') renderSchedule();
+      else if (tab === 'tally') openTallyTab();
+      else if (tab === 'attendance') openAttendanceTab();
+      else if (tab === 'announcements') renderAnnouncements();
       lucide.createIcons();
     }
 
-    // "UNHRC 1.2" / "GA1 2.3" / "1.2" -> agenda number "1" (the part before the dot)
-    function agendaFromCode(code) {
-      const m = String(code||'').match(/(\d+)\s*\.\s*\d+/);
-      return m ? m[1] : null;
-    }
-    function matchesAgenda(r, sel) {
-      if (!sel) return true;
-      const fromCode = agendaFromCode(r.code);
-      if (fromCode) return fromCode === sel;          // code is the source of truth
-      const am = String(r.agenda_item||'').match(/(\d+)/);  // fallback to the agenda_item field
-      return am ? am[1] === sel : false;
-    }
-
-    function getFiltered(statusFilter) {
-      const committee = document.getElementById('filter-committee').value;
-      const agenda = document.getElementById('filter-agenda').value;
-      return allResolutions.filter(r => {
-        if (statusFilter && r.status !== statusFilter) return false;
-        if (committee && r.committee !== committee) return false;
-        if (!matchesAgenda(r, agenda)) return false;
-        return true;
-      });
-    }
-
-    function applyFilters() { renderTab(currentTab); lucide.createIcons(); }
-
-    function renderTab(tab) {
+    function renderResolutions(items) {
       const c = document.getElementById('content-list');
-      if (tab === 'inbox') renderResList(getFiltered('sent_to_panel'), c, 'inbox');
-      else if (tab === 'published') renderResList(getFiltered('published'), c, 'published');
-      else if (tab === 'announcements') renderAnnouncementsTab(c);
-      else if (tab === 'schedule') renderSchedule();
-      else if (tab === 'tally') ensureTallyLoaded().then(renderTallyView);
-      else if (tab === 'attendance') openAttendanceTab();
-    }
-
-    function renderResList(items, c, mode) {
-      if (!items.length) { c.innerHTML = '<div class="text-center py-12 muted"><i data-lucide="inbox" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">Nothing here.</p></div>'; return; }
+      if (!items.length) { c.innerHTML = emptyState('file-text','No resolutions yet','Delegate submissions and your own resolutions appear here.'); return; }
+      const statusLabel = {pending:'New — awaiting you',under_review:'Under review by chairboard',sent_to_panel:'Sent to approval panel',published:'Published',withdrawn:'Withdrawn'};
       c.innerHTML = items.map(r => {
-        const statusLabel = {pending:'With chair',under_review:'Under review',sent_to_panel:'Awaiting approval',published:'Published',withdrawn:'Withdrawn'}[r.status];
-        const submitterTag = r.submitter_role==='delegate' && r.submitter_country
-          ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">'+escHtml(r.submitter_country)+'</span>' : '';
-        const docUrl = r.exec_doc_url || r.panel_doc_url || r.chair_doc_url;
-        const deleteBtn = '<button onclick="deleteResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg btn-danger transition">Delete</button>';
-        const actions = (mode==='inbox')
-          ? '<button onclick="openReviewModal(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Review &amp; approve</button>'+deleteBtn
-          : (docUrl ? '<a href="'+escHtml(docUrl)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Google Docs</a>' : '')+deleteBtn;
+        const isMine = r.submitted_by === currentProfile.id;
+        const heading = r.title || r.summary || 'Untitled resolution';
+        const submitterLine = r.submitter_country
+          ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(93,23,95,0.15);color:#a855f7">' + escHtml(r.submitter_country) + '</span>'
+          : (isMine ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.1)">You</span>' : '');
         return '<div class="item-card rounded-xl p-4 hover:opacity-95 transition">'+
           '<div class="flex items-start justify-between gap-4">'+
             '<div class="flex-1 min-w-0">'+
               '<div class="flex items-center gap-2 mb-1 flex-wrap">'+
-                '<span class="text-xs font-mono font-semibold text-purple-400">'+escHtml(r.code||'—')+'</span>'+
-                (r.agenda_item ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.08)">'+escHtml(r.agenda_item)+'</span>' : (agendaFromCode(r.code) ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.08)">Agenda Item '+agendaFromCode(r.code)+'</span>' : ''))+
-                '<span class="text-[10px] px-2 py-0.5 rounded-full status-'+r.status+'">'+statusLabel+'</span>'+
-                submitterTag+
+                (r.code ? '<span class="text-xs font-mono font-semibold text-purple-400">'+escHtml(r.code)+'</span>' : '')+
+                '<span class="text-[10px] px-2 py-0.5 rounded-full status-'+r.status+'">'+statusLabel[r.status]+'</span>'+
+                (r.agenda_item ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.1)">'+escHtml(r.agenda_item)+'</span>' : '')+
+                submitterLine+
               '</div>'+
-              '<p class="text-sm font-medium mb-1 truncate">'+escHtml(r.title||r.summary||'Resolution')+'</p>'+
+              '<p class="text-sm font-medium mb-1">'+escHtml(heading)+'</p>'+
+              (r.summary && r.title ? '<p class="text-xs muted mb-1">'+escHtml(r.summary)+'</p>' : '')+
               '<p class="text-[10px] muted">'+timeAgo(r.created_at)+'</p>'+
+              (r.exec_note ? '<p class="text-xs text-amber-500 mt-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5">'+escHtml(r.exec_note)+'</p>' : '')+
             '</div>'+
-            '<div class="flex gap-2 flex-shrink-0">'+actions+'</div>'+
+            '<div class="flex gap-2 flex-shrink-0 flex-wrap justify-end">'+
+              ((r.exec_doc_url||r.panel_doc_url||r.chair_doc_url) ? '<a href="'+escHtml(r.exec_doc_url||r.panel_doc_url||r.chair_doc_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Google Docs</a>' : '')+
+              (r.status==='pending' ? '<button onclick="markUnderReview(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg btn-info transition">Mark under review</button>' : '')+
+              (r.status==='under_review' ? '<button onclick="openPanelModal(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Send to approval panel</button>' : '')+
+              (isMine && (r.status==='pending'||r.status==='under_review'||r.status==='sent_to_panel') ? '<button onclick="withdrawResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg btn-warn transition">Withdraw</button>' : '')+
+              (r.status!=='sent_to_panel' ? '<button onclick="deleteResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg btn-danger transition">Delete</button>' : '')+
+            '</div>'+
           '</div></div>';
+      }).join('');
+      lucide.createIcons();
+    }
+
+    async function renderAmendments() {
+      const c = document.getElementById('content-list');
+      c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
+      const { data: all } = await sb.from('amendments').select('*').eq('committee', currentProfile.committee).order('created_at',{ascending:false});
+      const amendments = (all||[]).filter(a => !a.cleared_by_chair);
+      if (!amendments.length) { c.innerHTML = emptyState('git-pull-request','No amendments','When a delegate submits an amendment it appears here. Cleared amendments are hidden.'); return; }
+      const resMap = {}; cachedResolutions.forEach(r => resMap[r.id] = r);
+      const typeLabels = {insert:'Insert',add:'Add',strike:'Strike Out',change:'Change'};
+      const typeColors = {insert:'#a855f7',add:'#22c55e',strike:'#ef4444',change:'#3b82f6'};
+      c.innerHTML = amendments.map(a => {
+        const res = resMap[a.resolution_id];
+        const resLabel = res ? ((res.code? res.code+' — ':'')+res.title) : 'Resolution';
+        const statusLabel = {pending:'Pending',approved:'Approved',rejected:'Rejected'}[a.status];
+        const actions = a.status==='pending'
+          ? '<button onclick="approveAmendment(\''+a.id+'\')" class="px-4 py-2 text-xs font-semibold rounded-lg btn-success transition">Approve</button>'+
+            '<button onclick="openRejectModal(\''+a.id+'\')" class="px-4 py-2 text-xs font-semibold rounded-lg btn-danger transition">Reject</button>'
+          : '';
+        const row = (label,val) => '<div><p class="text-[10px] label-text uppercase tracking-wider mb-0.5">'+label+'</p><p class="text-sm">'+val+'</p></div>';
+        return '<div class="item-card rounded-xl p-5 space-y-3">'+
+          '<div class="flex items-center justify-between gap-3 flex-wrap">'+
+            '<div class="flex items-center gap-2 flex-wrap">'+
+              '<span class="text-[11px] px-2.5 py-1 rounded-full font-semibold" style="background:'+typeColors[a.amendment_type]+'22;color:'+typeColors[a.amendment_type]+'">'+typeLabels[a.amendment_type]+'</span>'+
+              '<span class="text-[11px] px-2.5 py-1 rounded-full status-'+a.status+'">'+statusLabel+'</span>'+
+              (a.submitter_country ? '<span class="text-[11px] px-2.5 py-1 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">'+escHtml(a.submitter_country)+'</span>' : '')+
+            '</div>'+
+            '<button onclick="clearAmendment(\''+a.id+'\')" title="Clear from your view" class="muted hover:text-red-400 transition flex items-center gap-1 text-[11px]"><i data-lucide="eraser" style="width:13px;height:13px"></i> Clear</button>'+
+          '</div>'+
+          row('On Resolution', escHtml(resLabel))+
+          row('Part / Clause to amend', escHtml(a.target_clause||'—'))+
+          '<div><p class="text-[10px] label-text uppercase tracking-wider mb-1">Amendment</p><p class="text-sm leading-relaxed subbox rounded-lg p-3">'+escHtml(a.amendment_text)+'</p></div>'+
+          (a.status==='rejected'&&a.review_note ? '<div><p class="text-[10px] label-text uppercase tracking-wider mb-1">Rejection reason (visible to delegate)</p><p class="text-sm subbox rounded-lg p-3 text-red-400">'+escHtml(a.review_note)+'</p></div>' : '')+
+          '<p class="text-[10px] muted">Submitted '+timeAgo(a.created_at)+'</p>'+
+          (actions ? '<div class="flex gap-2 pt-1">'+actions+'</div>' : '')+
+        '</div>';
       }).join('');
     }
 
-    async function renderAnnouncementsTab(c) {
-      const { data } = await sb.from('announcements').select('*').order('created_at',{ascending:false});
-      if (!data || !data.length) { c.innerHTML = '<p class="text-center muted py-8 text-sm">No announcements yet.</p>'; return; }
+    async function approveAmendment(id) {
+      await sb.from('amendments').update({ status:'approved', review_note:null }).eq('id', id);
+      await renderAmendments(); await checkAmendmentCount(); lucide.createIcons();
+    }
+    function openRejectModal(id) {
+      rejectingId = id;
+      document.getElementById('reject-reason').value = '';
+      document.getElementById('reject-error').classList.add('hidden');
+      document.getElementById('reject-modal').classList.remove('hidden');
+    }
+    function closeRejectModal() { document.getElementById('reject-modal').classList.add('hidden'); rejectingId = null; }
+    async function confirmReject() {
+      const reason = document.getElementById('reject-reason').value.trim();
+      const errEl = document.getElementById('reject-error');
+      if (!reason) { errEl.textContent='Please enter a reason so the delegate understands.'; errEl.classList.remove('hidden'); return; }
+      document.getElementById('reject-btn').disabled=true;
+      document.getElementById('reject-spinner').classList.remove('hidden');
+      const { error } = await sb.from('amendments').update({ status:'rejected', review_note:reason }).eq('id', rejectingId);
+      document.getElementById('reject-btn').disabled=false;
+      document.getElementById('reject-spinner').classList.add('hidden');
+      if (error) { errEl.textContent='Could not save. Try again.'; errEl.classList.remove('hidden'); return; }
+      closeRejectModal();
+      await renderAmendments(); await checkAmendmentCount(); lucide.createIcons();
+    }
+
+    // Soft-hide from chair view only (delegate still sees it on their page)
+    async function clearAmendment(id) {
+      await sb.from('amendments').update({ cleared_by_chair:true }).eq('id', id);
+      await renderAmendments(); await checkAmendmentCount(); lucide.createIcons();
+    }
+    async function clearAllAmendments() {
+      if (!confirm('Clear all amendments from your view? Delegates will still see their own on their amendments page.')) return;
+      await sb.from('amendments').update({ cleared_by_chair:true })
+        .eq('committee', currentProfile.committee).eq('cleared_by_chair', false);
+      await renderAmendments(); await checkAmendmentCount(); lucide.createIcons();
+    }
+
+    async function renderFeed() {
+      const c = document.getElementById('content-list');
+      c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
+      const { data: feed } = await sb.from('committee_feed').select('*').eq('committee', currentProfile.committee).order('created_at',{ascending:false});
+      if (!feed || !feed.length) { c.innerHTML = emptyState('rss','No feed posts yet','Click "Post to Feed" to share committee activity.'); return; }
+      c.innerHTML = feed.map(f => {
+        const author = ((f.posted_by_role||'').charAt(0).toUpperCase()+(f.posted_by_role||'').slice(1)+' '+(f.posted_by_name||'')).trim();
+        const isMine = f.posted_by === currentProfile.id;
+        return '<div class="item-card rounded-xl p-4 border-l-4" style="border-left-color:#5D175F">'+
+          '<div class="flex items-start justify-between gap-3">'+
+            '<div class="min-w-0">'+
+              '<p class="text-sm font-semibold mb-0.5">'+escHtml(f.title)+'</p>'+
+              '<p class="text-xs muted mb-2">'+escHtml(f.body)+'</p>'+
+              '<p class="text-[10px] muted">Posted by '+escHtml(author||'Chair')+' · '+timeAgo(f.created_at)+'</p>'+
+            '</div>'+
+            (isMine ? '<button onclick="deleteFeedItem(\''+f.id+'\')" class="muted hover:text-red-400 transition p-1 flex-shrink-0"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>' : '')+
+          '</div></div>';
+      }).join('');
+      lucide.createIcons();
+    }
+
+    async function renderAnnouncements() {
+      const c = document.getElementById('content-list');
+      c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-3 w-full mb-2"></div><div class="skeleton h-3 w-4/5"></div></div>';
+      const { data } = await sb.from('announcements').select('*')
+        .or('committee.is.null,committee.eq.'+currentProfile.committee).order('created_at',{ascending:false});
+      if (!data || !data.length) { c.innerHTML = emptyState('megaphone','No announcements','Announcements from the exec team appear here.'); return; }
       const colors = {info:'#a855f7',urgent:'#ef4444',warning:'#f97316',success:'#22c55e'};
       c.innerHTML = data.map(a =>
-        '<div class="item-card rounded-xl p-4">'+
-          '<div class="flex items-start justify-between gap-4">'+
-            '<div>'+
-              '<div class="flex items-center gap-2 mb-1">'+
-                '<span class="text-xs font-medium uppercase" style="color:'+(colors[a.type]||'#a855f7')+'">'+a.type+'</span>'+
-                (a.committee ? '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(128,128,128,0.1)">'+escHtml(a.committee)+'</span>' : '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(128,128,128,0.1)">All</span>')+
-              '</div>'+
-              '<p class="text-sm font-semibold mb-0.5">'+escHtml(a.title)+'</p>'+
-              '<p class="text-xs muted">'+escHtml(a.body)+'</p>'+
-              '<p class="text-[10px] muted mt-1">'+timeAgo(a.created_at)+'</p>'+
-            '</div>'+
-            '<button onclick="deleteAnnouncement(\''+a.id+'\')" class="muted hover:text-red-400 transition flex-shrink-0"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>'+
-          '</div></div>').join('');
-      lucide.createIcons();
+        '<div class="item-card rounded-xl p-4 border-l-4" style="border-left-color:'+(colors[a.type]||'#a855f7')+'">'+
+          '<div class="flex items-center gap-2 mb-1">'+
+            '<span class="text-xs font-medium uppercase" style="color:'+(colors[a.type]||'#a855f7')+'">'+a.type+'</span>'+
+            (a.committee ? '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(128,128,128,0.1)">'+escHtml(a.committee)+'</span>' : '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(128,128,128,0.1)">All</span>')+
+          '</div>'+
+          '<p class="text-sm font-semibold mb-0.5">'+escHtml(a.title)+'</p>'+
+          '<p class="text-xs muted">'+escHtml(a.body)+'</p>'+
+          '<p class="text-[10px] muted mt-1">'+timeAgo(a.created_at)+'</p>'+
+        '</div>').join('');
     }
 
-    function openReviewModal(id) {
-      const r = allResolutions.find(x=>x.id===id);
-      if (!r) return;
-      currentReviewId = id;
-      document.getElementById('review-title').textContent = r.title || r.summary || 'Resolution';
-      document.getElementById('review-committee').textContent = r.committee + ' · ' + (r.code||'') + (r.agenda_item ? ' · '+r.agenda_item : '');
-      document.getElementById('review-submitter').innerHTML = r.submitter_role==='delegate' && r.submitter_country
-        ? '<span style="color:#a855f7">Submitted by delegation: '+escHtml(r.submitter_country)+'</span>' : '<span class="muted">Submitted by chair</span>';
-      document.getElementById('review-chair-doc').href = r.panel_doc_url || r.chair_doc_url || '#';
-      document.getElementById('exec-doc-url').value = r.exec_doc_url || '';
-      document.getElementById('exec-note').value = r.exec_note || '';
-      document.getElementById('review-error').classList.add('hidden');
-      document.getElementById('review-modal').classList.remove('hidden');
-      lucide.createIcons();
+    // Resolution submit
+    function openSubmitModal(){ document.getElementById('submit-modal').classList.remove('hidden'); }
+    function closeSubmitModal(){ document.getElementById('submit-modal').classList.add('hidden'); }
+    async function submitResolution() {
+      const agenda=document.getElementById('res-agenda').value;
+      const country=document.getElementById('res-country').value.trim();
+      const docUrl=document.getElementById('res-doc-url').value.trim();
+      const errEl=document.getElementById('submit-error');
+      errEl.classList.add('hidden');
+      if(!country||!docUrl){ errEl.textContent='Please add the submitting country and the Google Docs link.'; errEl.classList.remove('hidden'); return; }
+      if(!docUrl.includes('docs.google.com')){ errEl.textContent='Please enter a valid Google Docs link.'; errEl.classList.remove('hidden'); return; }
+      document.getElementById('submit-btn').disabled=true;
+      document.getElementById('submit-btn-text').textContent='Submitting…';
+      document.getElementById('submit-spinner').classList.remove('hidden');
+      const { error } = await sb.from('resolutions').insert({
+        agenda_item: agenda, committee: currentProfile.committee,
+        submitted_by: currentProfile.id, submitter_role: 'chair', submitter_country: country,
+        chair_doc_url: docUrl, status: 'pending'
+      });
+      document.getElementById('submit-btn').disabled=false;
+      document.getElementById('submit-btn-text').textContent='Submit';
+      document.getElementById('submit-spinner').classList.add('hidden');
+      if(error){ console.error(error); errEl.textContent='Submission failed.'; errEl.classList.remove('hidden'); return; }
+      closeSubmitModal();
+      document.getElementById('res-country').value=''; document.getElementById('res-doc-url').value='';
+      await loadResolutions();
     }
-    function closeReviewModal() { document.getElementById('review-modal').classList.add('hidden'); currentReviewId=null; }
-
+    async function withdrawResolution(id) {
+      if(!confirm('Withdraw this resolution?')) return;
+      await sb.from('resolutions').update({status:'withdrawn'}).eq('id',id);
+      await loadResolutions();
+    }
     async function deleteResolution(id) {
       if(!confirm('Permanently delete this resolution? This cannot be undone.')) return;
-      const { error } = await sb.from('resolutions').delete().eq('id', id);
-      if(error){ console.error(error); alert('Could not delete.'); return; }
-      await loadAll(); lucide.createIcons();
+      const { error } = await sb.from('resolutions').delete().eq('id',id);
+      if(error){ console.error(error); alert('Could not delete (you can only delete resolutions you submitted).'); return; }
+      await loadResolutions();
     }
 
-    async function publishResolution() {
-      const execDocUrl=document.getElementById('exec-doc-url').value.trim();
-      const note=document.getElementById('exec-note').value.trim();
-      const errEl=document.getElementById('review-error');
+    // Lifecycle: pending -> under_review -> sent_to_panel (exec then publishes)
+    async function markUnderReview(id) {
+      await sb.from('resolutions').update({ status:'under_review' }).eq('id', id);
+      await loadResolutions();
+    }
+    function openPanelModal(id) {
+      const r = cachedResolutions.find(x=>x.id===id);
+      forwardingId = id;
+      document.getElementById('panel-code').value = (r && r.code) || '';
+      document.getElementById('panel-title').value = (r && r.title) || '';
+      document.getElementById('panel-doc-url').value = (r && r.panel_doc_url) || '';
+      document.getElementById('panel-summary').textContent = (r && (r.summary||r.title)) || '—';
+      document.getElementById('panel-error').classList.add('hidden');
+      document.getElementById('panel-modal').classList.remove('hidden');
+    }
+    function closePanelModal(){ document.getElementById('panel-modal').classList.add('hidden'); forwardingId=null; }
+    async function confirmSendToPanel() {
+      const code = document.getElementById('panel-code').value.trim();
+      const title = document.getElementById('panel-title').value.trim();
+      const panelDocUrl = document.getElementById('panel-doc-url').value.trim();
+      const errEl = document.getElementById('panel-error');
       errEl.classList.add('hidden');
-      document.getElementById('publish-btn-text').textContent='Projecting…';
-      document.getElementById('publish-spinner').classList.remove('hidden');
+      if (!code) { errEl.textContent='Please assign a code (e.g. UNHRC 1.2) before forwarding.'; errEl.classList.remove('hidden'); return; }
+      if (!panelDocUrl) { errEl.textContent='Please provide the Google Docs link to send to the exec panel.'; errEl.classList.remove('hidden'); return; }
+      if (!panelDocUrl.includes('docs.google.com')) { errEl.textContent='Please enter a valid Google Docs link.'; errEl.classList.remove('hidden'); return; }
+      const r = cachedResolutions.find(x=>x.id===forwardingId);
+      const finalTitle = title || (r && r.title) || (r && r.summary) || null;
+      document.getElementById('panel-btn').disabled=true;
+      document.getElementById('panel-spinner').classList.remove('hidden');
       const { error } = await sb.from('resolutions').update({
-        exec_doc_url: execDocUrl||null, exec_note: note||null,
-        status:'published', updated_at:new Date().toISOString()
-      }).eq('id',currentReviewId);
-      document.getElementById('publish-btn-text').textContent='Approve & Project';
-      document.getElementById('publish-spinner').classList.add('hidden');
-      if(error){ errEl.textContent='Failed to publish.'; errEl.classList.remove('hidden'); return; }
-      closeReviewModal(); await loadAll(); lucide.createIcons();
+        code, title: finalTitle, panel_doc_url: panelDocUrl, status:'sent_to_panel'
+      }).eq('id', forwardingId);
+      document.getElementById('panel-btn').disabled=false;
+      document.getElementById('panel-spinner').classList.add('hidden');
+      if (error) { console.error(error); errEl.textContent='Could not forward. Try again.'; errEl.classList.remove('hidden'); return; }
+      closePanelModal();
+      await loadResolutions();
     }
 
-    function openAnnouncementModal(){ document.getElementById('announcement-modal').classList.remove('hidden'); }
-    function closeAnnouncementModal(){ document.getElementById('announcement-modal').classList.add('hidden'); }
-    async function postAnnouncement() {
-      const title=document.getElementById('ann-title').value.trim();
-      const body=document.getElementById('ann-body').value.trim();
-      const type=document.getElementById('ann-type').value;
-      const committee=document.getElementById('ann-committee').value||null;
-      const errEl=document.getElementById('ann-error');
+    // Feed
+    function openFeedModal(){ document.getElementById('feed-title').value=''; document.getElementById('feed-body').value=''; document.getElementById('feed-error').classList.add('hidden'); document.getElementById('feed-modal').classList.remove('hidden'); }
+    function closeFeedModal(){ document.getElementById('feed-modal').classList.add('hidden'); }
+    async function postFeedItem() {
+      const title=document.getElementById('feed-title').value.trim();
+      const body=document.getElementById('feed-body').value.trim();
+      const errEl=document.getElementById('feed-error');
       errEl.classList.add('hidden');
-      if(!title||!body){ errEl.textContent='Title and message are required.'; errEl.classList.remove('hidden'); return; }
-      document.getElementById('ann-btn').disabled=true;
-      document.getElementById('ann-btn-text').textContent='Posting…';
-      document.getElementById('ann-spinner').classList.remove('hidden');
-      const { error } = await sb.from('announcements').insert({title,body,type,committee});
-      document.getElementById('ann-btn').disabled=false;
-      document.getElementById('ann-btn-text').textContent='Post';
-      document.getElementById('ann-spinner').classList.add('hidden');
+      if(!title||!body){ errEl.textContent='Title and description are required.'; errEl.classList.remove('hidden'); return; }
+      document.getElementById('feed-btn').disabled=true;
+      document.getElementById('feed-spinner').classList.remove('hidden');
+      const { error } = await sb.from('committee_feed').insert({
+        committee: currentProfile.committee, title, body,
+        posted_by: currentProfile.id, posted_by_name: currentProfile.name, posted_by_role: 'chair'
+      });
+      document.getElementById('feed-btn').disabled=false;
+      document.getElementById('feed-spinner').classList.add('hidden');
       if(error){ console.error(error); errEl.textContent='Failed to post.'; errEl.classList.remove('hidden'); return; }
-      closeAnnouncementModal();
-      document.getElementById('ann-title').value=''; document.getElementById('ann-body').value='';
-      if(currentTab==='announcements'){ renderAnnouncementsTab(document.getElementById('content-list')); lucide.createIcons(); }
+      closeFeedModal();
+      renderFeed();
+    }
+    async function deleteFeedItem(id) {
+      if(!confirm('Delete this feed post?')) return;
+      const { error } = await sb.from('committee_feed').delete().eq('id',id);
+      if(error){ console.error(error); alert('Could not delete (you can only delete your own posts).'); return; }
+      renderFeed();
     }
 
-    async function deleteAnnouncement(id) {
-      if(!confirm('Delete this announcement?')) return;
-      await sb.from('announcements').delete().eq('id',id);
-      renderAnnouncementsTab(document.getElementById('content-list')); lucide.createIcons();
-    }
-
-    // ── TALLY (read-only, all committees) ───────────────────────────────────
+    // ── TALLY (POI/Speech/Amendment points + call priority) ────────────────
     function tallyTotal(t){ return t.poi*1 + t.speech*2 + t.amendment*3; }
     function schoolGroupKey(e){ return (e.school||'zzz_no_school') + '|' + e.country; }
 
-    async function loadAllTally() {
-      const { data: delegates } = await sb.from('profiles').select('id,name,country,school,committee')
-        .eq('role','delegate').order('committee',{ascending:true}).order('country',{ascending:true});
-      const { data: rows } = await sb.from('tally').select('*');
+    async function loadTallyRoster() {
+      const { data: delegates } = await sb.from('profiles').select('id,name,country,school')
+        .eq('committee', currentProfile.committee).eq('role','delegate').order('country',{ascending:true});
+      const { data: rows } = await sb.from('tally').select('*').eq('committee', currentProfile.committee);
       const rowMap = {}; (rows||[]).forEach(r => rowMap[r.delegate_id] = r);
-      const byCommittee = {};
+      const map = {};
       (delegates||[]).forEach(d => {
-        if (!byCommittee[d.committee]) byCommittee[d.committee] = {};
         const r = rowMap[d.id] || {};
-        byCommittee[d.committee][d.id] = { name: d.name, country: d.country||'—', school: d.school||'', poi:r.poi_count||0, speech:r.speech_count||0, amendment:r.amendment_count||0 };
+        map[d.id] = { name: d.name, country: d.country || '—', school: d.school || '', poi: r.poi_count||0, speech: r.speech_count||0, amendment: r.amendment_count||0 };
       });
-      tallyByCommittee = byCommittee;
+      tallyMap = map;
     }
 
-    async function ensureTallyLoaded() {
-      await loadAllTally(); // always refresh — exec needs the current picture across committees
+    async function openTallyTab() {
+      const c = document.getElementById('content-list');
+      c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
+      await loadTallyRoster();
+      renderTally();
     }
 
-    function renderCommitteeTallyBlock(committee, map) {
-      const entries = Object.entries(map).map(([id,t]) => ({ id, ...t, total: tallyTotal(t) }));
+    function stepperCell(id, field, val) {
+      return '<td><div class="stepper">'+
+        '<span class="stepper-btn" onclick="adjustTally(\''+id+'\',\''+field+'\',-1)"><i data-lucide="minus" style="width:11px;height:11px"></i></span>'+
+        '<span class="stepper-val">'+val+'</span>'+
+        '<span class="stepper-btn" onclick="adjustTally(\''+id+'\',\''+field+'\',1)"><i data-lucide="plus" style="width:11px;height:11px"></i></span>'+
+      '</div></td>';
+    }
+
+    function renderTally() {
+      const c = document.getElementById('content-list');
+      const entries = Object.entries(tallyMap).map(([id,t]) => ({ id, ...t, total: tallyTotal(t) }));
+      if (!entries.length) { c.innerHTML = emptyState('users','No delegates yet','Once delegates are assigned to this committee, they will appear here.'); return; }
+
       const priority = [...entries].sort((a,b) => a.total-b.total || a.country.localeCompare(b.country));
       const rows = [...entries].sort((a,b) => schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
       const totals = entries.reduce((acc,e)=>({poi:acc.poi+e.poi,speech:acc.speech+e.speech,amendment:acc.amendment+e.amendment,total:acc.total+e.total}),{poi:0,speech:0,amendment:0,total:0});
 
-      const priorityHtml = entries.length
-        ? priority.map((e,i) => '<div class="priority-row"><span class="flex items-center gap-2"><span class="label-text" style="width:16px;display:inline-block;font-weight:600">'+(i+1)+'</span>'+escHtml(e.country)+'</span><span class="font-semibold text-purple-400">'+e.total+'</span></div>').join('')
-        : '<p class="text-xs muted px-2 py-1">No delegates yet.</p>';
+      const priorityHtml = priority.map((e,i) =>
+        '<div class="priority-row"><span class="flex items-center gap-2"><span class="label-text" style="width:16px;display:inline-block;font-weight:600">'+(i+1)+'</span>'+escHtml(e.country)+'</span><span class="font-semibold text-purple-400">'+e.total+'</span></div>'
+      ).join('');
 
       let lastSchool = null, groupToggle = false;
-      const rowsHtml = entries.length
-        ? rows.map(e => {
-            if (e.school !== lastSchool) { groupToggle = !groupToggle; lastSchool = e.school; }
-            return '<tr class="'+(groupToggle?'school-group':'')+'"><td><p class="font-medium text-sm">'+escHtml(e.country)+'</p><p class="text-[11px] muted">'+escHtml(e.name)+'</p>'+(e.school?'<p class="text-[10px] label-text">'+escHtml(e.school)+'</p>':'')+'</td><td class="text-center">'+e.poi+'</td><td class="text-center">'+e.speech+'</td><td class="text-center">'+e.amendment+'</td><td class="text-center font-semibold text-purple-400">'+e.total+'</td></tr>';
-          }).join('')
-        : '<tr><td colspan="5" class="text-center muted py-6">No delegates in this committee yet.</td></tr>';
+      const rowsHtml = rows.map(e => {
+        if (e.school !== lastSchool) { groupToggle = !groupToggle; lastSchool = e.school; }
+        return '<tr class="'+(groupToggle?'school-group':'')+'"><td><p class="font-medium text-sm">'+escHtml(e.country)+'</p><p class="text-[11px] muted">'+escHtml(e.name)+'</p>'+(e.school?'<p class="text-[10px] label-text">'+escHtml(e.school)+'</p>':'')+'</td>'+
+        stepperCell(e.id,'poi',e.poi)+stepperCell(e.id,'speech',e.speech)+stepperCell(e.id,'amendment',e.amendment)+
+        '<td class="text-center font-semibold text-purple-400">'+e.total+'</td></tr>';
+      }).join('');
 
-      return '<div class="mb-7">'+
-        '<p class="text-sm font-semibold mb-3">'+escHtml(committee)+'</p>'+
-        '<div class="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4">'+
-          '<div class="surface rounded-xl p-3">'+
-            '<p class="text-[10px] label-text uppercase tracking-wider mb-2">Call Priority</p>'+
+      c.innerHTML =
+        '<div class="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-5">'+
+          '<div class="surface rounded-xl p-4">'+
+            '<p class="text-xs label-text uppercase tracking-wider mb-1">Call Priority</p>'+
+            '<p class="text-[10px] muted mb-3">Least-engaged delegations first</p>'+
             '<div class="space-y-0.5">'+priorityHtml+'</div>'+
           '</div>'+
           '<div class="surface-strong rounded-xl overflow-x-auto">'+
@@ -644,39 +804,41 @@
               '<tfoot><tr><td class="font-semibold text-sm">Total</td><td class="text-center font-semibold">'+totals.poi+'</td><td class="text-center font-semibold">'+totals.speech+'</td><td class="text-center font-semibold">'+totals.amendment+'</td><td class="text-center font-semibold text-purple-400">'+totals.total+'</td></tr></tfoot>'+
             '</table>'+
           '</div>'+
-        '</div>'+
-      '</div>';
-    }
-
-    function renderTallyView() {
-      const c = document.getElementById('content-list');
-      const selected = document.getElementById('filter-committee').value;
-      const committees = Object.keys(tallyByCommittee).sort();
-      const list = selected ? committees.filter(x => x === selected) : committees;
-      if (!list.length) { c.innerHTML = '<div class="text-center py-12 muted"><i data-lucide="users" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">No delegates found.</p></div>'; lucide.createIcons(); return; }
-      c.innerHTML = list.map(committee => renderCommitteeTallyBlock(committee, tallyByCommittee[committee])).join('');
+        '</div>';
       lucide.createIcons();
     }
 
-    function exportTallyToExcel() {
-      const selected = document.getElementById('filter-committee').value;
-      const committees = Object.keys(tallyByCommittee).sort().filter(c => !selected || c === selected);
-      if (!committees.length) return;
-      const wb = XLSX.utils.book_new();
-      committees.forEach(committee => {
-        const entries = Object.values(tallyByCommittee[committee]).map(t => ({ ...t, total: tallyTotal(t) })).sort((a,b)=>schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
-        const priority = [...entries].sort((a,b)=> a.total-b.total || a.country.localeCompare(b.country));
-        const tallySheet = [['Delegation','Delegate','School','POIs (1pt)','Speeches (2pt)','Amendments (3pt)','Total Points']]
-          .concat(entries.map(e => [e.country, e.name, e.school, e.poi, e.speech, e.amendment, e.total]));
-        const prioritySheet = [['Rank','Delegation','Total Points']]
-          .concat(priority.map((e,i) => [i+1, e.country, e.total]));
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tallySheet), (committee+' Tally').slice(0,31));
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(prioritySheet), (committee+' Priority').slice(0,31));
-      });
-      XLSX.writeFile(wb, (selected || 'All Committees') + ' Tally.xlsx');
+    async function adjustTally(delegateId, field, delta) {
+      const t = tallyMap[delegateId];
+      if (!t) return;
+      t[field] = Math.max(0, t[field] + delta);
+      renderTally();
+      const { error } = await sb.from('tally').upsert({
+        delegate_id: delegateId, committee: currentProfile.committee,
+        poi_count: t.poi, speech_count: t.speech, amendment_count: t.amendment,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'delegate_id' });
+      if (error) console.error(error);
     }
 
-    // ── ATTENDANCE (read-only, all committees, per session) ─────────────────
+    function exportTallyToExcel() {
+      const entries = Object.values(tallyMap).map(t => ({ ...t, total: tallyTotal(t) })).sort((a,b)=>schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
+      const priority = [...entries].sort((a,b)=> a.total-b.total || a.country.localeCompare(b.country));
+      const tallySheet = [['Delegation','Delegate','School','POIs (1pt)','Speeches (2pt)','Amendments (3pt)','Total Points']]
+        .concat(entries.map(e => [e.country, e.name, e.school, e.poi, e.speech, e.amendment, e.total]));
+      const prioritySheet = [['Rank','Delegation','Total Points']]
+        .concat(priority.map((e,i) => [i+1, e.country, e.total]));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tallySheet), 'Tally');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(prioritySheet), 'Call Priority');
+      XLSX.writeFile(wb, currentProfile.committee+' Tally.xlsx');
+    }
+
+    // ── ATTENDANCE (per session, grouped by school) ─────────────────────────
+    // Sessions come from the same placeholder schedule used in the Schedule
+    // tab — only the items literally titled "Session ..." are attendance-
+    // eligible (breaks/ceremonies are skipped). Update PLACEHOLDER_SCHEDULE
+    // and this list of sessions updates automatically, no other code to touch.
     function getAttendanceSessions() {
       const list = [];
       PLACEHOLDER_SCHEDULE.forEach((day,i) => {
@@ -696,119 +858,112 @@
       return sessions[sessions.length-1].key;
     }
 
-    let attendanceByCommittee = {};
     async function loadAttendanceForSession(sessionKey) {
-      const { data: delegates } = await sb.from('profiles').select('id,name,country,school,committee')
-        .eq('role','delegate').order('committee',{ascending:true}).order('country',{ascending:true});
-      const { data: rows } = await sb.from('attendance').select('*').eq('session_key', sessionKey);
+      const { data: delegates } = await sb.from('profiles').select('id,name,country,school')
+        .eq('committee', currentProfile.committee).eq('role','delegate').order('country',{ascending:true});
+      const { data: rows } = await sb.from('attendance').select('*').eq('committee', currentProfile.committee).eq('session_key', sessionKey);
       const rowMap = {}; (rows||[]).forEach(r => rowMap[r.delegate_id] = r.status);
-      const byCommittee = {};
-      (delegates||[]).forEach(d => {
-        if (!byCommittee[d.committee]) byCommittee[d.committee] = {};
-        byCommittee[d.committee][d.id] = { name: d.name, country: d.country||'—', school: d.school||'', status: rowMap[d.id] || 'present' };
-      });
-      attendanceByCommittee = byCommittee;
+      const map = {};
+      (delegates||[]).forEach(d => { map[d.id] = { name: d.name, country: d.country || '—', school: d.school || '', status: rowMap[d.id] || 'present' }; });
+      attendanceMap = map;
     }
 
     async function openAttendanceTab() {
       const c = document.getElementById('content-list');
       c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
       const sessions = getAttendanceSessions();
-      if (!sessions.length) { c.innerHTML = '<div class="text-center py-12 muted"><i data-lucide="calendar-x" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">No sessions defined yet.</p></div>'; lucide.createIcons(); return; }
+      if (!sessions.length) { c.innerHTML = emptyState('calendar-x','No sessions defined yet','Add "Session ..." items to the placeholder schedule to start tracking attendance.'); return; }
       if (!attendanceSessionKey || !sessions.find(s=>s.key===attendanceSessionKey)) {
         attendanceSessionKey = defaultAttendanceSessionKey(sessions, new Date());
       }
       await loadAttendanceForSession(attendanceSessionKey);
-      renderAttendanceView();
+      renderAttendance();
     }
 
     async function selectAttendanceSession(key) {
       attendanceSessionKey = key;
       await loadAttendanceForSession(key);
-      renderAttendanceView();
+      renderAttendance();
     }
 
-    function renderCommitteeAttendanceBlock(committee, map) {
-      const entries = Object.entries(map).map(([id,t]) => ({ id, ...t }));
+    function renderAttendance() {
+      const c = document.getElementById('content-list');
+      const sessions = getAttendanceSessions();
+      const entries = Object.entries(attendanceMap).map(([id,t]) => ({ id, ...t }));
+      const sorted = [...entries].sort((a,b) => schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
       const present = entries.filter(e=>e.status==='present').length;
       const absent = entries.length - present;
       const rate = entries.length ? Math.round((present/entries.length)*1000)/10 : 0;
-      const rows = [...entries].sort((a,b) => schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
-
-      let lastSchool = null, groupToggle = false;
-      const rowsHtml = entries.length
-        ? rows.map(e => {
-            if (e.school !== lastSchool) { groupToggle = !groupToggle; lastSchool = e.school; }
-            return '<tr class="'+(groupToggle?'school-group':'')+'"><td><p class="font-medium text-sm">'+escHtml(e.country)+'</p><p class="text-[11px] muted">'+escHtml(e.name)+'</p>'+(e.school?'<p class="text-[10px] label-text">'+escHtml(e.school)+'</p>':'')+'</td><td class="text-center"><span class="attendance-pill '+e.status+'">'+(e.status==='present'?'Present':'Absent')+'</span></td></tr>';
-          }).join('')
-        : '<tr><td colspan="2" class="text-center muted py-6">No delegates in this committee yet.</td></tr>';
-
-      return '<div class="mb-7">'+
-        '<div class="flex items-center justify-between mb-3 flex-wrap gap-2">'+
-          '<p class="text-sm font-semibold">'+escHtml(committee)+'</p>'+
-          '<p class="text-xs muted">'+present+' present · '+absent+' absent · '+rate+'%</p>'+
-        '</div>'+
-        '<div class="surface-strong rounded-xl overflow-x-auto">'+
-          '<table class="tally-table">'+
-            '<thead><tr><th>Delegation</th><th>Attendance</th></tr></thead>'+
-            '<tbody>'+rowsHtml+'</tbody>'+
-          '</table>'+
-        '</div>'+
-      '</div>';
-    }
-
-    function renderAttendanceView() {
-      const c = document.getElementById('content-list');
-      const sessions = getAttendanceSessions();
-      const selected = document.getElementById('filter-committee').value;
-      const committees = Object.keys(attendanceByCommittee).sort();
-      const list = selected ? committees.filter(x => x === selected) : committees;
 
       const pillsHtml = sessions.map(s =>
         '<button onclick="selectAttendanceSession(\''+s.key+'\')" class="tab-btn text-sm font-medium whitespace-nowrap'+(s.key===attendanceSessionKey?' active':'')+'">'+escHtml(s.dayLabel)+' · '+escHtml(s.label)+'</button>'
       ).join('');
 
-      const body = list.length
-        ? list.map(committee => renderCommitteeAttendanceBlock(committee, attendanceByCommittee[committee])).join('')
-        : '<div class="text-center py-12 muted"><i data-lucide="users" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">No delegates found.</p></div>';
+      let lastSchool = null, groupToggle = false;
+      const rowsHtml = sorted.length ? sorted.map(e => {
+        if (e.school !== lastSchool) { groupToggle = !groupToggle; lastSchool = e.school; }
+        return '<tr class="'+(groupToggle?'school-group':'')+'"><td><p class="font-medium text-sm">'+escHtml(e.country)+'</p><p class="text-[11px] muted">'+escHtml(e.name)+'</p>'+(e.school?'<p class="text-[10px] label-text">'+escHtml(e.school)+'</p>':'')+'</td>'+
+          '<td class="text-center"><span onclick="toggleAttendance(\''+e.id+'\')" class="attendance-pill '+e.status+'">'+(e.status==='present'?'Present':'Absent')+'</span></td></tr>';
+      }).join('') : '<tr><td colspan="2" class="text-center muted py-8">No delegates in this committee yet.</td></tr>';
 
       c.innerHTML =
         '<div class="flex gap-6 border-b mb-5 overflow-x-auto" style="border-color:rgba(128,128,128,0.1)">'+pillsHtml+'</div>'+
         '<p class="text-[10px] muted mb-4">Placeholder schedule — sessions will match the final timetable once confirmed.</p>'+
-        body;
+        '<div class="surface-strong rounded-xl overflow-x-auto mb-4">'+
+          '<table class="tally-table">'+
+            '<thead><tr><th>Delegation</th><th>Attendance</th></tr></thead>'+
+            '<tbody>'+rowsHtml+'</tbody>'+
+          '</table>'+
+        '</div>'+
+        '<div class="grid grid-cols-3 gap-3">'+
+          '<div class="stat-card rounded-xl p-3"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Present</p><p class="text-xl font-bold text-green-400">'+present+'</p></div>'+
+          '<div class="stat-card rounded-xl p-3"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Absent</p><p class="text-xl font-bold text-red-400">'+absent+'</p></div>'+
+          '<div class="stat-card rounded-xl p-3"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Attendance Rate</p><p class="text-xl font-bold text-purple-400">'+rate+'%</p></div>'+
+        '</div>';
       lucide.createIcons();
+    }
+
+    async function toggleAttendance(delegateId) {
+      const t = attendanceMap[delegateId];
+      if (!t) return;
+      t.status = t.status === 'present' ? 'absent' : 'present';
+      renderAttendance();
+      const { error } = await sb.from('attendance').upsert({
+        delegate_id: delegateId, committee: currentProfile.committee, session_key: attendanceSessionKey,
+        status: t.status, updated_at: new Date().toISOString()
+      }, { onConflict: 'delegate_id,session_key' });
+      if (error) console.error(error);
     }
 
     async function exportAttendanceToExcel() {
       const sessions = getAttendanceSessions();
       if (!sessions.length) return;
-      const selected = document.getElementById('filter-committee').value;
-      const { data: delegates } = await sb.from('profiles').select('id,name,country,school,committee').eq('role','delegate');
-      const { data: rows } = await sb.from('attendance').select('*');
+      const { data: delegates } = await sb.from('profiles').select('id,name,country,school')
+        .eq('committee', currentProfile.committee).eq('role','delegate').order('country',{ascending:true});
+      const { data: rows } = await sb.from('attendance').select('*').eq('committee', currentProfile.committee);
       const statusMap = {}; (rows||[]).forEach(r => { if(!statusMap[r.delegate_id]) statusMap[r.delegate_id]={}; statusMap[r.delegate_id][r.session_key] = r.status; });
-      const committees = [...new Set((delegates||[]).map(d=>d.committee))].sort().filter(c => !selected || c === selected);
+      const entries = (delegates||[]).map(d => ({ id:d.id, name:d.name, country:d.country||'—', school:d.school||'' })).sort((a,b)=>schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
+
+      const header = ['Delegation','Delegate','School'].concat(sessions.map(s=>s.dayLabel+' '+s.label));
+      const body = entries.map(e => [e.country, e.name, e.school].concat(sessions.map(s => {
+        const st = (statusMap[e.id]||{})[s.key] || 'present';
+        return st === 'present' ? 'Present' : 'Absent';
+      })));
+      const presentRow = ['Present','','',].concat(sessions.map(s => entries.filter(e => ((statusMap[e.id]||{})[s.key]||'present')==='present').length));
+      const absentRow = ['Absent','',''].concat(sessions.map(s => entries.filter(e => ((statusMap[e.id]||{})[s.key]||'present')==='absent').length));
+      const rateRow = ['Attendance Rate','',''].concat(sessions.map(s => {
+        const p = entries.filter(e => ((statusMap[e.id]||{})[s.key]||'present')==='present').length;
+        return entries.length ? Math.round((p/entries.length)*1000)/10+'%' : '—';
+      }));
+      const sheet = [header].concat(body).concat([[],presentRow,absentRow,rateRow]);
       const wb = XLSX.utils.book_new();
-      committees.forEach(committee => {
-        const entries = (delegates||[]).filter(d=>d.committee===committee).map(d => ({ id:d.id, name:d.name, country:d.country||'—', school:d.school||'' })).sort((a,b)=>schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
-        const header = ['Delegation','Delegate','School'].concat(sessions.map(s=>s.dayLabel+' '+s.label));
-        const body = entries.map(e => [e.country, e.name, e.school].concat(sessions.map(s => {
-          const st = (statusMap[e.id]||{})[s.key] || 'present';
-          return st === 'present' ? 'Present' : 'Absent';
-        })));
-        const presentRow = ['Present','',''].concat(sessions.map(s => entries.filter(e => ((statusMap[e.id]||{})[s.key]||'present')==='present').length));
-        const absentRow = ['Absent','',''].concat(sessions.map(s => entries.filter(e => ((statusMap[e.id]||{})[s.key]||'present')==='absent').length));
-        const rateRow = ['Attendance Rate','',''].concat(sessions.map(s => {
-          const p = entries.filter(e => ((statusMap[e.id]||{})[s.key]||'present')==='present').length;
-          return entries.length ? Math.round((p/entries.length)*1000)/10+'%' : '—';
-        }));
-        const sheet = [header].concat(body).concat([[],presentRow,absentRow,rateRow]);
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheet), (committee+' Attendance').slice(0,31));
-      });
-      XLSX.writeFile(wb, (selected || 'All Committees') + ' Attendance.xlsx');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheet), 'Attendance');
+      XLSX.writeFile(wb, currentProfile.committee+' Attendance.xlsx');
     }
 
     async function handleSignOut(){ await sb.auth.signOut(); window.location.href='login.html'; }
 
+    function emptyState(icon,title,sub){ return '<div class="text-center py-12 muted"><i data-lucide="'+icon+'" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">'+title+'</p><p class="text-xs mt-1">'+sub+'</p></div>'; }
     function escHtml(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function escAttr(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/'/g,'\\\'').replace(/"/g,'&quot;'); }
     function timeAgo(iso){
@@ -824,10 +979,12 @@
       return Math.floor(d/1440)+'d ago';
     }
 
-    sb.channel('exec-updates')
-      .on('postgres_changes',{event:'*',schema:'public',table:'resolutions'},()=>loadAll())
-      .on('postgres_changes',{event:'*',schema:'public',table:'tally'},()=>{ if(currentTab==='tally') ensureTallyLoaded().then(renderTallyView); })
-      .on('postgres_changes',{event:'*',schema:'public',table:'attendance'},()=>{ if(currentTab==='attendance') loadAttendanceForSession(attendanceSessionKey).then(renderAttendanceView); })
+    sb.channel('chair-updates')
+      .on('postgres_changes',{event:'*',schema:'public',table:'resolutions'},()=>loadResolutions())
+      .on('postgres_changes',{event:'*',schema:'public',table:'amendments'},()=>{checkAmendmentCount(); if(currentTab==='amendments')renderAmendments();})
+      .on('postgres_changes',{event:'*',schema:'public',table:'committee_feed'},()=>{ if(currentTab==='feed')renderFeed(); })
+      .on('postgres_changes',{event:'*',schema:'public',table:'tally'},()=>{ if(currentTab==='tally') loadTallyRoster().then(renderTally); })
+      .on('postgres_changes',{event:'*',schema:'public',table:'attendance'},()=>{ if(currentTab==='attendance') loadAttendanceForSession(attendanceSessionKey).then(renderAttendance); })
       .subscribe();
 
     init();
