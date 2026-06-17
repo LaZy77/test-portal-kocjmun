@@ -65,6 +65,17 @@
     [data-theme="light"] .tab-btn.active{color:#5D175F}
     .badge-new{background:rgba(239,68,68,0.2);color:#dc2626;border:1px solid rgba(239,68,68,0.3);font-size:10px;padding:1px 6px;border-radius:99px}
     [data-theme="dark"] .badge-new{color:#fca5a5}
+    [data-theme="light"] .text-purple-400{color:#5D175F}
+    [data-theme="light"] .text-purple-200{color:#5D175F}
+    .btn-success{background:rgba(34,197,94,0.14);color:#16a34a;border:1px solid rgba(34,197,94,0.3)}
+    .btn-danger{background:rgba(239,68,68,0.12);color:#dc2626;border:1px solid rgba(239,68,68,0.28)}
+    .btn-info{background:rgba(59,130,246,0.12);color:#1d4ed8;border:1px solid rgba(59,130,246,0.28)}
+    .btn-warn{background:rgba(245,158,11,0.12);color:#b45309;border:1px solid rgba(245,158,11,0.28)}
+    .btn-success:hover,.btn-danger:hover,.btn-info:hover,.btn-warn:hover{opacity:.85}
+    [data-theme="dark"] .btn-success{color:#4ade80}
+    [data-theme="dark"] .btn-danger{color:#f87171}
+    [data-theme="dark"] .btn-info{color:#60a5fa}
+    [data-theme="dark"] .btn-warn{color:#fbbf24}
   </style>
 </head>
 <body class="h-full overflow-auto bg-grid">
@@ -147,11 +158,12 @@
             <option value="Agenda Item 2">Agenda Item 2</option>
             <option value="Agenda Item 3">Agenda Item 3</option>
           </select></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Submitting Country</label>
+          <input id="res-country" type="text" placeholder="e.g. France" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+          <p class="text-[10px] muted mt-1.5">The delegation this resolution is submitted on behalf of.</p></div>
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Google Docs Link</label>
           <input id="res-doc-url" type="url" placeholder="https://docs.google.com/document/d/..." class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono">
           <p class="text-[10px] muted mt-1.5">Set sharing to "Anyone with the link can view". The code is assigned when it's sent to the approval panel.</p></div>
-        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Short Explanation</label>
-          <textarea id="res-summary" rows="3" placeholder="In a sentence or two, what does this resolution propose?" class="input-field w-full px-4 py-3 rounded-xl text-sm resize-none"></textarea></div>
         <div id="submit-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
         <div class="flex gap-3 pt-2">
           <button onclick="closeSubmitModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
@@ -223,6 +235,9 @@
           <input id="panel-code" type="text" placeholder="e.g. UNHRC 1.2  (agenda 1, resolution 2)" class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
         <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Title <span class="normal-case label-text">(optional)</span></label>
           <input id="panel-title" type="text" placeholder="Defaults to the submitter's explanation" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Google Docs Link to send to Exec</label>
+          <input id="panel-doc-url" type="url" placeholder="https://docs.google.com/document/d/..." class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono">
+          <p class="text-[10px] muted mt-1.5">Provide the link the approval panel should review — separate from the one originally submitted.</p></div>
         <div id="panel-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
         <div class="flex gap-3 pt-2">
           <button onclick="closePanelModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
@@ -238,7 +253,7 @@
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD = '2026-06-16.2';
+    const BUILD = '2026-06-17';
     console.log('%cKoç JMUN · chair.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
     document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
@@ -323,9 +338,9 @@
       c.innerHTML = items.map(r => {
         const isMine = r.submitted_by === currentProfile.id;
         const heading = r.title || r.summary || 'Untitled resolution';
-        const submitterLine = r.submitter_role === 'delegate' && r.submitter_country
+        const submitterLine = r.submitter_country
           ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(93,23,95,0.15);color:#a855f7">📍 ' + escHtml(r.submitter_country) + '</span>'
-          : '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.1)">You</span>';
+          : (isMine ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.1)">You</span>' : '');
         return '<div class="item-card rounded-xl p-4 hover:opacity-95 transition">'+
           '<div class="flex items-start justify-between gap-4">'+
             '<div class="flex-1 min-w-0">'+
@@ -341,11 +356,11 @@
               (r.exec_note ? '<p class="text-xs text-amber-500 mt-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5">📝 '+escHtml(r.exec_note)+'</p>' : '')+
             '</div>'+
             '<div class="flex gap-2 flex-shrink-0 flex-wrap justify-end">'+
-              ((r.exec_doc_url||r.chair_doc_url) ? '<a href="'+escHtml(r.exec_doc_url||r.chair_doc_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Google Docs</a>' : '')+
-              (r.status==='pending' ? '<button onclick="markUnderReview(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition border border-blue-500/20">Mark under review</button>' : '')+
+              ((r.exec_doc_url||r.panel_doc_url||r.chair_doc_url) ? '<a href="'+escHtml(r.exec_doc_url||r.panel_doc_url||r.chair_doc_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Google Docs</a>' : '')+
+              (r.status==='pending' ? '<button onclick="markUnderReview(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg btn-info transition">Mark under review</button>' : '')+
               (r.status==='under_review' ? '<button onclick="openPanelModal(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Send to approval panel</button>' : '')+
-              (isMine && (r.status==='pending'||r.status==='under_review'||r.status==='sent_to_panel') ? '<button onclick="withdrawResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition border border-amber-500/20">Withdraw</button>' : '')+
-              (isMine ? '<button onclick="deleteResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Delete</button>' : '')+
+              (isMine && (r.status==='pending'||r.status==='under_review'||r.status==='sent_to_panel') ? '<button onclick="withdrawResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg btn-warn transition">Withdraw</button>' : '')+
+              (r.status!=='sent_to_panel' ? '<button onclick="deleteResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg btn-danger transition">Delete</button>' : '')+
             '</div>'+
           '</div></div>';
       }).join('');
@@ -366,8 +381,8 @@
         const resLabel = res ? ((res.code? res.code+' — ':'')+res.title) : 'Resolution';
         const statusLabel = {pending:'Pending',approved:'Approved',rejected:'Rejected'}[a.status];
         const actions = a.status==='pending'
-          ? '<button onclick="approveAmendment(\''+a.id+'\')" class="px-4 py-2 text-xs font-semibold rounded-lg bg-green-500/15 text-green-400 hover:bg-green-500/25 transition border border-green-500/30">Approve</button>'+
-            '<button onclick="openRejectModal(\''+a.id+'\')" class="px-4 py-2 text-xs font-semibold rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition border border-red-500/20">Reject</button>'
+          ? '<button onclick="approveAmendment(\''+a.id+'\')" class="px-4 py-2 text-xs font-semibold rounded-lg btn-success transition">Approve</button>'+
+            '<button onclick="openRejectModal(\''+a.id+'\')" class="px-4 py-2 text-xs font-semibold rounded-lg btn-danger transition">Reject</button>'
           : '';
         const row = (label,val) => '<div><p class="text-[10px] label-text uppercase tracking-wider mb-0.5">'+label+'</p><p class="text-sm">'+val+'</p></div>';
         return '<div class="item-card rounded-xl p-5 space-y-3">'+
@@ -471,25 +486,26 @@
     function closeSubmitModal(){ document.getElementById('submit-modal').classList.add('hidden'); }
     async function submitResolution() {
       const agenda=document.getElementById('res-agenda').value;
+      const country=document.getElementById('res-country').value.trim();
       const docUrl=document.getElementById('res-doc-url').value.trim();
-      const summary=document.getElementById('res-summary').value.trim();
       const errEl=document.getElementById('submit-error');
       errEl.classList.add('hidden');
-      if(!docUrl||!summary){ errEl.textContent='Please add the Google Docs link and a short explanation.'; errEl.classList.remove('hidden'); return; }
+      if(!country||!docUrl){ errEl.textContent='Please add the submitting country and the Google Docs link.'; errEl.classList.remove('hidden'); return; }
       if(!docUrl.includes('docs.google.com')){ errEl.textContent='Please enter a valid Google Docs link.'; errEl.classList.remove('hidden'); return; }
       document.getElementById('submit-btn').disabled=true;
       document.getElementById('submit-btn-text').textContent='Submitting…';
       document.getElementById('submit-spinner').classList.remove('hidden');
       const { error } = await sb.from('resolutions').insert({
         agenda_item: agenda, committee: currentProfile.committee,
-        submitted_by: currentProfile.id, submitter_role: 'chair', chair_doc_url: docUrl, summary, status: 'pending'
+        submitted_by: currentProfile.id, submitter_role: 'chair', submitter_country: country,
+        chair_doc_url: docUrl, status: 'pending'
       });
       document.getElementById('submit-btn').disabled=false;
       document.getElementById('submit-btn-text').textContent='Submit';
       document.getElementById('submit-spinner').classList.add('hidden');
       if(error){ console.error(error); errEl.textContent='Submission failed.'; errEl.classList.remove('hidden'); return; }
       closeSubmitModal();
-      document.getElementById('res-doc-url').value=''; document.getElementById('res-summary').value='';
+      document.getElementById('res-country').value=''; document.getElementById('res-doc-url').value='';
       await loadResolutions();
     }
     async function withdrawResolution(id) {
@@ -514,6 +530,7 @@
       forwardingId = id;
       document.getElementById('panel-code').value = (r && r.code) || '';
       document.getElementById('panel-title').value = (r && r.title) || '';
+      document.getElementById('panel-doc-url').value = (r && r.panel_doc_url) || '';
       document.getElementById('panel-summary').textContent = (r && (r.summary||r.title)) || '—';
       document.getElementById('panel-error').classList.add('hidden');
       document.getElementById('panel-modal').classList.remove('hidden');
@@ -522,15 +539,18 @@
     async function confirmSendToPanel() {
       const code = document.getElementById('panel-code').value.trim();
       const title = document.getElementById('panel-title').value.trim();
+      const panelDocUrl = document.getElementById('panel-doc-url').value.trim();
       const errEl = document.getElementById('panel-error');
       errEl.classList.add('hidden');
       if (!code) { errEl.textContent='Please assign a code (e.g. UNHRC 1.2) before forwarding.'; errEl.classList.remove('hidden'); return; }
+      if (!panelDocUrl) { errEl.textContent='Please provide the Google Docs link to send to the exec panel.'; errEl.classList.remove('hidden'); return; }
+      if (!panelDocUrl.includes('docs.google.com')) { errEl.textContent='Please enter a valid Google Docs link.'; errEl.classList.remove('hidden'); return; }
       const r = cachedResolutions.find(x=>x.id===forwardingId);
       const finalTitle = title || (r && r.title) || (r && r.summary) || null;
       document.getElementById('panel-btn').disabled=true;
       document.getElementById('panel-spinner').classList.remove('hidden');
       const { error } = await sb.from('resolutions').update({
-        code, title: finalTitle, status:'sent_to_panel'
+        code, title: finalTitle, panel_doc_url: panelDocUrl, status:'sent_to_panel'
       }).eq('id', forwardingId);
       document.getElementById('panel-btn').disabled=false;
       document.getElementById('panel-spinner').classList.add('hidden');
