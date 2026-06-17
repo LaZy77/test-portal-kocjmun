@@ -133,9 +133,9 @@
       <div class="flex gap-6 border-b mb-6 overflow-x-auto" style="border-color:rgba(128,128,128,0.1)">
         <button class="tab-btn active text-sm font-medium whitespace-nowrap" onclick="switchTab('resolutions')" id="tab-resolutions">Resolutions</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('amendments')" id="tab-amendments">Amendments <span id="amend-badge" class="badge-new ml-1 hidden">0</span></button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('announcements')" id="tab-announcements">Announcements</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('feed')" id="tab-feed">Committee Feed</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('schedule')" id="tab-schedule">Schedule</button>
-        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('announcements')" id="tab-announcements">Announcements</button>
       </div>
 
       <div id="tab-actions" class="mb-4 hidden">
@@ -265,7 +265,7 @@
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD = '2026-06-17.2';
+    const BUILD = '2026-06-17.3';
     console.log('%cKoç JMUN · chair.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
     document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
