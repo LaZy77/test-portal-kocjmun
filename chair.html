@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     html,body{height:100%;margin:0;font-family:'Outfit',sans-serif}
@@ -65,6 +66,19 @@
     [data-theme="light"] .tab-btn.active{color:#5D175F}
     .badge-new{background:rgba(239,68,68,0.2);color:#dc2626;border:1px solid rgba(239,68,68,0.3);font-size:10px;padding:1px 6px;border-radius:99px}
     [data-theme="dark"] .badge-new{color:#fca5a5}
+    .tally-table{border-collapse:collapse;width:100%;min-width:480px}
+    .tally-table th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:10px 12px;text-align:center;white-space:nowrap;background:rgba(93,23,95,0.1);color:#5D175F}
+    .tally-table th:first-child{text-align:left}
+    [data-theme="dark"] .tally-table th{background:rgba(93,23,95,0.22);color:#e9d5ff}
+    .tally-table td{padding:8px 12px;border-bottom:1px solid rgba(128,128,128,0.08);vertical-align:middle}
+    .tally-table tr:last-child td{border-bottom:none}
+    .tally-table tfoot td{border-top:2px solid rgba(128,128,128,0.15);border-bottom:none;padding-top:10px}
+    .stepper{display:inline-flex;align-items:center;gap:7px;justify-content:center}
+    .stepper-btn{width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;background:rgba(128,128,128,0.12);cursor:pointer;transition:opacity .15s;flex-shrink:0}
+    .stepper-btn:hover{opacity:.6}
+    .stepper-val{min-width:20px;text-align:center;font-weight:600;font-family:'JetBrains Mono',monospace;font-size:13px}
+    .priority-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:6px 8px;border-radius:8px}
+    .priority-row:nth-child(odd){background:rgba(128,128,128,0.05)}
     [data-theme="light"] .text-purple-400{color:#5D175F}
     [data-theme="light"] .text-purple-200{color:#5D175F}
     .btn-success{background:rgba(34,197,94,0.14);color:#16a34a;border:1px solid rgba(34,197,94,0.3)}
@@ -136,6 +150,7 @@
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('announcements')" id="tab-announcements">Announcements</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('feed')" id="tab-feed">Committee Feed</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('schedule')" id="tab-schedule">Schedule</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('tally')" id="tab-tally">Tally</button>
       </div>
 
       <div id="tab-actions" class="mb-4 hidden">
@@ -144,6 +159,9 @@
         </button>
         <button onclick="clearAllAmendments()" id="clear-amend-btn" class="hidden items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-400 transition surface border" style="border-color:rgba(239,68,68,0.25)">
           <i data-lucide="eraser" style="width:14px;height:14px"></i> Clear all amendments
+        </button>
+        <button onclick="exportTallyToExcel()" id="export-tally-btn" class="hidden items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:#5D175F">
+          <i data-lucide="download" style="width:14px;height:14px"></i> Export to Excel
         </button>
       </div>
 
@@ -265,13 +283,14 @@
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD = '2026-06-17.3';
+    const BUILD = '2026-06-17.4';
     console.log('%cKoç JMUN · chair.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
     document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
     let currentProfile = null;
     let currentTab = 'resolutions';
     let cachedResolutions = [];
+    let tallyMap = {};
     let rejectingId = null;
     let forwardingId = null;
 
@@ -429,14 +448,17 @@
       const tabActions = document.getElementById('tab-actions');
       const addFeedBtn = document.getElementById('add-feed-btn');
       const clearBtn = document.getElementById('clear-amend-btn');
-      addFeedBtn.classList.add('hidden'); clearBtn.classList.add('hidden'); tabActions.classList.add('hidden');
+      const exportBtn = document.getElementById('export-tally-btn');
+      addFeedBtn.classList.add('hidden'); clearBtn.classList.add('hidden'); exportBtn.classList.add('hidden'); tabActions.classList.add('hidden');
       if (tab === 'feed') { tabActions.classList.remove('hidden'); addFeedBtn.classList.remove('hidden'); addFeedBtn.classList.add('flex'); }
       if (tab === 'amendments') { tabActions.classList.remove('hidden'); clearBtn.classList.remove('hidden'); clearBtn.classList.add('flex'); }
+      if (tab === 'tally') { tabActions.classList.remove('hidden'); exportBtn.classList.remove('hidden'); exportBtn.classList.add('flex'); }
 
       if (tab === 'resolutions') renderResolutions(cachedResolutions);
       else if (tab === 'amendments') renderAmendments();
       else if (tab === 'feed') renderFeed();
       else if (tab === 'schedule') renderSchedule();
+      else if (tab === 'tally') openTallyTab();
       else if (tab === 'announcements') renderAnnouncements();
       lucide.createIcons();
     }
@@ -697,6 +719,100 @@
       renderFeed();
     }
 
+    // ── TALLY (POI/Speech/Amendment points + call priority) ────────────────
+    function tallyTotal(t){ return t.poi*1 + t.speech*2 + t.amendment*3; }
+
+    async function loadTallyRoster() {
+      const { data: delegates } = await sb.from('profiles').select('id,name,country')
+        .eq('committee', currentProfile.committee).eq('role','delegate').order('country',{ascending:true});
+      const { data: rows } = await sb.from('tally').select('*').eq('committee', currentProfile.committee);
+      const rowMap = {}; (rows||[]).forEach(r => rowMap[r.delegate_id] = r);
+      const map = {};
+      (delegates||[]).forEach(d => {
+        const r = rowMap[d.id] || {};
+        map[d.id] = { name: d.name, country: d.country || '—', poi: r.poi_count||0, speech: r.speech_count||0, amendment: r.amendment_count||0 };
+      });
+      tallyMap = map;
+    }
+
+    async function openTallyTab() {
+      const c = document.getElementById('content-list');
+      c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
+      await loadTallyRoster();
+      renderTally();
+    }
+
+    function stepperCell(id, field, val) {
+      return '<td><div class="stepper">'+
+        '<span class="stepper-btn" onclick="adjustTally(\''+id+'\',\''+field+'\',-1)"><i data-lucide="minus" style="width:11px;height:11px"></i></span>'+
+        '<span class="stepper-val">'+val+'</span>'+
+        '<span class="stepper-btn" onclick="adjustTally(\''+id+'\',\''+field+'\',1)"><i data-lucide="plus" style="width:11px;height:11px"></i></span>'+
+      '</div></td>';
+    }
+
+    function renderTally() {
+      const c = document.getElementById('content-list');
+      const entries = Object.entries(tallyMap).map(([id,t]) => ({ id, ...t, total: tallyTotal(t) }));
+      if (!entries.length) { c.innerHTML = emptyState('users','No delegates yet','Once delegates are assigned to this committee, they will appear here.'); return; }
+
+      const priority = [...entries].sort((a,b) => a.total-b.total || a.country.localeCompare(b.country));
+      const rows = [...entries].sort((a,b) => a.country.localeCompare(b.country));
+      const totals = entries.reduce((acc,e)=>({poi:acc.poi+e.poi,speech:acc.speech+e.speech,amendment:acc.amendment+e.amendment,total:acc.total+e.total}),{poi:0,speech:0,amendment:0,total:0});
+
+      const priorityHtml = priority.map((e,i) =>
+        '<div class="priority-row"><span class="flex items-center gap-2"><span class="label-text" style="width:16px;display:inline-block;font-weight:600">'+(i+1)+'</span>'+escHtml(e.country)+'</span><span class="font-semibold text-purple-400">'+e.total+'</span></div>'
+      ).join('');
+
+      const rowsHtml = rows.map(e =>
+        '<tr><td><p class="font-medium text-sm">'+escHtml(e.country)+'</p><p class="text-[11px] muted">'+escHtml(e.name)+'</p></td>'+
+        stepperCell(e.id,'poi',e.poi)+stepperCell(e.id,'speech',e.speech)+stepperCell(e.id,'amendment',e.amendment)+
+        '<td class="text-center font-semibold text-purple-400">'+e.total+'</td></tr>'
+      ).join('');
+
+      c.innerHTML =
+        '<div class="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-5">'+
+          '<div class="surface rounded-xl p-4">'+
+            '<p class="text-xs label-text uppercase tracking-wider mb-1">Call Priority</p>'+
+            '<p class="text-[10px] muted mb-3">Least-engaged delegations first</p>'+
+            '<div class="space-y-0.5">'+priorityHtml+'</div>'+
+          '</div>'+
+          '<div class="surface-strong rounded-xl overflow-x-auto">'+
+            '<table class="tally-table">'+
+              '<thead><tr><th>Delegation</th><th>POIs<br><span class="text-[9px] normal-case label-text">1pt</span></th><th>Speeches<br><span class="text-[9px] normal-case label-text">2pt</span></th><th>Amendments<br><span class="text-[9px] normal-case label-text">3pt</span></th><th>Total</th></tr></thead>'+
+              '<tbody>'+rowsHtml+'</tbody>'+
+              '<tfoot><tr><td class="font-semibold text-sm">Total</td><td class="text-center font-semibold">'+totals.poi+'</td><td class="text-center font-semibold">'+totals.speech+'</td><td class="text-center font-semibold">'+totals.amendment+'</td><td class="text-center font-semibold text-purple-400">'+totals.total+'</td></tr></tfoot>'+
+            '</table>'+
+          '</div>'+
+        '</div>';
+      lucide.createIcons();
+    }
+
+    async function adjustTally(delegateId, field, delta) {
+      const t = tallyMap[delegateId];
+      if (!t) return;
+      t[field] = Math.max(0, t[field] + delta);
+      renderTally();
+      const { error } = await sb.from('tally').upsert({
+        delegate_id: delegateId, committee: currentProfile.committee,
+        poi_count: t.poi, speech_count: t.speech, amendment_count: t.amendment,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'delegate_id' });
+      if (error) console.error(error);
+    }
+
+    function exportTallyToExcel() {
+      const entries = Object.values(tallyMap).map(t => ({ ...t, total: tallyTotal(t) })).sort((a,b)=>a.country.localeCompare(b.country));
+      const priority = [...entries].sort((a,b)=> a.total-b.total || a.country.localeCompare(b.country));
+      const tallySheet = [['Delegation','Delegate','POIs (1pt)','Speeches (2pt)','Amendments (3pt)','Total Points']]
+        .concat(entries.map(e => [e.country, e.name, e.poi, e.speech, e.amendment, e.total]));
+      const prioritySheet = [['Rank','Delegation','Total Points']]
+        .concat(priority.map((e,i) => [i+1, e.country, e.total]));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tallySheet), 'Tally');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(prioritySheet), 'Call Priority');
+      XLSX.writeFile(wb, currentProfile.committee+' Tally.xlsx');
+    }
+
     async function handleSignOut(){ await sb.auth.signOut(); window.location.href='login.html'; }
 
     function emptyState(icon,title,sub){ return '<div class="text-center py-12 muted"><i data-lucide="'+icon+'" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">'+title+'</p><p class="text-xs mt-1">'+sub+'</p></div>'; }
@@ -719,6 +835,7 @@
       .on('postgres_changes',{event:'*',schema:'public',table:'resolutions'},()=>loadResolutions())
       .on('postgres_changes',{event:'*',schema:'public',table:'amendments'},()=>{checkAmendmentCount(); if(currentTab==='amendments')renderAmendments();})
       .on('postgres_changes',{event:'*',schema:'public',table:'committee_feed'},()=>{ if(currentTab==='feed')renderFeed(); })
+      .on('postgres_changes',{event:'*',schema:'public',table:'tally'},()=>{ if(currentTab==='tally') loadTallyRoster().then(renderTally); })
       .subscribe();
 
     init();
