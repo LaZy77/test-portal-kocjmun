@@ -99,16 +99,27 @@
 
     <section class="max-w-7xl mx-auto px-4 sm:px-8 pt-8 pb-16 animate-fadein">
       <div class="surface-strong rounded-2xl p-6 glow-border mb-8">
-        <div class="flex items-start justify-between flex-wrap gap-4">
+        <div class="flex items-start justify-between flex-wrap gap-4 mb-6 pb-4 border-b" style="border-color:rgba(128,128,128,0.1)">
           <div>
             <p class="text-xs label-text mb-1">Chair Dashboard</p>
             <h1 class="text-xl font-semibold">Welcome, <span class="text-amber-400" id="chair-name">—</span></h1>
-            <p class="text-sm muted mt-1">Committee: <span class="font-medium" id="chair-committee" style="color:inherit">—</span> · Room <span class="font-medium" id="chair-room" style="color:inherit">—</span></p>
           </div>
           <button onclick="openSubmitModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition" style="background:#5D175F">
             <i data-lucide="plus" style="width:16px;height:16px"></i>
             Submit Resolution
           </button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+          <div class="stat-card rounded-xl p-3"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Committee</p><p class="font-semibold text-sm text-purple-400" id="chair-committee">—</p></div>
+          <div class="stat-card rounded-xl p-3"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Room</p><p class="font-semibold text-sm text-purple-400" id="chair-room">—</p></div>
+          <div class="stat-card rounded-xl p-3"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Next Session</p><p class="font-semibold text-sm text-purple-400" id="chair-session-time-text">—</p></div>
+        </div>
+        <div class="surface rounded-xl p-4" id="chair-next-session-block" style="display:none">
+          <p class="text-xs label-text mb-2">Upcoming</p>
+          <div class="flex items-center justify-between">
+            <div><p class="text-sm font-medium" id="chair-session-title-text">—</p><p class="text-xs muted"><span id="chair-session-time-range">—</span></p></div>
+            <span id="chair-session-countdown" class="text-[10px] px-2 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20"></span>
+          </div>
         </div>
       </div>
 
@@ -123,6 +134,7 @@
         <button class="tab-btn active text-sm font-medium whitespace-nowrap" onclick="switchTab('resolutions')" id="tab-resolutions">Resolutions</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('amendments')" id="tab-amendments">Amendments <span id="amend-badge" class="badge-new ml-1 hidden">0</span></button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('feed')" id="tab-feed">Committee Feed</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('schedule')" id="tab-schedule">Schedule</button>
         <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('announcements')" id="tab-announcements">Announcements</button>
       </div>
 
@@ -253,7 +265,7 @@
     const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD = '2026-06-17';
+    const BUILD = '2026-06-17.2';
     console.log('%cKoç JMUN · chair.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
     document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
 
@@ -262,6 +274,102 @@
     let cachedResolutions = [];
     let rejectingId = null;
     let forwardingId = null;
+
+    // ── PLACEHOLDER SCHEDULE ──────────────────────────────────────────────
+    // Same schedule for every committee. Edit PLACEHOLDER_DATES (real conference
+    // dates) and PLACEHOLDER_SCHEDULE (real session/break times) once finalised —
+    // nothing else in the code needs to change.
+    const PLACEHOLDER_DATES = ['2026-07-17','2026-07-18','2026-07-19'];
+    const PLACEHOLDER_SCHEDULE = [
+      { label:'Day 1', items:[
+        {title:'Opening Ceremony', start:'09:00', end:'10:00'},
+        {title:'Session I',        start:'10:15', end:'12:00'},
+        {title:'Lunch Break',      start:'12:00', end:'13:00'},
+        {title:'Session II',       start:'13:00', end:'15:00'},
+        {title:'Coffee Break',     start:'15:00', end:'15:20'},
+        {title:'Session III',      start:'15:20', end:'17:00'}
+      ]},
+      { label:'Day 2', items:[
+        {title:'Session IV',       start:'09:00', end:'11:00'},
+        {title:'Coffee Break',     start:'11:00', end:'11:20'},
+        {title:'Session V',        start:'11:20', end:'13:00'},
+        {title:'Lunch Break',      start:'13:00', end:'14:00'},
+        {title:'Session VI',       start:'14:00', end:'16:00'},
+        {title:'Social Night',     start:'19:00', end:'22:00'}
+      ]},
+      { label:'Day 3', items:[
+        {title:'Session VII',      start:'09:00', end:'11:00'},
+        {title:'Coffee Break',     start:'11:00', end:'11:20'},
+        {title:'Session VIII',     start:'11:20', end:'13:00'},
+        {title:'Lunch Break',      start:'13:00', end:'14:00'},
+        {title:'Closing Ceremony', start:'14:30', end:'16:00'}
+      ]}
+    ];
+    function buildScheduleEvents() {
+      const events = [];
+      PLACEHOLDER_SCHEDULE.forEach((day,i) => {
+        const dateStr = PLACEHOLDER_DATES[i];
+        if (!dateStr) return;
+        day.items.forEach(it => {
+          events.push({ title: it.title, start: new Date(dateStr+'T'+it.start+':00'), end: new Date(dateStr+'T'+it.end+':00') });
+        });
+      });
+      return events.sort((a,b) => a.start - b.start);
+    }
+    function getCurrentOrNextScheduleItem(now) {
+      const events = buildScheduleEvents();
+      for (const ev of events) { if (now < ev.end) return ev; }
+      return null;
+    }
+    function fmtTime(d) { return d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+    function defaultScheduleDayIndex(now) {
+      for (let i=0;i<PLACEHOLDER_DATES.length;i++){
+        const dayEnd = new Date(PLACEHOLDER_DATES[i]+'T23:59:59');
+        if (now <= dayEnd) return i;
+      }
+      return PLACEHOLDER_DATES.length-1;
+    }
+    let scheduleSelectedDay = null;
+    function selectScheduleDay(i) { scheduleSelectedDay = i; renderSchedule(); }
+
+    function renderSchedule() {
+      const c = document.getElementById('content-list');
+      const now = new Date();
+      if (scheduleSelectedDay === null) scheduleSelectedDay = defaultScheduleDayIndex(now);
+      const next = getCurrentOrNextScheduleItem(now);
+      let html = '<div class="flex gap-6 border-b mb-5 overflow-x-auto" style="border-color:rgba(128,128,128,0.1)">'+
+        PLACEHOLDER_SCHEDULE.map((day,i) => '<button onclick="selectScheduleDay('+i+')" class="tab-btn text-sm font-medium whitespace-nowrap'+(i===scheduleSelectedDay?' active':'')+'">'+escHtml(day.label)+'</button>').join('')+
+      '</div>';
+      html += '<p class="text-[10px] muted mb-4">Placeholder schedule — will be updated once the final timetable is confirmed.</p>';
+      const dateStr = PLACEHOLDER_DATES[scheduleSelectedDay];
+      PLACEHOLDER_SCHEDULE[scheduleSelectedDay].items.forEach(it => {
+        const start = new Date(dateStr+'T'+it.start+':00');
+        const end = new Date(dateStr+'T'+it.end+':00');
+        const isNow = now>=start && now<end;
+        const isNext = !isNow && next && next.title===it.title && next.start.getTime()===start.getTime();
+        const isPast = now>=end;
+        html += '<div class="item-card rounded-xl p-3 mb-2 flex items-center justify-between'+(isPast?' opacity-50':'')+'">'+
+          '<div><p class="text-sm font-medium">'+escHtml(it.title)+'</p><p class="text-xs muted">'+fmtTime(start)+'–'+fmtTime(end)+'</p></div>'+
+          (isNow ? '<span class="text-[10px] px-2 py-0.5 rounded-full status-published">Now</span>' : (isNext ? '<span class="text-[10px] px-2 py-0.5 rounded-full status-pending">Next</span>' : ''))+
+        '</div>';
+      });
+      c.innerHTML = html;
+    }
+
+    function renderNextSession() {
+      const item = getCurrentOrNextScheduleItem(new Date());
+      const t = document.getElementById('chair-session-time-text');
+      if (!item) { t.textContent = 'No upcoming'; return; }
+      t.textContent = fmtTime(item.start);
+      document.getElementById('chair-next-session-block').style.display = 'block';
+      document.getElementById('chair-session-title-text').textContent = item.title;
+      document.getElementById('chair-session-time-range').textContent = fmtTime(item.start)+'–'+fmtTime(item.end);
+      const diffMins = Math.round((item.start - new Date())/60000);
+      const cd = document.getElementById('chair-session-countdown');
+      if (diffMins<0) cd.textContent='In progress';
+      else if (diffMins<60) cd.textContent='In '+diffMins+' min';
+      else cd.textContent='In '+Math.floor(diffMins/60)+'h';
+    }
 
     function toggleTheme() {
       const html = document.documentElement;
@@ -287,6 +395,7 @@
       document.getElementById('chair-committee').textContent = profile.committee;
       document.getElementById('chair-room').textContent = profile.room || '—';
       document.getElementById('feed-committee-label').textContent = profile.committee;
+      renderNextSession();
       await loadResolutions();
       await checkAmendmentCount();
     }
@@ -327,6 +436,7 @@
       if (tab === 'resolutions') renderResolutions(cachedResolutions);
       else if (tab === 'amendments') renderAmendments();
       else if (tab === 'feed') renderFeed();
+      else if (tab === 'schedule') renderSchedule();
       else if (tab === 'announcements') renderAnnouncements();
       lucide.createIcons();
     }
@@ -334,12 +444,12 @@
     function renderResolutions(items) {
       const c = document.getElementById('content-list');
       if (!items.length) { c.innerHTML = emptyState('file-text','No resolutions yet','Delegate submissions and your own resolutions appear here.'); return; }
-      const statusLabel = {pending:'New — awaiting you',under_review:'Under review by chairboard',sent_to_panel:'Sent to approval panel',published:'Projected on all panels',withdrawn:'Withdrawn'};
+      const statusLabel = {pending:'New — awaiting you',under_review:'Under review by chairboard',sent_to_panel:'Sent to approval panel',published:'Published',withdrawn:'Withdrawn'};
       c.innerHTML = items.map(r => {
         const isMine = r.submitted_by === currentProfile.id;
         const heading = r.title || r.summary || 'Untitled resolution';
         const submitterLine = r.submitter_country
-          ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(93,23,95,0.15);color:#a855f7">📍 ' + escHtml(r.submitter_country) + '</span>'
+          ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(93,23,95,0.15);color:#a855f7">' + escHtml(r.submitter_country) + '</span>'
           : (isMine ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.1)">You</span>' : '');
         return '<div class="item-card rounded-xl p-4 hover:opacity-95 transition">'+
           '<div class="flex items-start justify-between gap-4">'+
@@ -353,7 +463,7 @@
               '<p class="text-sm font-medium mb-1">'+escHtml(heading)+'</p>'+
               (r.summary && r.title ? '<p class="text-xs muted mb-1">'+escHtml(r.summary)+'</p>' : '')+
               '<p class="text-[10px] muted">'+timeAgo(r.created_at)+'</p>'+
-              (r.exec_note ? '<p class="text-xs text-amber-500 mt-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5">📝 '+escHtml(r.exec_note)+'</p>' : '')+
+              (r.exec_note ? '<p class="text-xs text-amber-500 mt-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5">'+escHtml(r.exec_note)+'</p>' : '')+
             '</div>'+
             '<div class="flex gap-2 flex-shrink-0 flex-wrap justify-end">'+
               ((r.exec_doc_url||r.panel_doc_url||r.chair_doc_url) ? '<a href="'+escHtml(r.exec_doc_url||r.panel_doc_url||r.chair_doc_url)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Google Docs</a>' : '')+
@@ -390,7 +500,7 @@
             '<div class="flex items-center gap-2 flex-wrap">'+
               '<span class="text-[11px] px-2.5 py-1 rounded-full font-semibold" style="background:'+typeColors[a.amendment_type]+'22;color:'+typeColors[a.amendment_type]+'">'+typeLabels[a.amendment_type]+'</span>'+
               '<span class="text-[11px] px-2.5 py-1 rounded-full status-'+a.status+'">'+statusLabel+'</span>'+
-              (a.submitter_country ? '<span class="text-[11px] px-2.5 py-1 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">📍 '+escHtml(a.submitter_country)+'</span>' : '')+
+              (a.submitter_country ? '<span class="text-[11px] px-2.5 py-1 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">'+escHtml(a.submitter_country)+'</span>' : '')+
             '</div>'+
             '<button onclick="clearAmendment(\''+a.id+'\')" title="Clear from your view" class="muted hover:text-red-400 transition flex items-center gap-1 text-[11px]"><i data-lucide="eraser" style="width:13px;height:13px"></i> Clear</button>'+
           '</div>'+
