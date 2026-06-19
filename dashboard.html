@@ -542,68 +542,30 @@
       return Math.floor(d/1440)+'d ago';
     }
 
-// ============================================================
-// PASTE THIS WHOLE FILE into dashboard.html, in place of the old
-// block that starts with:  sb.channel('delegate-updates')
-// and ends with:           .subscribe();
-// ============================================================
-
-function liveChannel({ client, name, committee, tables, onResume }) {
-  let channel = null;
-  function open() {
-    if (channel) return;
-    let ch = client.channel(name);
-    for (const t of tables) {
-      const cfg = { event: t.event || "*", schema: "public", table: t.table };
-      if (committee && t.scoped) cfg.filter = "committee=eq." + committee;
-      ch = ch.on("postgres_changes", cfg, t.handler);
-    }
-    ch.subscribe();
-    channel = ch;
-  }
-  function close() {
-    if (!channel) return;
-    client.removeChannel(channel);
-    channel = null;
-  }
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) { close(); }
-    else { open(); if (onResume) onResume(); }
-  });
-  window.addEventListener("pagehide", close);
-  open();
-  return { open, close };
-}
-
-liveChannel({
-  client: sb,
-  name: 'delegate-updates',
-  committee: currentProfile.committee,
-  onResume: () => { if (currentProfile) loadDashboard(currentProfile.id); },
-  tables: [
-    { table: 'resolutions', scoped: true, handler: (payload) => {
-        if (currentTab === 'resolutions') renderResolutions();
-        if (payload.new && payload.new.submitted_by === currentProfile.id && payload.old && payload.old.status !== payload.new.status) {
-          const labels = { pending:'Submitted', under_review:'Under review by chairboard', sent_to_panel:'Sent to approval panel', published:'Published', withdrawn:'Withdrawn' };
-          showToast('Your resolution status changed: ' + (labels[payload.new.status] || payload.new.status), payload.new.status === 'published' ? 'success' : 'info');
+    sb.channel('delegate-updates')
+      .on('postgres_changes',{event:'*',schema:'public',table:'resolutions'},(payload)=>{
+        if (currentTab==='resolutions') renderResolutions();
+        if (payload.new && payload.new.submitted_by===currentProfile.id && payload.old && payload.old.status!==payload.new.status) {
+          const labels = {pending:'Submitted',under_review:'Under review by chairboard',sent_to_panel:'Sent to approval panel',published:'Published',withdrawn:'Withdrawn'};
+          showToast('Your resolution status changed: '+(labels[payload.new.status]||payload.new.status), payload.new.status==='published'?'success':'info');
         }
-      }},
-    { table: 'amendments', scoped: true, handler: (payload) => {
-        if (currentTab === 'amendments') renderMyAmendments();
-        if (payload.new && payload.new.submitted_by === currentProfile.id && payload.old && payload.old.status !== payload.new.status && payload.new.status !== 'pending') {
-          showToast('Your amendment was ' + payload.new.status, payload.new.status === 'approved' ? 'success' : 'warning');
+      })
+      .on('postgres_changes',{event:'*',schema:'public',table:'amendments'},(payload)=>{
+        if (currentTab==='amendments') renderMyAmendments();
+        if (payload.new && payload.new.submitted_by===currentProfile.id && payload.old && payload.old.status!==payload.new.status && payload.new.status!=='pending') {
+          showToast('Your amendment was '+payload.new.status, payload.new.status==='approved'?'success':'warning');
         }
-      }},
-    { table: 'committee_feed', scoped: true, handler: (payload) => {
-        if (currentTab === 'feed') renderFeed();
-        if (payload.eventType === 'INSERT') showToast('New committee feed post', 'info');
-      }},
-    { table: 'announcements', scoped: false, handler: (payload) => {
+      })
+      .on('postgres_changes',{event:'*',schema:'public',table:'committee_feed'},(payload)=>{
+        if (currentTab==='feed') renderFeed();
+        if (payload.eventType==='INSERT') showToast('New committee feed post', 'info');
+      })
+      .on('postgres_changes',{event:'*',schema:'public',table:'announcements'},(payload)=>{
         if (currentProfile) loadDashboard(currentProfile.id);
-        if (payload.eventType === 'INSERT' && payload.new) showToast('New announcement: ' + payload.new.title, 'info');
-      }},
-  ],
-});
+        if (payload.eventType==='INSERT' && payload.new) showToast('New announcement: '+payload.new.title, 'info');
+      })
+      .subscribe();
+
     init();
   </script>
   <div id="toast-container" style="position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:340px;pointer-events:none"></div>
