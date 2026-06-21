@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full" data-theme="dark">
+<html lang="en" class="h-full" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -295,7 +295,7 @@
       document.getElementById('theme-icon').setAttribute('data-lucide', next === 'dark' ? 'sun' : 'moon');
       lucide.createIcons();
     }
-    (function(){ let s='dark'; try{s=localStorage.getItem('jmun_theme')||'dark';}catch(e){} document.documentElement.setAttribute('data-theme',s); })();
+    (function(){ let s='light'; try{s=localStorage.getItem('jmun_theme')||'light';}catch(e){} document.documentElement.setAttribute('data-theme',s); })();
     lucide.createIcons();
     document.getElementById('theme-icon').setAttribute('data-lucide', document.documentElement.getAttribute('data-theme')==='dark'?'sun':'moon');
     lucide.createIcons();
