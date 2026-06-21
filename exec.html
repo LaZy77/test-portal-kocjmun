@@ -404,9 +404,9 @@
 
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = 'login.html'; return; }
+      if (!session) { window.location.href = 'index.html'; return; }
       const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
-      if (!profile || profile.role !== 'exec') { window.location.href = 'login.html'; return; }
+      if (!profile || profile.role !== 'exec') { window.location.href = 'index.html'; return; }
       document.getElementById('nav-name').textContent = profile.name;
       document.getElementById('exec-name').textContent = profile.name;
       renderNextSession();
@@ -816,7 +816,7 @@
       XLSX.writeFile(wb, (selected || 'All Committees') + ' Attendance.xlsx');
     }
 
-    async function handleSignOut(){ await sb.auth.signOut(); window.location.href='login.html'; }
+    async function handleSignOut(){ await sb.auth.signOut(); window.location.href='index.html'; }
 
     function escHtml(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function escAttr(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/'/g,'\\\'').replace(/"/g,'&quot;'); }
