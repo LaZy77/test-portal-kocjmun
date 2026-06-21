@@ -302,14 +302,14 @@
 
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = 'login.html'; return; }
+      if (!session) { window.location.href = '/'; return; }
       const { data: roleCheck } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
       if (roleCheck && roleCheck.role === 'chair') { window.location.href = 'chair.html'; return; }
       if (roleCheck && roleCheck.role === 'exec')  { window.location.href = 'exec.html'; return; }
       await loadDashboard(session.user.id);
     }
 
-    async function handleSignOut() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+    async function handleSignOut() { await sb.auth.signOut(); window.location.href = '/'; }
 
     async function loadDashboard(userId) {
       try {
