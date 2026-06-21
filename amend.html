@@ -162,10 +162,10 @@
 
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = 'login.html'; return; }
+      if (!session) { window.location.href = '/'; return; }
 
       const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
-      if (!profile) { window.location.href = 'login.html'; return; }
+      if (!profile) { window.location.href = '/'; return; }
       currentProfile = profile;
 
       const { data: resolutions } = await sb
