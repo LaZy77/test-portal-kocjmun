@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full" data-theme="dark">
+<html lang="en" class="h-full" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -221,7 +221,7 @@
     // ─── Theme (persisted, shared key with dashboards) ───────────────
     (function initTheme(){
       let saved = 'dark';
-      try { saved = localStorage.getItem('jmun_theme') || 'dark'; } catch(e){}
+      try { saved = localStorage.getItem('jmun_theme') || 'light'; } catch(e){}
       document.documentElement.setAttribute('data-theme', saved);
     })();
     function toggleTheme(){
