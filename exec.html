@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exec Dashboard — Koç JMUN</title>
+  <link rel="icon" type="image/png" href="blackkocjmunlogo.png">
+  <link rel="apple-touch-icon" href="blackkocjmunlogo.png">
+
+// test
+  
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html,body{height:100%;margin:0;font-family:'Outfit',sans-serif}
+    [data-theme="dark"] body{background:#0a0e1a;color:#fff}
+    [data-theme="dark"] .surface{background:rgba(255,255,255,0.04);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
+    [data-theme="dark"] .surface-strong{background:rgba(255,255,255,0.07);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.12)}
+    [data-theme="dark"] .glow-border{box-shadow:0 0 20px rgba(93,23,95,0.25),inset 0 0 20px rgba(93,23,95,0.1);border:1px solid rgba(93,23,95,0.4)}
+    [data-theme="dark"] .glow-border-gold{box-shadow:0 0 20px rgba(212,168,83,0.15);border:1px solid rgba(212,168,83,0.3)}
+    [data-theme="dark"] .bg-grid{background-image:linear-gradient(rgba(93,23,95,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.05) 1px,transparent 1px);background-size:60px 60px}
+    [data-theme="dark"] .input-field{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0}
+    [data-theme="dark"] .input-field::placeholder{color:#4b5563}
+    [data-theme="dark"] .muted{color:#9ca3af}
+    [data-theme="dark"] .label-text{color:#6b7280}
+    [data-theme="dark"] .stat-card{background:rgba(255,255,255,0.04)}
+    [data-theme="dark"] .item-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)}
+    [data-theme="light"] body{background:#f5f3f7;color:#1a1523}
+    [data-theme="light"] .surface{background:rgba(255,255,255,0.7);backdrop-filter:blur(16px);border:1px solid rgba(93,23,95,0.1)}
+    [data-theme="light"] .surface-strong{background:#ffffff;border:1px solid rgba(93,23,95,0.12);box-shadow:0 4px 20px rgba(93,23,95,0.06)}
+    [data-theme="light"] .glow-border{box-shadow:0 4px 24px rgba(93,23,95,0.1);border:1px solid rgba(93,23,95,0.2)}
+    [data-theme="light"] .glow-border-gold{box-shadow:0 4px 24px rgba(212,168,83,0.12);border:1px solid rgba(212,168,83,0.3)}
+    [data-theme="light"] .bg-grid{background-image:linear-gradient(rgba(93,23,95,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(93,23,95,0.03) 1px,transparent 1px);background-size:60px 60px}
+    [data-theme="light"] .input-field{background:#ffffff;border:1px solid rgba(93,23,95,0.2);color:#1a1523}
+    [data-theme="light"] .input-field::placeholder{color:#9ca3af}
+    [data-theme="light"] .muted{color:#6b7280}
+    [data-theme="light"] .label-text{color:#9ca3af}
+    [data-theme="light"] .stat-card{background:#faf9fb;border:1px solid rgba(93,23,95,0.08)}
+    [data-theme="light"] .item-card{background:#faf9fb;border:1px solid rgba(93,23,95,0.1)}
+    .input-field{transition:border-color .2s,box-shadow .2s}
+    .input-field:focus{outline:none;border-color:rgba(93,23,95,0.7);box-shadow:0 0 0 3px rgba(93,23,95,0.15)}
+    @keyframes pulse-glow{0%,100%{opacity:.4}50%{opacity:.8}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .animate-pulse-glow{animation:pulse-glow 3s ease-in-out infinite}
+    .animate-fadein{animation:fadeIn 0.4s ease-out forwards}
+    .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
+    .skeleton{background:linear-gradient(90deg,rgba(128,128,128,0.1) 25%,rgba(128,128,128,0.2) 50%,rgba(128,128,128,0.1) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px}
+    .status-pending{background:rgba(234,179,8,0.15);color:#a16207;border:1px solid rgba(234,179,8,0.3)}
+    .status-received{background:rgba(59,130,246,0.15);color:#1d4ed8;border:1px solid rgba(59,130,246,0.3)}
+    .status-under_review{background:rgba(99,102,241,0.15);color:#4338ca;border:1px solid rgba(99,102,241,0.3)}
+    .status-sent_to_panel{background:rgba(124,58,237,0.15);color:#6d28d9;border:1px solid rgba(124,58,237,0.3)}
+    .status-published{background:rgba(34,197,94,0.15);color:#15803d;border:1px solid rgba(34,197,94,0.3)}
+    .status-withdrawn{background:rgba(107,114,128,0.15);color:#6b7280;border:1px solid rgba(107,114,128,0.3)}
+    [data-theme="dark"] .status-pending{color:#fde047}
+    [data-theme="dark"] .status-received{color:#93c5fd}
+    [data-theme="dark"] .status-under_review{color:#a5b4fc}
+    [data-theme="dark"] .status-sent_to_panel{color:#c4b5fd}
+    [data-theme="dark"] .status-published{color:#86efac}
+    [data-theme="dark"] .status-withdrawn{color:#9ca3af}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem}
+    .tab-btn{color:#9ca3af;border-bottom:2px solid transparent;transition:all .3s;padding-bottom:8px}
+    .tab-btn.active{color:#a855f7;border-bottom-color:#5D175F}
+    [data-theme="light"] .tab-btn{color:#6b7280}
+    [data-theme="light"] .tab-btn.active{color:#5D175F}
+    .badge-new{background:rgba(239,68,68,0.2);color:#dc2626;border:1px solid rgba(239,68,68,0.3);font-size:10px;padding:1px 6px;border-radius:99px}
+    [data-theme="dark"] .badge-new{color:#fca5a5}
+    .tally-table{border-collapse:collapse;width:100%;min-width:480px}
+    .tally-table th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:10px 12px;text-align:center;white-space:nowrap;background:rgba(93,23,95,0.1);color:#5D175F}
+    .tally-table th:first-child{text-align:left}
+    [data-theme="dark"] .tally-table th{background:rgba(93,23,95,0.22);color:#e9d5ff}
+    .tally-table td{padding:8px 12px;border-bottom:1px solid rgba(128,128,128,0.08);vertical-align:middle;text-align:center}
+    .tally-table td:first-child{text-align:left}
+    .tally-table tr:last-child td{border-bottom:none}
+    .tally-table tfoot td{border-top:2px solid rgba(128,128,128,0.15);border-bottom:none;padding-top:10px}
+    .priority-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:6px 8px;border-radius:8px}
+    .priority-row:nth-child(odd){background:rgba(128,128,128,0.05)}
+    .school-group{background:rgba(93,23,95,0.035)}
+    [data-theme="dark"] .school-group{background:rgba(93,23,95,0.09)}
+    .attendance-pill{display:inline-block;padding:5px 16px;border-radius:99px;font-size:12px;font-weight:600;user-select:none}
+    .attendance-pill.present{background:rgba(34,197,94,0.14);color:#16a34a;border:1px solid rgba(34,197,94,0.3)}
+    .attendance-pill.absent{background:rgba(239,68,68,0.12);color:#dc2626;border:1px solid rgba(239,68,68,0.28)}
+    [data-theme="dark"] .attendance-pill.present{color:#4ade80}
+    [data-theme="dark"] .attendance-pill.absent{color:#f87171}
+    [data-theme="light"] .text-purple-400{color:#5D175F}
+    [data-theme="light"] .text-purple-200{color:#5D175F}
+    .btn-success{background:rgba(34,197,94,0.14);color:#16a34a;border:1px solid rgba(34,197,94,0.3)}
+    .btn-danger{background:rgba(239,68,68,0.12);color:#dc2626;border:1px solid rgba(239,68,68,0.28)}
+    .btn-info{background:rgba(59,130,246,0.12);color:#1d4ed8;border:1px solid rgba(59,130,246,0.28)}
+    .btn-warn{background:rgba(245,158,11,0.12);color:#b45309;border:1px solid rgba(245,158,11,0.28)}
+    .btn-success:hover,.btn-danger:hover,.btn-info:hover,.btn-warn:hover{opacity:.85}
+    [data-theme="dark"] .btn-success{color:#4ade80}
+    [data-theme="dark"] .btn-danger{color:#f87171}
+    [data-theme="dark"] .btn-info{color:#60a5fa}
+    [data-theme="dark"] .btn-warn{color:#fbbf24}
+  </style>
+</head>
+<body class="h-full overflow-auto bg-grid">
+  <div class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:0">
+    <div class="absolute top-[10%] left-[15%] w-96 h-96 rounded-full bg-purple-900/10 blur-3xl animate-pulse-glow"></div>
+    <div class="absolute bottom-[20%] right-[10%] w-80 h-80 rounded-full bg-amber-900/5 blur-3xl animate-pulse-glow" style="animation-delay:1.5s"></div>
+  </div>
+
+  <div class="relative z-10 w-full">
+    <nav class="w-full px-4 sm:px-8 py-4 border-b" style="border-color:rgba(128,128,128,0.1)">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="kocjmunlogo.png" alt="Koç JMUN" style="height:40px;width:auto">
+          <div class="h-5 w-px" style="background:rgba(128,128,128,0.2)"></div>
+          <span class="text-xs font-medium text-yellow-500 uppercase tracking-wider">Executive Portal</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="toggleTheme()" class="p-2 rounded-lg surface hover:opacity-80 transition" title="Toggle theme">
+            <i data-lucide="sun" style="width:18px;height:18px" id="theme-icon"></i>
+          </button>
+          <span class="text-sm muted hidden sm:inline">Signed in as <span class="font-medium" id="nav-name" style="color:inherit">—</span></span>
+          <button onclick="handleSignOut()" class="px-3 py-1.5 rounded-lg text-xs text-purple-200 hover:bg-purple-500/10 transition" style="border:1px solid rgba(93,23,95,0.4)">Sign Out</button>
+        </div>
+      </div>
+    </nav>
+
+    <section class="max-w-7xl mx-auto px-4 sm:px-8 pt-8 pb-6 animate-fadein">
+      <div class="surface-strong rounded-2xl p-6 glow-border-gold mb-8">
+        <div class="flex items-start justify-between flex-wrap gap-4 mb-5 pb-4 border-b" style="border-color:rgba(128,128,128,0.1)">
+          <div>
+            <p class="text-xs label-text mb-1">Executive Dashboard</p>
+            <h1 class="text-xl font-semibold">Welcome, <span class="text-yellow-500" id="exec-name">—</span></h1>
+            <p class="text-sm muted mt-1">Full access across all committees</p>
+          </div>
+          <button onclick="openAnnouncementModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition" style="background:#b45309">
+            <i data-lucide="megaphone" style="width:16px;height:16px"></i> Post Announcement
+          </button>
+        </div>
+        <div class="surface rounded-xl p-4" id="exec-next-session-block" style="display:none">
+          <p class="text-xs label-text mb-2">Upcoming</p>
+          <div class="flex items-center justify-between">
+            <div><p class="text-sm font-medium" id="exec-session-title-text">—</p><p class="text-xs muted"><span id="exec-session-time-range">—</span></p></div>
+            <span id="exec-session-countdown" class="text-[10px] px-2 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Awaiting you</p><p class="text-2xl font-bold text-amber-400" id="stat-pending">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">With chairs</p><p class="text-2xl font-bold text-blue-400" id="stat-received">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Published</p><p class="text-2xl font-bold text-green-400" id="stat-published">—</p></div>
+        <div class="stat-card rounded-xl p-4"><p class="text-[10px] label-text uppercase tracking-wider mb-1">Total</p><p class="text-2xl font-bold" id="stat-total">—</p></div>
+      </div>
+
+      <div class="flex gap-6 border-b mb-6 overflow-x-auto" style="border-color:rgba(128,128,128,0.1)">
+        <button class="tab-btn active text-sm font-medium whitespace-nowrap" onclick="switchTab('inbox')" id="tab-inbox">Awaiting Approval <span id="inbox-badge" class="badge-new ml-1 hidden">0</span></button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('published')" id="tab-published">Published</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('announcements')" id="tab-announcements">Announcements</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('schedule')" id="tab-schedule">Schedule</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('tally')" id="tab-tally">Tally</button>
+        <button class="tab-btn text-sm font-medium whitespace-nowrap" onclick="switchTab('attendance')" id="tab-attendance">Attendance</button>
+      </div>
+
+      <!-- Filters -->
+      <div id="filter-bar" class="flex flex-wrap gap-3 mb-6">
+        <div>
+          <label class="block text-[10px] label-text uppercase tracking-wider mb-1">Committee</label>
+          <select id="filter-committee" onchange="applyFilters()" class="input-field px-4 py-2.5 rounded-xl text-sm">
+            <option value="">All Committees</option>
+            <option value="UNHRC">UNHRC</option>
+            <option value="UNSC">UNSC</option>
+            <option value="ECOSOC">ECOSOC</option>
+            <option value="GA1">GA1</option>
+            <option value="GA3">GA3</option>
+          </select>
+        </div>
+        <div id="filter-agenda-wrap">
+          <label class="block text-[10px] label-text uppercase tracking-wider mb-1">Agenda Item</label>
+          <select id="filter-agenda" onchange="applyFilters()" class="input-field px-4 py-2.5 rounded-xl text-sm">
+            <option value="">All Agenda Items</option>
+            <option value="1">Agenda Item 1</option>
+            <option value="2">Agenda Item 2</option>
+            <option value="3">Agenda Item 3</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="tally-actions" class="hidden mb-4">
+        <button onclick="exportTallyToExcel()" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:#5D175F">
+          <i data-lucide="download" style="width:14px;height:14px"></i> Export to Excel
+        </button>
+      </div>
+
+      <div id="attendance-actions" class="hidden mb-4">
+        <button onclick="exportAttendanceToExcel()" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition" style="background:#5D175F">
+          <i data-lucide="download" style="width:14px;height:14px"></i> Export to Excel
+        </button>
+      </div>
+
+      <div class="surface-strong rounded-2xl p-5 sm:p-6 glow-border">
+        <div id="content-list" class="space-y-3">
+          <div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>
+          <div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-56"></div></div>
+        </div>
+      </div>
+      <footer class="border-t pt-8" style="border-color:rgba(128,128,128,0.1)">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs muted">
+          <div class="text-center sm:text-left"><p class="font-medium">Portal — Koç JMUN</p><p>For registered participants only.</p></div>
+          <div class="flex gap-4"><a href="https://kocjmun.com" class="hover:opacity-70 transition">Main Website</a><a href="https://kocjmun.com/contact" class="hover:opacity-70 transition">Contact</a></div>
+        </div>
+      </footer>
+    </section>
+  </div>
+
+  <!-- Review Modal -->
+  <div id="review-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-xl glow-border overflow-y-auto" style="max-height:90vh">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold">Review Resolution</h2>
+        <button onclick="closeReviewModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <div class="item-card rounded-xl p-4 mb-5">
+        <p class="text-xs label-text mb-1">Resolution</p>
+        <p class="font-semibold" id="review-title">—</p>
+        <p class="text-xs muted mt-0.5" id="review-committee">—</p>
+        <p class="text-xs mt-1" id="review-submitter"></p>
+      </div>
+      <div class="space-y-4">
+        <a id="review-chair-doc" href="#" target="_blank" class="flex items-center gap-2 px-4 py-3 rounded-xl text-sm btn-info transition">
+          <i data-lucide="external-link" style="width:16px;height:16px"></i> Open Submitted Google Doc
+        </a>
+        <div class="border-t pt-4" style="border-color:rgba(128,128,128,0.1)">
+          <p class="text-xs font-medium label-text uppercase tracking-wider mb-3">Approve &amp; Project on All Panels</p>
+          <div class="space-y-3">
+            <div><label class="block text-xs muted mb-1.5">Google Docs link shown on all panels <span class="label-text">(leave blank to use the submitted doc)</span></label>
+              <input id="exec-doc-url" type="url" placeholder="https://docs.google.com/..." class="input-field w-full px-4 py-3 rounded-xl text-sm font-mono"></div>
+            <div><label class="block text-xs muted mb-1.5">Note to Chair (optional)</label>
+              <input id="exec-note" type="text" placeholder="e.g. Formatting applied to clauses 3 & 4" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+          </div>
+        </div>
+        <div id="review-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+        <div class="flex gap-3 pt-2">
+          <button onclick="closeReviewModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+          <button onclick="publishResolution()" id="btn-publish" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#16a34a">
+            <span id="publish-btn-text">Approve &amp; Project</span><span id="publish-spinner" class="hidden"><span class="spinner"></span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Announcement Modal -->
+  <div id="announcement-modal" class="modal-overlay hidden">
+    <div class="surface-strong rounded-2xl p-6 w-full max-w-lg glow-border">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold">Post Announcement</h2>
+        <button onclick="closeAnnouncementModal()" class="muted hover:opacity-70"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+      </div>
+      <div class="space-y-4">
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Title</label>
+          <input id="ann-title" type="text" placeholder="e.g. Lunch break extended" class="input-field w-full px-4 py-3 rounded-xl text-sm"></div>
+        <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Message</label>
+          <textarea id="ann-body" rows="3" placeholder="Full announcement text..." class="input-field w-full px-4 py-3 rounded-xl text-sm resize-none"></textarea></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Type</label>
+            <select id="ann-type" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+              <option value="info">Info</option><option value="urgent">Urgent</option>
+              <option value="warning">Warning</option><option value="success">Success</option>
+            </select></div>
+          <div><label class="block text-xs font-medium label-text mb-1.5 uppercase tracking-wider">Committee</label>
+            <select id="ann-committee" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+              <option value="">All Committees</option><option value="UNHRC">UNHRC</option><option value="UNSC">UNSC</option>
+              <option value="ECOSOC">ECOSOC</option><option value="GA1">GA1</option><option value="GA3">GA3</option>
+            </select></div>
+        </div>
+        <div id="ann-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+        <div class="flex gap-3 pt-2">
+          <button onclick="closeAnnouncementModal()" class="flex-1 py-3 rounded-xl text-sm font-medium muted hover:opacity-80 transition surface">Cancel</button>
+          <button onclick="postAnnouncement()" id="ann-btn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition flex items-center justify-center gap-2" style="background:#b45309">
+            <span id="ann-btn-text">Post</span><span id="ann-spinner" class="hidden"><span class="spinner"></span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://guekhtmrtohkrsgfwjnj.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZWtodG1ydG9oa3JzZ2Z3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTA2ODIsImV4cCI6MjA5NzA4NjY4Mn0.itQUPtckChXJApE6993hTgROdK_RkuQD7tsvp3M5R_I';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const BUILD = '2026-06-18';
+    console.log('%cKoç JMUN · exec.html · build '+BUILD,'color:#5D175F;font-weight:700;font-size:13px');
+    document.addEventListener('DOMContentLoaded',function(){var b=document.createElement('div');b.textContent='build '+BUILD;b.style.cssText='position:fixed;bottom:5px;right:7px;font:600 9px/1 Outfit,sans-serif;letter-spacing:.04em;opacity:.30;color:#5D175F;pointer-events:none;z-index:9999';document.body.appendChild(b);});
+
+    let currentTab = 'inbox';
+    let tallyByCommittee = {};
+    let attendanceSessionKey = null;
+    let allResolutions = [];
+    let currentReviewId = null;
+
+    // ── PLACEHOLDER SCHEDULE ──────────────────────────────────────────────
+    // Same schedule for every committee. Edit PLACEHOLDER_DATES (real conference
+    // dates) and PLACEHOLDER_SCHEDULE (real session/break times) once finalised —
+    // nothing else in the code needs to change.
+    const PLACEHOLDER_DATES = ['2026-07-17','2026-07-18','2026-07-19'];
+    const PLACEHOLDER_SCHEDULE = [
+      { label:'Day 1', items:[
+        {title:'Opening Ceremony', start:'09:00', end:'10:00'},
+        {title:'Session I',        start:'10:15', end:'12:00'},
+        {title:'Lunch Break',      start:'12:00', end:'13:00'},
+        {title:'Session II',       start:'13:00', end:'15:00'},
+        {title:'Coffee Break',     start:'15:00', end:'15:20'},
+        {title:'Session III',      start:'15:20', end:'17:00'}
+      ]},
+      { label:'Day 2', items:[
+        {title:'Session IV',       start:'09:00', end:'11:00'},
+        {title:'Coffee Break',     start:'11:00', end:'11:20'},
+        {title:'Session V',        start:'11:20', end:'13:00'},
+        {title:'Lunch Break',      start:'13:00', end:'14:00'},
+        {title:'Session VI',       start:'14:00', end:'16:00'},
+        {title:'Social Night',     start:'19:00', end:'22:00'}
+      ]},
+      { label:'Day 3', items:[
+        {title:'Session VII',      start:'09:00', end:'11:00'},
+        {title:'Coffee Break',     start:'11:00', end:'11:20'},
+        {title:'Session VIII',     start:'11:20', end:'13:00'},
+        {title:'Lunch Break',      start:'13:00', end:'14:00'},
+        {title:'Closing Ceremony', start:'14:30', end:'16:00'}
+      ]}
+    ];
+    function buildScheduleEvents() {
+      const events = [];
+      PLACEHOLDER_SCHEDULE.forEach((day,i) => {
+        const dateStr = PLACEHOLDER_DATES[i];
+        if (!dateStr) return;
+        day.items.forEach(it => {
+          events.push({ title: it.title, start: new Date(dateStr+'T'+it.start+':00'), end: new Date(dateStr+'T'+it.end+':00') });
+        });
+      });
+      return events.sort((a,b) => a.start - b.start);
+    }
+    function getCurrentOrNextScheduleItem(now) {
+      const events = buildScheduleEvents();
+      for (const ev of events) { if (now < ev.end) return ev; }
+      return null;
+    }
+    function fmtTime(d) { return d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+    function defaultScheduleDayIndex(now) {
+      for (let i=0;i<PLACEHOLDER_DATES.length;i++){
+        const dayEnd = new Date(PLACEHOLDER_DATES[i]+'T23:59:59');
+        if (now <= dayEnd) return i;
+      }
+      return PLACEHOLDER_DATES.length-1;
+    }
+    let scheduleSelectedDay = null;
+    function selectScheduleDay(i) { scheduleSelectedDay = i; renderSchedule(); }
+
+    function renderSchedule() {
+      const c = document.getElementById('content-list');
+      const now = new Date();
+      if (scheduleSelectedDay === null) scheduleSelectedDay = defaultScheduleDayIndex(now);
+      const next = getCurrentOrNextScheduleItem(now);
+      let html = '<div class="flex gap-6 border-b mb-5 overflow-x-auto" style="border-color:rgba(128,128,128,0.1)">'+
+        PLACEHOLDER_SCHEDULE.map((day,i) => '<button onclick="selectScheduleDay('+i+')" class="tab-btn text-sm font-medium whitespace-nowrap'+(i===scheduleSelectedDay?' active':'')+'">'+escHtml(day.label)+'</button>').join('')+
+      '</div>';
+      html += '<p class="text-[10px] muted mb-4">Placeholder schedule — will be updated once the final timetable is confirmed.</p>';
+      const dateStr = PLACEHOLDER_DATES[scheduleSelectedDay];
+      PLACEHOLDER_SCHEDULE[scheduleSelectedDay].items.forEach(it => {
+        const start = new Date(dateStr+'T'+it.start+':00');
+        const end = new Date(dateStr+'T'+it.end+':00');
+        const isNow = now>=start && now<end;
+        const isNext = !isNow && next && next.title===it.title && next.start.getTime()===start.getTime();
+        const isPast = now>=end;
+        html += '<div class="item-card rounded-xl p-3 mb-2 flex items-center justify-between'+(isPast?' opacity-50':'')+'">'+
+          '<div><p class="text-sm font-medium">'+escHtml(it.title)+'</p><p class="text-xs muted">'+fmtTime(start)+'–'+fmtTime(end)+'</p></div>'+
+          (isNow ? '<span class="text-[10px] px-2 py-0.5 rounded-full status-published">Now</span>' : (isNext ? '<span class="text-[10px] px-2 py-0.5 rounded-full status-pending">Next</span>' : ''))+
+        '</div>';
+      });
+      c.innerHTML = html;
+    }
+
+    function renderNextSession() {
+      const item = getCurrentOrNextScheduleItem(new Date());
+      if (!item) return;
+      document.getElementById('exec-next-session-block').style.display = 'block';
+      document.getElementById('exec-session-title-text').textContent = item.title;
+      document.getElementById('exec-session-time-range').textContent = fmtTime(item.start)+'–'+fmtTime(item.end);
+      const diffMins = Math.round((item.start - new Date())/60000);
+      const cd = document.getElementById('exec-session-countdown');
+      if (diffMins<0) cd.textContent='In progress';
+      else if (diffMins<60) cd.textContent='In '+diffMins+' min';
+      else cd.textContent='In '+Math.floor(diffMins/60)+'h';
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('jmun_theme', next); } catch(e){}
+      document.getElementById('theme-icon').setAttribute('data-lucide', next === 'dark' ? 'sun' : 'moon');
+      lucide.createIcons();
+    }
+    (function(){ let s='light'; try{s=localStorage.getItem('jmun_theme')||'light';}catch(e){} document.documentElement.setAttribute('data-theme',s); })();
+    lucide.createIcons();
+    document.getElementById('theme-icon').setAttribute('data-lucide', document.documentElement.getAttribute('data-theme')==='dark'?'sun':'moon');
+    lucide.createIcons();
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = ''; return; }
+      const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+      if (!profile || profile.role !== 'exec') { window.location.href = ''; return; }
+      document.getElementById('nav-name').textContent = profile.name;
+      document.getElementById('exec-name').textContent = profile.name;
+      renderNextSession();
+      await loadAll();
+    }
+
+    async function loadAll() {
+      const { data, error } = await sb.from('resolutions').select('*').order('created_at',{ascending:false});
+      if (error) { console.error(error); return; }
+      allResolutions = data || [];
+      updateStats();
+      renderTab(currentTab);
+      lucide.createIcons();
+    }
+
+    function updateStats() {
+      document.getElementById('stat-pending').textContent = allResolutions.filter(r=>r.status==='sent_to_panel').length;
+      document.getElementById('stat-received').textContent = allResolutions.filter(r=>r.status==='pending'||r.status==='under_review').length;
+      document.getElementById('stat-published').textContent = allResolutions.filter(r=>r.status==='published').length;
+      document.getElementById('stat-total').textContent = allResolutions.length;
+      const pending = allResolutions.filter(r=>r.status==='sent_to_panel').length;
+      const badge = document.getElementById('inbox-badge');
+      if (pending>0){ badge.textContent=pending; badge.classList.remove('hidden'); } else badge.classList.add('hidden');
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.getElementById('tab-'+tab).classList.add('active');
+      document.getElementById('filter-bar').style.display = (tab === 'announcements' || tab === 'schedule') ? 'none' : 'flex';
+      document.getElementById('filter-agenda-wrap').style.display = (tab === 'tally' || tab === 'attendance') ? 'none' : 'block';
+      document.getElementById('tally-actions').classList.toggle('hidden', tab !== 'tally');
+      document.getElementById('attendance-actions').classList.toggle('hidden', tab !== 'attendance');
+      renderTab(tab);
+      lucide.createIcons();
+    }
+
+    // "UNHRC 1.2" / "GA1 2.3" / "1.2" -> agenda number "1" (the part before the dot)
+    function agendaFromCode(code) {
+      const m = String(code||'').match(/(\d+)\s*\.\s*\d+/);
+      return m ? m[1] : null;
+    }
+    function matchesAgenda(r, sel) {
+      if (!sel) return true;
+      const fromCode = agendaFromCode(r.code);
+      if (fromCode) return fromCode === sel;          // code is the source of truth
+      const am = String(r.agenda_item||'').match(/(\d+)/);  // fallback to the agenda_item field
+      return am ? am[1] === sel : false;
+    }
+
+    function getFiltered(statusFilter) {
+      const committee = document.getElementById('filter-committee').value;
+      const agenda = document.getElementById('filter-agenda').value;
+      return allResolutions.filter(r => {
+        if (statusFilter && r.status !== statusFilter) return false;
+        if (committee && r.committee !== committee) return false;
+        if (!matchesAgenda(r, agenda)) return false;
+        return true;
+      });
+    }
+
+    function applyFilters() { renderTab(currentTab); lucide.createIcons(); }
+
+    function renderTab(tab) {
+      const c = document.getElementById('content-list');
+      if (tab === 'inbox') renderResList(getFiltered('sent_to_panel'), c, 'inbox');
+      else if (tab === 'published') renderResList(getFiltered('published'), c, 'published');
+      else if (tab === 'announcements') renderAnnouncementsTab(c);
+      else if (tab === 'schedule') renderSchedule();
+      else if (tab === 'tally') ensureTallyLoaded().then(renderTallyView);
+      else if (tab === 'attendance') openAttendanceTab();
+    }
+
+    function renderResList(items, c, mode) {
+      if (!items.length) { c.innerHTML = '<div class="text-center py-12 muted"><i data-lucide="inbox" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">Nothing here.</p></div>'; return; }
+      c.innerHTML = items.map(r => {
+        const statusLabel = {pending:'With chair',under_review:'Under review',sent_to_panel:'Awaiting approval',published:'Published',withdrawn:'Withdrawn'}[r.status];
+        const submitterTag = r.submitter_role==='delegate' && r.submitter_country
+          ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(147,51,234,0.12);color:#a855f7">'+escHtml(r.submitter_country)+'</span>' : '';
+        const docUrl = r.exec_doc_url || r.panel_doc_url || r.chair_doc_url;
+        const deleteBtn = '<button onclick="deleteResolution(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg btn-danger transition">Delete</button>';
+        const actions = (mode==='inbox')
+          ? '<button onclick="openReviewModal(\''+r.id+'\')" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Review &amp; approve</button>'+deleteBtn
+          : (docUrl ? '<a href="'+escHtml(docUrl)+'" target="_blank" class="px-3 py-1.5 text-xs font-medium rounded-lg text-white transition" style="background:#5D175F">Google Docs</a>' : '')+deleteBtn;
+        return '<div class="item-card rounded-xl p-4 hover:opacity-95 transition">'+
+          '<div class="flex items-start justify-between gap-4">'+
+            '<div class="flex-1 min-w-0">'+
+              '<div class="flex items-center gap-2 mb-1 flex-wrap">'+
+                '<span class="text-xs font-mono font-semibold text-purple-400">'+escHtml(r.code||'—')+'</span>'+
+                (r.agenda_item ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.08)">'+escHtml(r.agenda_item)+'</span>' : (agendaFromCode(r.code) ? '<span class="text-[10px] px-2 py-0.5 rounded-full" style="background:rgba(128,128,128,0.08)">Agenda Item '+agendaFromCode(r.code)+'</span>' : ''))+
+                '<span class="text-[10px] px-2 py-0.5 rounded-full status-'+r.status+'">'+statusLabel+'</span>'+
+                submitterTag+
+              '</div>'+
+              '<p class="text-sm font-medium mb-1 truncate">'+escHtml(r.title||r.summary||'Resolution')+'</p>'+
+              '<p class="text-[10px] muted">'+timeAgo(r.created_at)+'</p>'+
+            '</div>'+
+            '<div class="flex gap-2 flex-shrink-0">'+actions+'</div>'+
+          '</div></div>';
+      }).join('');
+    }
+
+    async function renderAnnouncementsTab(c) {
+      const { data } = await sb.from('announcements').select('*').order('created_at',{ascending:false});
+      if (!data || !data.length) { c.innerHTML = '<p class="text-center muted py-8 text-sm">No announcements yet.</p>'; return; }
+      const colors = {info:'#a855f7',urgent:'#ef4444',warning:'#f97316',success:'#22c55e'};
+      c.innerHTML = data.map(a =>
+        '<div class="item-card rounded-xl p-4">'+
+          '<div class="flex items-start justify-between gap-4">'+
+            '<div>'+
+              '<div class="flex items-center gap-2 mb-1">'+
+                '<span class="text-xs font-medium uppercase" style="color:'+(colors[a.type]||'#a855f7')+'">'+a.type+'</span>'+
+                (a.committee ? '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(128,128,128,0.1)">'+escHtml(a.committee)+'</span>' : '<span class="text-[10px] px-2 py-0.5 rounded" style="background:rgba(128,128,128,0.1)">All</span>')+
+              '</div>'+
+              '<p class="text-sm font-semibold mb-0.5">'+escHtml(a.title)+'</p>'+
+              '<p class="text-xs muted">'+escHtml(a.body)+'</p>'+
+              '<p class="text-[10px] muted mt-1">'+timeAgo(a.created_at)+'</p>'+
+            '</div>'+
+            '<button onclick="deleteAnnouncement(\''+a.id+'\')" class="muted hover:text-red-400 transition flex-shrink-0"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>'+
+          '</div></div>').join('');
+      lucide.createIcons();
+    }
+
+    function openReviewModal(id) {
+      const r = allResolutions.find(x=>x.id===id);
+      if (!r) return;
+      currentReviewId = id;
+      document.getElementById('review-title').textContent = r.title || r.summary || 'Resolution';
+      document.getElementById('review-committee').textContent = r.committee + ' · ' + (r.code||'') + (r.agenda_item ? ' · '+r.agenda_item : '');
+      document.getElementById('review-submitter').innerHTML = r.submitter_role==='delegate' && r.submitter_country
+        ? '<span style="color:#a855f7">Submitted by delegation: '+escHtml(r.submitter_country)+'</span>' : '<span class="muted">Submitted by chair</span>';
+      document.getElementById('review-chair-doc').href = r.panel_doc_url || r.chair_doc_url || '#';
+      document.getElementById('exec-doc-url').value = r.exec_doc_url || '';
+      document.getElementById('exec-note').value = r.exec_note || '';
+      document.getElementById('review-error').classList.add('hidden');
+      document.getElementById('review-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+    function closeReviewModal() { document.getElementById('review-modal').classList.add('hidden'); currentReviewId=null; }
+
+    async function deleteResolution(id) {
+      if(!confirm('Permanently delete this resolution? This cannot be undone.')) return;
+      const { error } = await sb.from('resolutions').delete().eq('id', id);
+      if(error){ console.error(error); alert('Could not delete.'); return; }
+      await loadAll(); lucide.createIcons();
+    }
+
+    async function publishResolution() {
+      const execDocUrl=document.getElementById('exec-doc-url').value.trim();
+      const note=document.getElementById('exec-note').value.trim();
+      const errEl=document.getElementById('review-error');
+      errEl.classList.add('hidden');
+      document.getElementById('publish-btn-text').textContent='Projecting…';
+      document.getElementById('publish-spinner').classList.remove('hidden');
+      const { error } = await sb.from('resolutions').update({
+        exec_doc_url: execDocUrl||null, exec_note: note||null,
+        status:'published', updated_at:new Date().toISOString()
+      }).eq('id',currentReviewId);
+      document.getElementById('publish-btn-text').textContent='Approve & Project';
+      document.getElementById('publish-spinner').classList.add('hidden');
+      if(error){ errEl.textContent='Failed to publish.'; errEl.classList.remove('hidden'); return; }
+      closeReviewModal(); await loadAll(); lucide.createIcons();
+    }
+
+    function openAnnouncementModal(){ document.getElementById('announcement-modal').classList.remove('hidden'); }
+    function closeAnnouncementModal(){ document.getElementById('announcement-modal').classList.add('hidden'); }
+    async function postAnnouncement() {
+      const title=document.getElementById('ann-title').value.trim();
+      const body=document.getElementById('ann-body').value.trim();
+      const type=document.getElementById('ann-type').value;
+      const committee=document.getElementById('ann-committee').value||null;
+      const errEl=document.getElementById('ann-error');
+      errEl.classList.add('hidden');
+      if(!title||!body){ errEl.textContent='Title and message are required.'; errEl.classList.remove('hidden'); return; }
+      document.getElementById('ann-btn').disabled=true;
+      document.getElementById('ann-btn-text').textContent='Posting…';
+      document.getElementById('ann-spinner').classList.remove('hidden');
+      const { error } = await sb.from('announcements').insert({title,body,type,committee});
+      document.getElementById('ann-btn').disabled=false;
+      document.getElementById('ann-btn-text').textContent='Post';
+      document.getElementById('ann-spinner').classList.add('hidden');
+      if(error){ console.error(error); errEl.textContent='Failed to post.'; errEl.classList.remove('hidden'); return; }
+      closeAnnouncementModal();
+      document.getElementById('ann-title').value=''; document.getElementById('ann-body').value='';
+      if(currentTab==='announcements'){ renderAnnouncementsTab(document.getElementById('content-list')); lucide.createIcons(); }
+    }
+
+    async function deleteAnnouncement(id) {
+      if(!confirm('Delete this announcement?')) return;
+      await sb.from('announcements').delete().eq('id',id);
+      renderAnnouncementsTab(document.getElementById('content-list')); lucide.createIcons();
+    }
+
+    // ── TALLY (read-only, all committees) ───────────────────────────────────
+    function tallyTotal(t){ return t.poi*1 + t.speech*2 + t.amendment*3; }
+    function schoolGroupKey(e){ return (e.school||'zzz_no_school') + '|' + e.country; }
+
+    async function loadAllTally() {
+      const { data: delegates } = await sb.from('profiles').select('id,name,country,school,committee')
+        .eq('role','delegate').order('committee',{ascending:true}).order('country',{ascending:true});
+      const { data: rows } = await sb.from('tally').select('*');
+      const rowMap = {}; (rows||[]).forEach(r => rowMap[r.delegate_id] = r);
+      const byCommittee = {};
+      (delegates||[]).forEach(d => {
+        if (!byCommittee[d.committee]) byCommittee[d.committee] = {};
+        const r = rowMap[d.id] || {};
+        byCommittee[d.committee][d.id] = { name: d.name, country: d.country||'—', school: d.school||'', poi:r.poi_count||0, speech:r.speech_count||0, amendment:r.amendment_count||0 };
+      });
+      tallyByCommittee = byCommittee;
+    }
+
+    async function ensureTallyLoaded() {
+      await loadAllTally(); // always refresh — exec needs the current picture across committees
+    }
+
+    function renderCommitteeTallyBlock(committee, map) {
+      const entries = Object.entries(map).map(([id,t]) => ({ id, ...t, total: tallyTotal(t) }));
+      const priority = [...entries].sort((a,b) => a.total-b.total || a.country.localeCompare(b.country));
+      const rows = [...entries].sort((a,b) => schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
+      const totals = entries.reduce((acc,e)=>({poi:acc.poi+e.poi,speech:acc.speech+e.speech,amendment:acc.amendment+e.amendment,total:acc.total+e.total}),{poi:0,speech:0,amendment:0,total:0});
+
+      const priorityHtml = entries.length
+        ? priority.map((e,i) => '<div class="priority-row"><span class="flex items-center gap-2"><span class="label-text" style="width:16px;display:inline-block;font-weight:600">'+(i+1)+'</span>'+escHtml(e.country)+'</span><span class="font-semibold text-purple-400">'+e.total+'</span></div>').join('')
+        : '<p class="text-xs muted px-2 py-1">No delegates yet.</p>';
+
+      let lastSchool = null, groupToggle = false;
+      const rowsHtml = entries.length
+        ? rows.map(e => {
+            if (e.school !== lastSchool) { groupToggle = !groupToggle; lastSchool = e.school; }
+            return '<tr class="'+(groupToggle?'school-group':'')+'"><td><p class="font-medium text-sm">'+escHtml(e.country)+'</p><p class="text-[11px] muted">'+escHtml(e.name)+'</p>'+(e.school?'<p class="text-[10px] label-text">'+escHtml(e.school)+'</p>':'')+'</td><td class="text-center">'+e.poi+'</td><td class="text-center">'+e.speech+'</td><td class="text-center">'+e.amendment+'</td><td class="text-center font-semibold text-purple-400">'+e.total+'</td></tr>';
+          }).join('')
+        : '<tr><td colspan="5" class="text-center muted py-6">No delegates in this committee yet.</td></tr>';
+
+      return '<div class="mb-7">'+
+        '<p class="text-sm font-semibold mb-3">'+escHtml(committee)+'</p>'+
+        '<div class="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4">'+
+          '<div class="surface rounded-xl p-3">'+
+            '<p class="text-[10px] label-text uppercase tracking-wider mb-2">Call Priority</p>'+
+            '<div class="space-y-0.5">'+priorityHtml+'</div>'+
+          '</div>'+
+          '<div class="surface-strong rounded-xl overflow-x-auto">'+
+            '<table class="tally-table">'+
+              '<thead><tr><th>Delegation</th><th>POIs<br><span class="text-[9px] normal-case label-text">1pt</span></th><th>Speeches<br><span class="text-[9px] normal-case label-text">2pt</span></th><th>Amendments<br><span class="text-[9px] normal-case label-text">3pt</span></th><th>Total</th></tr></thead>'+
+              '<tbody>'+rowsHtml+'</tbody>'+
+              '<tfoot><tr><td class="font-semibold text-sm">Total</td><td class="text-center font-semibold">'+totals.poi+'</td><td class="text-center font-semibold">'+totals.speech+'</td><td class="text-center font-semibold">'+totals.amendment+'</td><td class="text-center font-semibold text-purple-400">'+totals.total+'</td></tr></tfoot>'+
+            '</table>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    }
+
+    function renderTallyView() {
+      const c = document.getElementById('content-list');
+      const selected = document.getElementById('filter-committee').value;
+      const committees = Object.keys(tallyByCommittee).sort();
+      const list = selected ? committees.filter(x => x === selected) : committees;
+      if (!list.length) { c.innerHTML = '<div class="text-center py-12 muted"><i data-lucide="users" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">No delegates found.</p></div>'; lucide.createIcons(); return; }
+      c.innerHTML = list.map(committee => renderCommitteeTallyBlock(committee, tallyByCommittee[committee])).join('');
+      lucide.createIcons();
+    }
+
+    function exportTallyToExcel() {
+      const selected = document.getElementById('filter-committee').value;
+      const committees = Object.keys(tallyByCommittee).sort().filter(c => !selected || c === selected);
+      if (!committees.length) return;
+      const wb = XLSX.utils.book_new();
+      committees.forEach(committee => {
+        const entries = Object.values(tallyByCommittee[committee]).map(t => ({ ...t, total: tallyTotal(t) })).sort((a,b)=>schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
+        const priority = [...entries].sort((a,b)=> a.total-b.total || a.country.localeCompare(b.country));
+        const tallySheet = [['Delegation','Delegate','School','POIs (1pt)','Speeches (2pt)','Amendments (3pt)','Total Points']]
+          .concat(entries.map(e => [e.country, e.name, e.school, e.poi, e.speech, e.amendment, e.total]));
+        const prioritySheet = [['Rank','Delegation','Total Points']]
+          .concat(priority.map((e,i) => [i+1, e.country, e.total]));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tallySheet), (committee+' Tally').slice(0,31));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(prioritySheet), (committee+' Priority').slice(0,31));
+      });
+      XLSX.writeFile(wb, (selected || 'All Committees') + ' Tally.xlsx');
+    }
+
+    // ── ATTENDANCE (read-only, all committees, per session) ─────────────────
+    function getAttendanceSessions() {
+      const list = [];
+      PLACEHOLDER_SCHEDULE.forEach((day,i) => {
+        const dateStr = PLACEHOLDER_DATES[i];
+        day.items.forEach(it => {
+          if (/^session/i.test(it.title)) {
+            list.push({ key: i+'|'+it.title, label: it.title, dayLabel: day.label,
+              start: new Date(dateStr+'T'+it.start+':00'), end: new Date(dateStr+'T'+it.end+':00') });
+          }
+        });
+      });
+      return list;
+    }
+    function defaultAttendanceSessionKey(sessions, now) {
+      if (!sessions.length) return null;
+      for (const s of sessions) { if (now < s.end) return s.key; }
+      return sessions[sessions.length-1].key;
+    }
+
+    let attendanceByCommittee = {};
+    async function loadAttendanceForSession(sessionKey) {
+      const { data: delegates } = await sb.from('profiles').select('id,name,country,school,committee')
+        .eq('role','delegate').order('committee',{ascending:true}).order('country',{ascending:true});
+      const { data: rows } = await sb.from('attendance').select('*').eq('session_key', sessionKey);
+      const rowMap = {}; (rows||[]).forEach(r => rowMap[r.delegate_id] = r.status);
+      const byCommittee = {};
+      (delegates||[]).forEach(d => {
+        if (!byCommittee[d.committee]) byCommittee[d.committee] = {};
+        byCommittee[d.committee][d.id] = { name: d.name, country: d.country||'—', school: d.school||'', status: rowMap[d.id] || 'present' };
+      });
+      attendanceByCommittee = byCommittee;
+    }
+
+    async function openAttendanceTab() {
+      const c = document.getElementById('content-list');
+      c.innerHTML = '<div class="item-card rounded-xl p-4"><div class="skeleton h-4 w-32 mb-2"></div><div class="skeleton h-3 w-64"></div></div>';
+      const sessions = getAttendanceSessions();
+      if (!sessions.length) { c.innerHTML = '<div class="text-center py-12 muted"><i data-lucide="calendar-x" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">No sessions defined yet.</p></div>'; lucide.createIcons(); return; }
+      if (!attendanceSessionKey || !sessions.find(s=>s.key===attendanceSessionKey)) {
+        attendanceSessionKey = defaultAttendanceSessionKey(sessions, new Date());
+      }
+      await loadAttendanceForSession(attendanceSessionKey);
+      renderAttendanceView();
+    }
+
+    async function selectAttendanceSession(key) {
+      attendanceSessionKey = key;
+      await loadAttendanceForSession(key);
+      renderAttendanceView();
+    }
+
+    function renderCommitteeAttendanceBlock(committee, map) {
+      const entries = Object.entries(map).map(([id,t]) => ({ id, ...t }));
+      const present = entries.filter(e=>e.status==='present').length;
+      const absent = entries.length - present;
+      const rate = entries.length ? Math.round((present/entries.length)*1000)/10 : 0;
+      const rows = [...entries].sort((a,b) => schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
+
+      let lastSchool = null, groupToggle = false;
+      const rowsHtml = entries.length
+        ? rows.map(e => {
+            if (e.school !== lastSchool) { groupToggle = !groupToggle; lastSchool = e.school; }
+            return '<tr class="'+(groupToggle?'school-group':'')+'"><td><p class="font-medium text-sm">'+escHtml(e.country)+'</p><p class="text-[11px] muted">'+escHtml(e.name)+'</p>'+(e.school?'<p class="text-[10px] label-text">'+escHtml(e.school)+'</p>':'')+'</td><td class="text-center"><span class="attendance-pill '+e.status+'">'+(e.status==='present'?'Present':'Absent')+'</span></td></tr>';
+          }).join('')
+        : '<tr><td colspan="2" class="text-center muted py-6">No delegates in this committee yet.</td></tr>';
+
+      return '<div class="mb-7">'+
+        '<div class="flex items-center justify-between mb-3 flex-wrap gap-2">'+
+          '<p class="text-sm font-semibold">'+escHtml(committee)+'</p>'+
+          '<p class="text-xs muted">'+present+' present · '+absent+' absent · '+rate+'%</p>'+
+        '</div>'+
+        '<div class="surface-strong rounded-xl overflow-x-auto">'+
+          '<table class="tally-table">'+
+            '<thead><tr><th>Delegation</th><th>Attendance</th></tr></thead>'+
+            '<tbody>'+rowsHtml+'</tbody>'+
+          '</table>'+
+        '</div>'+
+      '</div>';
+    }
+
+    function renderAttendanceView() {
+      const c = document.getElementById('content-list');
+      const sessions = getAttendanceSessions();
+      const selected = document.getElementById('filter-committee').value;
+      const committees = Object.keys(attendanceByCommittee).sort();
+      const list = selected ? committees.filter(x => x === selected) : committees;
+
+      const pillsHtml = sessions.map(s =>
+        '<button onclick="selectAttendanceSession(\''+s.key+'\')" class="tab-btn text-sm font-medium whitespace-nowrap'+(s.key===attendanceSessionKey?' active':'')+'">'+escHtml(s.dayLabel)+' · '+escHtml(s.label)+'</button>'
+      ).join('');
+
+      const body = list.length
+        ? list.map(committee => renderCommitteeAttendanceBlock(committee, attendanceByCommittee[committee])).join('')
+        : '<div class="text-center py-12 muted"><i data-lucide="users" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">No delegates found.</p></div>';
+
+      c.innerHTML =
+        '<div class="flex gap-6 border-b mb-5 overflow-x-auto" style="border-color:rgba(128,128,128,0.1)">'+pillsHtml+'</div>'+
+        '<p class="text-[10px] muted mb-4">Placeholder schedule — sessions will match the final timetable once confirmed.</p>'+
+        body;
+      lucide.createIcons();
+    }
+
+    async function exportAttendanceToExcel() {
+      const sessions = getAttendanceSessions();
+      if (!sessions.length) return;
+      const selected = document.getElementById('filter-committee').value;
+      const { data: delegates } = await sb.from('profiles').select('id,name,country,school,committee').eq('role','delegate');
+      const { data: rows } = await sb.from('attendance').select('*');
+      const statusMap = {}; (rows||[]).forEach(r => { if(!statusMap[r.delegate_id]) statusMap[r.delegate_id]={}; statusMap[r.delegate_id][r.session_key] = r.status; });
+      const committees = [...new Set((delegates||[]).map(d=>d.committee))].sort().filter(c => !selected || c === selected);
+      const wb = XLSX.utils.book_new();
+      committees.forEach(committee => {
+        const entries = (delegates||[]).filter(d=>d.committee===committee).map(d => ({ id:d.id, name:d.name, country:d.country||'—', school:d.school||'' })).sort((a,b)=>schoolGroupKey(a).localeCompare(schoolGroupKey(b)));
+        const header = ['Delegation','Delegate','School'].concat(sessions.map(s=>s.dayLabel+' '+s.label));
+        const body = entries.map(e => [e.country, e.name, e.school].concat(sessions.map(s => {
+          const st = (statusMap[e.id]||{})[s.key] || 'present';
+          return st === 'present' ? 'Present' : 'Absent';
+        })));
+        const presentRow = ['Present','',''].concat(sessions.map(s => entries.filter(e => ((statusMap[e.id]||{})[s.key]||'present')==='present').length));
+        const absentRow = ['Absent','',''].concat(sessions.map(s => entries.filter(e => ((statusMap[e.id]||{})[s.key]||'present')==='absent').length));
+        const rateRow = ['Attendance Rate','',''].concat(sessions.map(s => {
+          const p = entries.filter(e => ((statusMap[e.id]||{})[s.key]||'present')==='present').length;
+          return entries.length ? Math.round((p/entries.length)*1000)/10+'%' : '—';
+        }));
+        const sheet = [header].concat(body).concat([[],presentRow,absentRow,rateRow]);
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheet), (committee+' Attendance').slice(0,31));
+      });
+      XLSX.writeFile(wb, (selected || 'All Committees') + ' Attendance.xlsx');
+    }
+
+    async function handleSignOut(){ await sb.auth.signOut(); window.location.href=''; }
+
+    function escHtml(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function escAttr(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/'/g,'\\\'').replace(/"/g,'&quot;'); }
+    function timeAgo(iso){
+      if(!iso) return '';
+      let s = String(iso).trim();
+      if(!/[zZ]$|[+\-]\d\d:?\d\d$/.test(s)){ s = s.replace(' ','T') + 'Z'; }
+      const then = new Date(s).getTime();
+      if(isNaN(then)) return '';
+      const d = Math.round((Date.now()-then)/60000);
+      if(d<1) return 'just now';
+      if(d<60) return d+'m ago';
+      if(d<1440) return Math.floor(d/60)+'h ago';
+      return Math.floor(d/1440)+'d ago';
+    }
+
+    sb.channel('exec-updates')
+      .on('postgres_changes',{event:'*',schema:'public',table:'resolutions'},()=>loadAll())
+      .on('postgres_changes',{event:'*',schema:'public',table:'tally'},()=>{ if(currentTab==='tally') ensureTallyLoaded().then(renderTallyView); })
+      .on('postgres_changes',{event:'*',schema:'public',table:'attendance'},()=>{ if(currentTab==='attendance') loadAttendanceForSession(attendanceSessionKey).then(renderAttendanceView); })
+      .subscribe();
+
+    init();
+  </script>
+</body>
+</html>
