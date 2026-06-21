@@ -429,9 +429,9 @@
 
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = 'login.html'; return; }
+      if (!session) { window.location.href = '/'; return; }
       const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
-      if (!profile || profile.role !== 'chair') { window.location.href = 'login.html'; return; }
+      if (!profile || profile.role !== 'chair') { window.location.href = '/'; return; }
       currentProfile = profile;
       document.getElementById('nav-name').textContent = profile.name;
       document.getElementById('chair-name').textContent = profile.name;
@@ -970,7 +970,7 @@
       XLSX.writeFile(wb, currentProfile.committee+' Attendance.xlsx');
     }
 
-    async function handleSignOut(){ await sb.auth.signOut(); window.location.href='login.html'; }
+    async function handleSignOut(){ await sb.auth.signOut(); window.location.href='/'; }
 
     function emptyState(icon,title,sub){ return '<div class="text-center py-12 muted"><i data-lucide="'+icon+'" style="width:32px;height:32px;margin:0 auto 8px;display:block;opacity:0.3"></i><p class="text-sm">'+title+'</p><p class="text-xs mt-1">'+sub+'</p></div>'; }
     function escHtml(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
